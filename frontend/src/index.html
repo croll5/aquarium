@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge, Chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Main Source Files -->
+    <link rel="stylesheet" href="main.css" />
+    <link rel="stylesheet" href="index.css">
+    <script src="main.js"></script>
+</head>
+
+<body id="app" class="app">
+    <header style="display: none;">
+        <button id="onglet_extraction" class="onglet" onclick="change_onglet('analyse/extraction/index.html','onglet_extraction')">Extraction</button>
+        <button id="onglet_chronologie" class="onglet" onclick="change_onglet('analyse/chronologie/index.html','onglet_chronologie')">Chronologie</button>
+        <button id="onglet_arborescence" class="onglet" onclick="change_onglet('analyse/arborescence/index.html','onglet_arborescence')">Arborescence</button>
+        <!--  -->
+    </header>
+    <main>
+        <iframe src="accueil/index.html" title="frame"></iframe>
+    </main>
+    <footer onclick="accueil()">
+        <p>Aquarium - Logiciel d'analyse d'ORCs</p>
+        <!--  -->
+    </footer>
+</body>
+
+</html>

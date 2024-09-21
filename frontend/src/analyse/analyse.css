@@ -1,0 +1,13 @@
+body{
+    background-color: #FCF5DC;
+}
+
+h1{
+    color: #001D64;
+    text-align: center;
+}
+
+.liste_options:hover{
+    cursor: pointer;
+    font-weight: bolder;
+}

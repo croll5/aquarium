@@ -1,0 +1,12 @@
+.dossier_arborescence{
+    margin-left: 20px;
+}
+
+.fichier_arborescence{
+    font-weight: bolder;
+}
+
+#extraction_arborescence{
+    display: none;
+    text-align: center;
+}
