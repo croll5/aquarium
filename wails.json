@@ -1,0 +1,10 @@
+{
+  "name": "aquarium",
+  "outputfilename": "aquarium",
+  "frontend:install": "",
+  "frontend:build": "",
+  "author": {
+    "name": "croll5",
+    "email": "cecile.rolland@eleve.isep.fr"
+  }
+}
