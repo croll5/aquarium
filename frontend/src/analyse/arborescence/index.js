@@ -23,3 +23,9 @@ function construireArborescence(dossier, id_racine){
         construireArborescence(enfant, "enfants_" + dossier["nom"]);
     }
 }
+
+function extraire_arborescence(){
+    parent.window.go.main.App.ExtraireArborescence().then(resultat =>{
+        alert("Chalut la compagnie !");
+    })
+}
