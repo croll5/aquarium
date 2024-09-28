@@ -1,43 +1,99 @@
-## About
+## À propos
 
-This is an extremely straightforward Wails template, comprising essential web components (HTML, CSS, JS) and intentionally lacking any front-end frameworks, dependencies, or Node package management. 
-As a result, you'll end up with an exceptionally lightweight source folder (1 - 5MB).
+Le projet AQUARIUM (Application de QUestionnement et d'Analyse des Relevés Informatiques pour l'identification des Vecteurs de Malveillance) a pour objectif de faciliter l'analyse de machines Windows potentiellement compromises.
 
-That being said, this is a good template for something like a ``Hello World`` application, which doesn't require you to store ~200-300MB of source files.
+Il a été fait par :
+- Charles MAILLEY
+- Cynthia CALIMOUTTOUPOULLE
+- Flore PAVIOT-ADET
+- Valentyna PRONINA
+- Cécile ROLLAND
 
-## Instruction
+## Conditions d'utilisation
 
-1. Do all the setup/ installation for [Wails](https://wails.io/docs/gettingstarted/installation).
-2. Open command prompt on your desire directory.
-3. ``> wails init -n [your-app-name] -t https://github.com/KiddoV/wails-pure-js-template``
-4. ``> cd ./[your-app-name]``
-5. ``> wails dev``
-6. Keep developing...
+Il est strictement interdit d'utiliser le logiciel à des fins commerciales, y compris, mais sans s'y limiter, la vente, la location, la distribution ou toute autre forme de monétisation du logiciel.
 
-## Live Development
+L'utilisateur n'est pas autorisé à modifier, distribuer ou créer des œuvres dérivées du logiciel sans l'autorisation écrite préalable de l'équipe de développement.
 
-To run in live development mode, run `wails dev` in the project directory. The frontend dev server will run on http://localhost:34115. Connect to this in your browser and connect to your application.
+Le logiciel est fourni 'tel quel', sans garantie d'aucune sorte, expresse ou implicite. L'équipe de développement ne sera en aucun cas responsable des dommages directs, indirects, spéciaux, accessoires ou consécutifs résultant de l'utilisation ou de l'incapacité à utiliser le logiciel
 
-## Building
+Ces conditions d'utilisation sont provisoires. Elle sont susceptibles d'évoluer sans que l'équipe de développement n'ait à s'en justifier.
 
-To build a redistribute, production mode package, use `wails build`.
+## Installation du projet
 
-Or build with [UPX](https://upx.github.io/) for better distribution size: ``wails build -upx -upxflags="--best --lzma"``
+1. Suivre le guide d'installation de Wials : [Wails](https://wails.io/docs/gettingstarted/installation).
+2. Ouvrir un terminal dans le dossier où le projet a été téléchargé
+3. Lancer la commande suivante : ``> wails dev``
 
-To use ``UPX``, you need to download and at least put the path in the ``System Enviroment Variables``:
+## Architecture générale
 
-*Windows*
-![Capture](https://user-images.githubusercontent.com/28552977/191490618-b84d307e-f783-4c68-bd90-3f484de25478.PNG)
+Le logiciel Aquarium utilise le langage Go pour la logique applicative et les langage HTML, CSS et JavaScript pour la partie affichage.
+Ces deux parties sont articulées grâce au compilateur Wails. 
 
-## Adding Dependencies
+## Structure du dossier d'analyse
 
-You don't have to rely on ``npm`` to add dependencies.
+Le dossier d'une analyse a la structure suivante : 
+- ``collecteORC`` : dossier contenant les archives ORC partiellement décompressées
+- ``analyse`` : dossier contenant les fichiers d'analyse générés par le logiciel
+  - ``chronologie.db`` : base de donnée des évènements qui se sont déroulés sur la machine analysée. 
+    - ``chronologie`` : la table contenant les évènements, qui contient les champs suivants :
+      - ``id`` : l'identifiant de l'évènement
+      - ``extracteur`` : l'identifiant de l'extracteur qui l'a écrit
+      - ``horodatage`` : la date de l'évènement
+      - ``source`` : le fichier duquel l'évènement a été extrait
+      - ``message`` : le contenu de l'évènement
+  - ``arborescence.json`` : l'arborescence (partielle) du systeme de fichiers de la machine source 
 
-If your application requires internet access, you can add dependencies via a ``CDN`` links.
+## Interface graphique
 
-If your application is used offline, simply download dependencies and save them in the ``src/libs`` folder, then import them in the index.html file.
+La structure de l’interface graphique est la suivante :
 
-E.g.
-```html
-<script src="../libs/jquery/jquery-3.7.1.js"></script>
-```
+![Structure du projet](images_documentation/image.png)
+
+L’entête contient des boutons qui renvoient vers les différents affichages de l’application. Ils ont la structure suivante : 
+
+``
+<button id="identifiant" class="onglet" onclick="change_onglet('chemin/vers/l’onglet','identifiant')"> Nom de l’onglet</button>
+``
+Avec : 
+- identifiant : un identifiant unique du bouton. Par convention, on le nommera avec « onglet_ » puis le nom de l’onglet.
+- chemin/vers/l’onglet : le chemin qui permet d’accéder à l’onglet depuis la page aquarium/frontend/src/index.html.
+- Nom de l’onglet : le nom de l’onglet, qui sera affiché à l’utilisateur.
+
+Les styles communs à toute l’application (par exemple le style par défaut d’un bouton clair) sont enregistrés dans le fichier aquarium/frontend/src/main.css.
+
+Pour appeler une fonction Go depuis l’un des onglets de l’interface graphique, on utilise le code suivant : 
+
+``
+parent.window.go.main.App.FonctionGo().then(resultat=>{
+	// Code à exécuter une fois que l’on a les résultats de la fonction Go
+}
+``
+
+Avec FonctionGo le nom de la fonction Go que l’on souhaite appeler.
+⚠️À noter : pour pouvoir être appelée depuis l’interface graphique, la fonction Go doit être écrite en suivant le modèle décrit dans la partie « Logique de l’application ».
+
+## Logique de l’application
+
+La logique de l’application (fonctions d’extraction d’évènements, de recherche de marqueurs, …) est écrite en Go.
+Les fonctions Go pouvant être appelées depuis l’interface graphique sont écrites dans le fichier aquarium/app.go. Elles ont la structure suivante : 
+``
+func (a *App) FonctionGo(arg1 type1, arg2 type2, …) (typeA, typeB, …) {
+    // Logique de la fonction
+    return resA, resB, …
+}
+``
+Avec : 
+- FonctionGo : le nom de la fonction Go
+- arg... type... : les arguments de la fonction et leurs types
+- res... type... : les valeurs renvoyées par la fonction et leurs types
+
+### Modules d'extraction
+
+Les opérations d'extraction de l'ORC sont séparés en modules, qui peuvent être exécutés sur un clic de l'utilisateur. 
+Cela permet de réduire le temps de chargement de l'application à la création d'une analyse, et ainsi de permettre à l'utilisateur d'afficher une partie des évènements pendant l'extraction du reste des éléments. 
+
+Ces modules comportent les fonctions suivantes : 
+- ``Definition``, qui renvoie les informations sur la fonction de l'extracteur
+- ``Extraction``, qui extrait les évènements choisis et les enregistre dans le fichier ``analyse/chronologie.db``
+- ``PrerequisOK``, qui renvoit ``vrai`` si les conditions sont réunies pour que l'extraction puisse se faire.
