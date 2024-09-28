@@ -56,7 +56,7 @@ func CreationArborescence(chemin string) bool {
 		return false
 	}
 	defer bd.Close()
-	var requete string = "CREATE TABLE test(ID int, horodatage DATE, source VARCHAR(25), message TEXT)"
+	var requete string = "CREATE TABLE chronologie(ID int, horodatage INT, source VARCHAR(25), message TEXT)"
 	bd.Exec(requete)
 	return true
 }
