@@ -78,7 +78,7 @@ func enregistrerArborescenceJson(arbo *Arborescence, chemin string) error {
 
 func GetArborescence(cheminProjet string) (Arborescence, error) {
 	var resultatArbo Arborescence
-	donneesFichier, err := os.ReadFile(filepath.Join(filepath.Dir(cheminProjet), "analyse", "arborescence.json"))
+	donneesFichier, err := os.ReadFile(filepath.Join(cheminProjet, "analyse", "arborescence.json"))
 	if err != nil {
 		log.Println("WARN | Le fichier d'arborescence n'existe pas ou n'a pas pu être ouvert : ", err.Error())
 		return Arborescence{}, nil
@@ -92,7 +92,7 @@ func ExtraireArborescence(cheminProjet string) (Arborescence, error) {
 	resultatArbo.Nom = "racine"
 	resultatArbo.Enfants = []Arborescence{}
 	// On parcourt les fichiers GetTHis
-	collectes, err := os.ReadDir(filepath.Join(filepath.Dir(cheminProjet), "collecteORC"))
+	collectes, err := os.ReadDir(filepath.Join(cheminProjet, "collecteORC"))
 	if err != nil {
 		log.Println(err.Error())
 		return resultatArbo, err
@@ -100,7 +100,7 @@ func ExtraireArborescence(cheminProjet string) (Arborescence, error) {
 	for _, collecte := range collectes {
 		if collecte.IsDir() {
 			log.Println("INFO | Parcourt du dossier ", collecte.Name())
-			filepath.Walk(filepath.Join(filepath.Dir(cheminProjet), "collecteORC", collecte.Name()), func(path string, info fs.FileInfo, err error) error {
+			filepath.Walk(filepath.Join(cheminProjet, "collecteORC", collecte.Name()), func(path string, info fs.FileInfo, err error) error {
 				log.Println("INFO | Ouverture de l'archive ", path, " qui a pour extension ", filepath.Ext(path))
 				if filepath.Ext(path) != ".7z" {
 					return nil
@@ -118,6 +118,6 @@ func ExtraireArborescence(cheminProjet string) (Arborescence, error) {
 			})
 		}
 	}
-	err = enregistrerArborescenceJson(&resultatArbo, filepath.Join(filepath.Dir(cheminProjet), "analyse", "arborescence.json"))
+	err = enregistrerArborescenceJson(&resultatArbo, filepath.Join(cheminProjet, "analyse", "arborescence.json"))
 	return resultatArbo, err
 }

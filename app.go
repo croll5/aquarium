@@ -119,7 +119,7 @@ func (a *App) OuvrirAnalyseExistante() bool {
 	if fichier == "" {
 		return false
 	}
-	chemin_projet = fichier
+	chemin_projet = filepath.Dir(fichier)
 	return true
 }
 
