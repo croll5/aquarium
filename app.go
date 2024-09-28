@@ -154,5 +154,10 @@ func (a *App) ExtraireArborescence() arborescence.Arborescence {
 	if err != nil {
 		a.signalerErreur(err)
 	}
+	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+		Type:    runtime.InfoDialog,
+		Title:   "Extraction terminée",
+		Message: "L'extraction de l'arborescence s'est terminée avec succès !",
+	})
 	return res
 }

@@ -1,6 +1,7 @@
 parent.window.go.main.App.ArborescenceMachineAnalysee().then(resultat =>{
     if(resultat["nom"] == "" && resultat["enfants"] == undefined){
         document.getElementById("extraction_arborescence").style.display = "inline";
+        document.getElementById("patientez").style.display = "none";
     }else{
         construireArborescence(resultat, "arborescence")
         document.getElementById("patientez").style.display = "none";
@@ -32,7 +33,12 @@ function construireArborescence(dossier, id_racine, numero_dossier){
 }
 
 function extraire_arborescence(){
+    document.getElementById("extraction_arborescence").style.display = "none";
+    document.getElementById("patientez_extraction").style.display = "inline";
     parent.window.go.main.App.ExtraireArborescence().then(resultat =>{
-        alert("Chalut la compagnie !");
+        document.getElementById("patientez").style.display = "inline";
+        document.getElementById("patientez_extraction").style.display = "none";
+        construireArborescence(resultat, "arborescence");
+        document.getElementById("patientez").style.display = "none";
     })
 }
