@@ -52,9 +52,9 @@ La structure de l’interface graphique est la suivante :
 
 L’entête contient des boutons qui renvoient vers les différents affichages de l’application. Ils ont la structure suivante : 
 
-``
+```html
 <button id="identifiant" class="onglet" onclick="change_onglet('chemin/vers/l’onglet','identifiant')"> Nom de l’onglet</button>
-``
+```
 Avec : 
 - identifiant : un identifiant unique du bouton. Par convention, on le nommera avec « onglet_ » puis le nom de l’onglet.
 - chemin/vers/l’onglet : le chemin qui permet d’accéder à l’onglet depuis la page aquarium/frontend/src/index.html.
@@ -64,11 +64,11 @@ Les styles communs à toute l’application (par exemple le style par défaut d�
 
 Pour appeler une fonction Go depuis l’un des onglets de l’interface graphique, on utilise le code suivant : 
 
-``
+```go
 parent.window.go.main.App.FonctionGo().then(resultat=>{
 	// Code à exécuter une fois que l’on a les résultats de la fonction Go
 }
-``
+```
 
 Avec FonctionGo le nom de la fonction Go que l’on souhaite appeler.
 ⚠️À noter : pour pouvoir être appelée depuis l’interface graphique, la fonction Go doit être écrite en suivant le modèle décrit dans la partie « Logique de l’application ».
@@ -77,12 +77,12 @@ Avec FonctionGo le nom de la fonction Go que l’on souhaite appeler.
 
 La logique de l’application (fonctions d’extraction d’évènements, de recherche de marqueurs, …) est écrite en Go.
 Les fonctions Go pouvant être appelées depuis l’interface graphique sont écrites dans le fichier aquarium/app.go. Elles ont la structure suivante : 
-``
+```go
 func (a *App) FonctionGo(arg1 type1, arg2 type2, …) (typeA, typeB, …) {
     // Logique de la fonction
     return resA, resB, …
 }
-``
+```
 Avec : 
 - FonctionGo : le nom de la fonction Go
 - arg... type... : les arguments de la fonction et leurs types
