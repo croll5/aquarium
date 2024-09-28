@@ -11,10 +11,12 @@
 </head>
 <body>
     <h1>Arborescence de la machine analysée</h1>
+    <p id="patientez">🫧 L'affichage de l'arborescence peut prendre un peu de temps... Ne quittez pas cette page 🐬</p>
+    <p id="patientez_extraction">🫧 L'extraction est en cours. Vous pouvez patienter en salle d'attente 🫧</p>
     <div id="extraction_arborescence">
         <p>L'arborescence n'a pas encore été extraite de la capture ORC. Appuyez sur le bouton "Extraire" pour le faire.</p>
         <p>⚠️ Attention : cette extration peut prendre un certain temps.</p>
-        <button class="bouton_sombre">Extraire</button>
+        <button class="bouton_sombre" onclick="extraire_arborescence()">Extraire</button>
     </div>
     <div id="arborescence"></div>
 </body>
