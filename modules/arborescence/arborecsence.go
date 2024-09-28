@@ -25,6 +25,7 @@ func remplitArborescenceDepuisCSV(fichierCSV *sevenzip.File, arbo *Arborescence)
 		return err
 	}
 	var contenuCSV *csv.Reader = csv.NewReader(contenuBrute)
+	contenuCSV.Read()
 	for {
 		ligne, err := contenuCSV.Read()
 		if err == io.EOF {
@@ -33,7 +34,8 @@ func remplitArborescenceDepuisCSV(fichierCSV *sevenzip.File, arbo *Arborescence)
 		if err != nil {
 			return err
 		}
-		var chemin []string = strings.Split(ligne[4], "\\")
+		nomChemin, _ := strings.CutPrefix(ligne[4], "\\")
+		var chemin []string = strings.Split(nomChemin, "\\")
 		var vousetesici *[]Arborescence = &arbo.Enfants
 
 		for _, dossier := range chemin {
