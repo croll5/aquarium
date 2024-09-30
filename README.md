@@ -17,7 +17,7 @@ L'utilisateur n'est pas autorisé à modifier, distribuer ou créer des œuvres 
 
 Le logiciel est fourni 'tel quel', sans garantie d'aucune sorte, expresse ou implicite. L'équipe de développement ne sera en aucun cas responsable des dommages directs, indirects, spéciaux, accessoires ou consécutifs résultant de l'utilisation ou de l'incapacité à utiliser le logiciel
 
-Ces conditions d'utilisation sont provisoires. Elle sont susceptibles d'évoluer sans que l'équipe de développement n'ait à s'en justifier.
+Ces conditions d'utilisation sont provisoires. Elles sont susceptibles d'évoluer sans que l'équipe de développement n'ait à s'en justifier.
 
 ## Installation du projet
 
@@ -42,6 +42,16 @@ Le dossier d'une analyse a la structure suivante :
       - ``horodatage`` : la date de l'évènement
       - ``source`` : le fichier duquel l'évènement a été extrait
       - ``message`` : le contenu de l'évènement
+    - ``indicateurs`` : les indicateurs de compromission
+      - ``id`` : identifiant de l'indicateur
+      - ``type`` : type d'indicateur (ip, url, md5, ...)
+      - ``valeur`` : valeur de l'indicateur
+      - ``tlp`` : politique de diffusion (cf : https://www.cert.ssi.gouv.fr/csirt/politique-partage/)
+      - ``pap`` : politique d'utilisation
+      - ``commentaire`` : commentaire éventuel
+    - ``indicateurs_evenements`` : table faisant le lien entre les indicateurs de compromission et les évènements dans lequels ils apparaissent
+      - ``id_indicateur``
+      - ``id_evenement``
   - ``arborescence.json`` : l'arborescence (partielle) du systeme de fichiers de la machine source 
 
 ## Interface graphique

@@ -124,11 +124,15 @@ func (a *App) OuvrirAnalyseExistante() bool {
 }
 
 func (a *App) ListeExtractionsPossibles() map[string]string {
-	return extraction.ListeExtracteursHtml()
+	resultat, err := extraction.ListeExtracteursHtml(chemin_projet)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 func (a *App) ExtraireElements(module string, description string) {
-	err := extraction.Extraction(module)
+	err := extraction.Extraction(module, chemin_projet)
 	if err != nil {
 		log.Println("Erreur dans l’extraction du module", module, ":", err.Error())
 		a.signalerErreur(err)
