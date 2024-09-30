@@ -50,13 +50,17 @@ func CreationArborescence(chemin string) bool {
 	defer fichier.Close()
 	fichier.WriteString("coucou")
 	// Création de la base de données qui contiendra la chronologie des évènements
-	bd, err := sql.Open("sqlite3", filepath.Join(chemin, "analyse", "chronologie.db"))
+	bd, err := sql.Open("sqlite3", filepath.Join(chemin, "analyse", "extractions.db"))
 	if err != nil {
 		log.Println(err)
 		return false
 	}
 	defer bd.Close()
-	var requete string = "CREATE TABLE chronologie(ID int, horodatage INT, source VARCHAR(25), message TEXT)"
+	var requete string = "CREATE TABLE chronologie(id INT PRIMARY KEY, extracteur VARCHAR(25), horodatage DATETIME, source VARCHAR(25), message TEXT)"
+	bd.Exec(requete)
+	requete = "CREATE TABLE indicateurs(id INT PRIMARY KEY, type VARCHAR(32), valeur VARCHAR(50), tlp VARCHAR(10), pap VARCHAR(10), commentaire TEXT)"
+	bd.Exec(requete)
+	requete = "CREATE TABLE indicateurs_evenements(id_indicateur INT, id_evenement INT, FOREIGN KEY(id_indicateur) REFERENCES indicateurs(id), FOREIGN KEY(id_evenement) REFERENCES chronologie(id))"
 	bd.Exec(requete)
 	return true
 }

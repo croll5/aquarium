@@ -3,32 +3,52 @@ package extraction
 import (
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/navigateur"
+	"database/sql"
 	"errors"
+	"log"
+	"path/filepath"
 )
 
 type Extracteur interface {
-	Extraction() error
+	Extraction(string) error
 	Description() string
+	PrerequisOK(string) bool
 }
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
-	"evtx":       evtx.New(),
-	"navigateur": navigateur.New(),
+	"evtx":       evtx.Evtx{},
+	"navigateur": navigateur.Navigateur{},
 }
 
-func ListeExtracteursHtml() map[string]string {
+func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 	// On itère sur tous les extracteurs
 	var resultat map[string]string = map[string]string{}
-	for k, v := range liste_extracteurs {
-		resultat[k] = v.Description()
+	bd, err := sql.Open("sqlite3", filepath.Join(cheminProjet, "analyse", "extractions.db"))
+	if err != nil {
+		log.Println(err)
+		return map[string]string{}, err
 	}
-	return resultat
+	defer bd.Close()
+	requete, err := bd.Prepare("SELECT count(*) FROM chronologie WHERE extracteur=?;")
+	var nbLignes int
+	for k, v := range liste_extracteurs {
+		reponse, err := requete.Query(k)
+		reponse.Next()
+		reponse.Scan(&nbLignes)
+		if err != nil {
+			return map[string]string{}, err
+		}
+		if v.PrerequisOK(filepath.Join(cheminProjet, "collecteORC")) && nbLignes == 0 {
+			resultat[k] = v.Description()
+		}
+	}
+	return resultat, nil
 }
 
-func Extraction(module string) error {
+func Extraction(module string, cheminProjet string) error {
 	if liste_extracteurs[module] == nil {
 		return errors.New("Erreur : module " + module + " non reconnu")
 	}
-	err := liste_extracteurs[module].Extraction()
+	err := liste_extracteurs[module].Extraction(cheminProjet)
 	return err
 }

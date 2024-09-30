@@ -1,17 +1,15 @@
 package navigateur
 
-type Navigateur struct {
-	extrait bool
-}
+type Navigateur struct{}
 
-func (n Navigateur) Extraction() error {
+func (n Navigateur) Extraction(cheminProjet string) error {
 	return nil
-}
-
-func New() Navigateur {
-	return Navigateur{extrait: false}
 }
 
 func (n Navigateur) Description() string {
 	return "Historique de navigation"
+}
+
+func (n Navigateur) PrerequisOK(cheminORC string) bool {
+	return true
 }
