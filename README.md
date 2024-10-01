@@ -8,6 +8,7 @@ Il a été fait par :
 - Flore PAVIOT-ADET
 - Valentyna PRONINA
 - Cécile ROLLAND
+- Abderahman MOAD
 
 ## Conditions d'utilisation
 
