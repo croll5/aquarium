@@ -5,10 +5,10 @@ Le projet AQUARIUM (Application de QUestionnement et d'Analyse des Relevés Info
 Il a été fait par :
 - Charles MAILLEY
 - Cynthia CALIMOUTTOUPOULLE
-- Flore PAVIOT-ADET
 - Valentyna PRONINA
 - Cécile ROLLAND
 - Abderahman MOAD
+- Valraven
 
 ## Conditions d'utilisation
 
