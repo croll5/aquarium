@@ -1,6 +1,7 @@
 package sam
 
 import (
+	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"io"
 	"log"
@@ -40,8 +41,12 @@ func (s Sam) Extraction(cheminProjet string) error {
 		}
 		cleDeBase := registre.OpenKey("SAM/Domains/Account/Users/Names")
 		enfants := cleDeBase.Subkeys()
-
-		log.Println(enfants[0].Name(), " : ", enfants[0].LastWriteTime().Time)
+		for _, compte := range enfants {
+			err := utilitaires.AjoutEvenementDansBDD(cheminProjet, "sam", compte.LastWriteTime().Time, "SAM/SAM/"+fichierSAM.Name, "Modification du compte "+compte.Name())
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
