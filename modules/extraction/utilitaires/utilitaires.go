@@ -2,6 +2,7 @@ package utilitaires
 
 import (
 	"database/sql"
+	"encoding/binary"
 	"path/filepath"
 	"time"
 )
@@ -28,4 +29,12 @@ func AjoutEvenementDansBDD(cheminProjet string, extracteur string, horodatage ti
 	}
 	_, err = requete.Exec(extracteur, horodatage, source, message)
 	return err
+}
+
+func FileTimeVersGo(date []byte) time.Time {
+	var dateInt = int64(binary.LittleEndian.Uint64(date))
+	var difference = dateInt / 10000000
+	var complement = dateInt % 10000000
+	var referentiel = time.Date(1601, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	return time.Unix(referentiel+difference, complement)
 }
