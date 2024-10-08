@@ -7,12 +7,14 @@ toolchain go1.22.2
 require (
 	github.com/bodgit/sevenzip v1.5.2
 	github.com/wailsapp/wails/v2 v2.9.2
+	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect

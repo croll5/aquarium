@@ -3,6 +3,7 @@ package extraction
 import (
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/navigateur"
+	"aquarium/modules/extraction/sam"
 	"database/sql"
 	"errors"
 	"log"
@@ -18,6 +19,7 @@ type Extracteur interface {
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"evtx":       evtx.Evtx{},
 	"navigateur": navigateur.Navigateur{},
+	"sam":        sam.Sam{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
