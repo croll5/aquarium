@@ -25,10 +25,10 @@ func ListeExtracteursHtml() map[string]string {
 	return resultat
 }
 
-func Extraction(module string) error {
+func Extraction(module string, chemin_projet string) error {
 	if liste_extracteurs[module] == nil {
 		return errors.New("Erreur : module " + module + " non reconnu")
 	}
-	err := liste_extracteurs[module].Extraction()
-	return err
+	err := liste_extracteurs[module].Extraction(chemin_projet)
+	return errn
 }
