@@ -5,10 +5,14 @@ go 1.23.1
 require (
 	github.com/0xrawsec/golang-evtx v1.2.9
 	github.com/bodgit/sevenzip v1.5.2
+<<<<<<< HEAD
 	github.com/pkg/errors v0.9.1
 	github.com/wailsapp/wails/v2 v2.9.2
 	modernc.org/sqlite v1.33.1
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
+=======
+	github.com/wailsapp/wails/v2 v2.9.2
+>>>>>>> 55d4136 (Start navigator extraction)
 )
 
 require github.com/0xrawsec/golang-utils v1.3.0 // indirect
