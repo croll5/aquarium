@@ -174,8 +174,8 @@ func (a *App) ExtraireElements(module string, description string) {
 	}
 }
 
-func (a *App) ArborescenceMachineAnalysee() arborescence.Arborescence {
-	res, err := arborescence.GetArborescence(chemin_projet)
+func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.MetaDonnees {
+	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier)
 	if err != nil {
 		a.signalerErreur(err)
 	}

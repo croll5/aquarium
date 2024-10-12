@@ -3,6 +3,7 @@ package arborescence
 import (
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/fs"
 	"log"
@@ -20,6 +21,16 @@ type Arborescence struct {
 	EmpreinteMD5 string         `json:"md5,omitempty"`
 	Legitimite   int            `json:"legitimite,omitempty"`
 }
+
+type MetaDonnees struct {
+	Nom             string
+	ADesEnfants     bool
+	EnfantsSuspects int
+	EnfantsInconnus int
+	Empreinte       string
+}
+
+var cacheArbo Arborescence
 
 // FONCTIONS INTERNES
 
@@ -203,4 +214,33 @@ func ExtraireArborescence(cheminProjet string, cheminModele string) (Arborescenc
 	}
 	err = enregistrerArborescenceJson(&resultatArbo, filepath.Join(cheminProjet, "analyse", "arborescence.json"))
 	return resultatArbo, err
+}
+
+func RecupEnfantsArbo(cheminProjet string, cheminDossier []int) ([]MetaDonnees, error) {
+	var fichiers []MetaDonnees = []MetaDonnees{}
+	if len(cheminDossier) == 0 {
+		var err error
+		cacheArbo, err = GetArborescence(cheminProjet)
+		if err != nil {
+			return fichiers, err
+		}
+	}
+	var vousetesici *Arborescence = &cacheArbo
+	for _, pas := range cheminDossier {
+		if len(vousetesici.Enfants) < pas {
+			return fichiers, errors.New("Le chemin de dossier spécifié est incohérent avec l'arborecsence")
+		}
+		vousetesici = &(*vousetesici).Enfants[pas]
+	}
+	for i := range vousetesici.Enfants {
+		var metadonnees MetaDonnees = MetaDonnees{
+			Nom:             (*vousetesici).Enfants[i].Nom,
+			ADesEnfants:     len((*vousetesici).Enfants[i].Enfants) != 0,
+			EnfantsSuspects: 0,
+			EnfantsInconnus: 0,
+			Empreinte:       (*vousetesici).Enfants[i].EmpreinteMD5,
+		}
+		fichiers = append(fichiers, metadonnees)
+	}
+	return fichiers, nil
 }
