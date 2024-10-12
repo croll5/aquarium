@@ -109,7 +109,7 @@ func extractFile(file *sevenzip.File, destination string) error {
 	if err != nil {
 		log.Println("ERROR | Problème dans l'extraction de l'ORC : ", err.Error())
 	}
-
+	
 	return nil
 }
 
