@@ -25,7 +25,13 @@ function construireArborescence(dossier, id_racine, numero_dossier){
     }
     else{
         let nom_fichier = document.createElement("p");
-        nom_fichier.textContent = dossier["nom"];
+        let legitimite = "😵"
+        if(dossier["legitimite"] == 1){
+            legitimite = "🥴"
+        }else if(dossier["legitimite"] == 2){
+            legitimite = "😇"
+        }
+        nom_fichier.textContent = dossier["nom"] + legitimite;
         nom_fichier.className = "fichier_arborescence";
         document.getElementById(id_racine).appendChild(nom_fichier);
     }
@@ -35,7 +41,7 @@ function construireArborescence(dossier, id_racine, numero_dossier){
 function extraire_arborescence(){
     document.getElementById("extraction_arborescence").style.display = "none";
     document.getElementById("patientez_extraction").style.display = "inline";
-    parent.window.go.main.App.ExtraireArborescence().then(resultat =>{
+    parent.window.go.main.App.ExtraireArborescence(true).then(resultat =>{
         document.getElementById("patientez").style.display = "inline";
         document.getElementById("patientez_extraction").style.display = "none";
         construireArborescence(resultat, "arborescence");
