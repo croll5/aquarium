@@ -30,3 +30,7 @@ details[open] > summary {
 #patientez{
     display: none;
 }
+
+#affichage_arbo{
+    display: none;
+}

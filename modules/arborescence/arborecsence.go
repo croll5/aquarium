@@ -218,7 +218,7 @@ func ExtraireArborescence(cheminProjet string, cheminModele string) (Arborescenc
 
 func RecupEnfantsArbo(cheminProjet string, cheminDossier []int) ([]MetaDonnees, error) {
 	var fichiers []MetaDonnees = []MetaDonnees{}
-	if len(cheminDossier) == 0 {
+	if len(cacheArbo.Enfants) == 0 {
 		var err error
 		cacheArbo, err = GetArborescence(cheminProjet)
 		if err != nil {
@@ -233,11 +233,17 @@ func RecupEnfantsArbo(cheminProjet string, cheminDossier []int) ([]MetaDonnees, 
 		vousetesici = &(*vousetesici).Enfants[pas]
 	}
 	for i := range vousetesici.Enfants {
+		var legitimite []int = []int{0, 0}
+		if (*vousetesici).Enfants[i].Legitimite == 0 {
+			legitimite = []int{1, 0}
+		} else if (*vousetesici).Enfants[i].Legitimite == 1 {
+			legitimite = []int{0, 1}
+		}
 		var metadonnees MetaDonnees = MetaDonnees{
 			Nom:             (*vousetesici).Enfants[i].Nom,
 			ADesEnfants:     len((*vousetesici).Enfants[i].Enfants) != 0,
-			EnfantsSuspects: 0,
-			EnfantsInconnus: 0,
+			EnfantsInconnus: legitimite[0],
+			EnfantsSuspects: legitimite[1],
 			Empreinte:       (*vousetesici).Enfants[i].EmpreinteMD5,
 		}
 		fichiers = append(fichiers, metadonnees)

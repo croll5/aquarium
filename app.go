@@ -190,6 +190,13 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 			Title:   "Choisissez le modele",
 			Filters: []runtime.FileFilter{{DisplayName: "Modèles aqua", Pattern: "modele.aqua"}},
 		})
+		if err != nil || cheminModele == "" {
+			runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+				Type:    runtime.ErrorDialog,
+				Message: "Vous devez choisir un fichier modele.aqua. \nSi vous n'avez pas de modèle, il est possible d'en créer un en vous rendant sur la page d'accueil.\nSi vous ne souhaitez pas utiliser de modèle, décochez l'option « Comparer l'arborescence avec celle d'un modèle. »",
+			})
+			return arborescence.Arborescence{}
+		}
 	}
 	res, err := arborescence.ExtraireArborescence(chemin_projet, filepath.Dir(cheminModele))
 	if err != nil {
