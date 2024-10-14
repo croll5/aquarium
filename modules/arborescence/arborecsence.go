@@ -34,12 +34,23 @@ var cacheArbo Arborescence
 
 // FONCTIONS INTERNES
 
+/*
+* Fonction qui rencoie un pointeur vers un fichier à partir de son chemin dans une
+arborescence
+@param chemin : le chemin du fichier à cherche dans l'arborescence
+@param modele : un pointeur vers l'arborescence dans laquelle il faut chercher le fichier
+@return : un pointeur vers le fichier, ou nil si le fichier n'est pas dans l'arborescence
+*/
 func chercherCheminDansModele(chemin []string, modele *Arborescence) *Arborescence {
 	var vousetesiciModele *[]Arborescence = &modele.Enfants
 	var res *Arborescence
+	// On parcourt les dossiers du chemin vers le fichier à chercher
 	for _, dossier := range chemin {
 		var trouve bool = false
+		// On parcourt les dossier du répertoire courant de l'arborescence
 		for i := range *vousetesiciModele {
+			// Si on trouve le dossier recherché dans l'arborescence, on change le
+			// répertoire courant de l'arborescence vers ce dossier
 			if (*vousetesiciModele)[i].Nom == dossier {
 				res = &(*vousetesiciModele)[i]
 				vousetesiciModele = &(*vousetesiciModele)[i].Enfants
@@ -47,10 +58,13 @@ func chercherCheminDansModele(chemin []string, modele *Arborescence) *Arborescen
 				break
 			}
 		}
+		// Si on n'a pas trouvé le dossier recherché dans l'arborescence, c'est que le fichier
+		// n'existe pas. On renvoie la valeur nulle
 		if !trouve {
 			return nil
 		}
 	}
+	// Si on a trouvé le fichier, on renvoie un pointeur vers celui-ci
 	return res
 }
 
@@ -91,6 +105,8 @@ func ajoutCheminDansArborescence(cheminFichier string, md5Fichier string, arbo *
 			vousetesici = &(*vousetesici)[len(*vousetesici)-1].Enfants
 		}
 	}
+	// legitimite : variable indiquant si le fichier concerné est également dans le modèle (1), et si leurs empreintes
+	// sont identiques (2).
 	var legitimite int = -1
 	var fichierDansModele *Arborescence = chercherCheminDansModele(chemin, modeleArbo)
 	if fichierDansModele == nil {
@@ -102,6 +118,7 @@ func ajoutCheminDansArborescence(cheminFichier string, md5Fichier string, arbo *
 			legitimite = 1
 		}
 	}
+	// On ajoute le nouveau fichier et ses caractéristiques dans l'arborescence
 	var nouveauFichier Arborescence = Arborescence{
 		Nom:          chemin[len(chemin)-1],
 		Enfants:      []Arborescence{},
@@ -162,6 +179,8 @@ func enregistrerArborescenceJson(arbo *Arborescence, chemin string) error {
 
 // FONCTIONS EXTERNES
 
+/** Fonction qui à partir du chemin vers un projet renvoie une arborescence si elle existe
+ */
 func GetArborescence(cheminProjet string) (Arborescence, error) {
 	var resultatArbo Arborescence
 	donneesFichier, err := os.ReadFile(filepath.Join(cheminProjet, "analyse", "arborescence.json"))
@@ -173,6 +192,11 @@ func GetArborescence(cheminProjet string) (Arborescence, error) {
 	return resultatArbo, err
 }
 
+/*
+* Fonction permettant de faire l'arborescence du système de fichier de la machine analysée
+@param cheminProjet : le chemin vers le projet aquarium
+@cheminModele : le chemin vers le modèle d'ORC avec lequel on compare l'arborescence
+*/
 func ExtraireArborescence(cheminProjet string, cheminModele string) (Arborescence, error) {
 	// Si un modèle a été donné en argument, on le récupère
 	var modeleArbo Arborescence
@@ -212,12 +236,20 @@ func ExtraireArborescence(cheminProjet string, cheminModele string) (Arborescenc
 			})
 		}
 	}
+	// On enregistre l'arborescence que l'on vient d'extraire
 	err = enregistrerArborescenceJson(&resultatArbo, filepath.Join(cheminProjet, "analyse", "arborescence.json"))
 	return resultatArbo, err
 }
 
+/*
+* Fonction qui renvoie les caractéristiques des fichiers et dossiers contenus un dossier
+@param cheminProjet : le chemin vers le projet ORC
+@param cheminDossier : chemin vers le dossier duquel on veut les enfants
+@return : une liste contenant les métadonnées des éléments contenus dans le dossier
+*/
 func RecupEnfantsArbo(cheminProjet string, cheminDossier []int) ([]MetaDonnees, error) {
 	var fichiers []MetaDonnees = []MetaDonnees{}
+	// Si l'arborescence nextraite du fichier .json, on l'extrait
 	if len(cacheArbo.Enfants) == 0 {
 		var err error
 		cacheArbo, err = GetArborescence(cheminProjet)
@@ -226,12 +258,15 @@ func RecupEnfantsArbo(cheminProjet string, cheminDossier []int) ([]MetaDonnees, 
 		}
 	}
 	var vousetesici *Arborescence = &cacheArbo
+	// On suit le chemin donné en paramètres pour se placer dans le dossier
+	// duquel on veut le contenu
 	for _, pas := range cheminDossier {
 		if len(vousetesici.Enfants) < pas {
 			return fichiers, errors.New("Le chemin de dossier spécifié est incohérent avec l'arborecsence")
 		}
 		vousetesici = &(*vousetesici).Enfants[pas]
 	}
+	// On parcourt les éléments de ce dossier
 	for i := range vousetesici.Enfants {
 		var legitimite []int = []int{0, 0}
 		if (*vousetesici).Enfants[i].Legitimite == 0 {

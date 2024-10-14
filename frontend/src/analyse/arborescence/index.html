@@ -13,6 +13,7 @@
     
     <h1>Arborescence de la machine analysée</h1>
     <p id="patientez">🫧 L'extraction est en cours. Vous pouvez patienter en salle d'attente 🫧</p>
+    <!--Menu permttant à l'utilisateur de lancer une extraction de l'arborescence-->
     <div id="extraction_arborescence">
         <p>L'arborescence n'a pas encore été extraite de la capture ORC. Appuyez sur le bouton "Extraire" pour le faire.</p>
         <input type="checkbox" id="avec_modele" checked>
@@ -23,6 +24,7 @@
         <button class="bouton_sombre" onclick="extraire_arborescence()">Extraire</button>
     </div>
     <div id="affichage_arbo">
+        <!--Légende des indicateurs de légitimité-->
         <div id="legende">
             <h3>Choix des indicateurs de légitimité à afficher</h3>
             <input type="checkbox" id="affiche_inconnu" onchange="affichage_legitimite('affiche_inconnu', 'legitimite_aucune')" checked>
@@ -33,7 +35,9 @@
             <label for="affiche_ok">Fichiers présents dans le modèle avec la même empreinte (😇)</label><br>
         </div>
         <h3>Arborescence</h3>
-        <div id="arborescence"></div>
+        <div id="arborescence">
+            <!--On va ajouter les fichiers d'arborescence ici-->
+        </div>
     </div>
 </body>
 </html>

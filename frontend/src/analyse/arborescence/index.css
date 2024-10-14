@@ -31,6 +31,7 @@ details[open] > summary {
     display: none;
 }
 
+/*div contenant l'arborescence et sa légende*/
 #affichage_arbo{
     display: none;
 }
