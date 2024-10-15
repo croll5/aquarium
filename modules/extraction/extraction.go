@@ -17,9 +17,9 @@ type Extracteur interface {
 }
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
-	"evtx":       evtx.New(),
-	"navigateur": navigateur.New(),
-	"werr":       werr.New(),
+	"evtx":       evtx.Evtx{},
+	"navigateur": navigateur.Navigateur{},
+	"werr":       werr.Werr{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {

@@ -1,15 +1,13 @@
 package werr
 
-type Werr struct {
-	extrait bool
-}
+type Werr struct{}
 
-func (w Werr) Extraction() error {
+func (w Werr) Extraction(cheminProjet string) error {
 	return nil
 }
 
-func New() Werr {
-	return Werr{extrait: false}
+func (w Werr) PrerequisOK(cheminORC string) bool {
+	return true
 }
 
 func (w Werr) Description() string {
