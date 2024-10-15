@@ -4,10 +4,7 @@ import (
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/navigateur"
 	"aquarium/modules/extraction/werr"
-<<<<<<< HEAD
 	"database/sql"
-=======
->>>>>>> 4353ad4264f5b9c1641ca0c56c1ed526ab10e803
 	"errors"
 	"log"
 	"path/filepath"
