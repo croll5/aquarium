@@ -4,6 +4,7 @@ import (
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/navigateur"
 	"aquarium/modules/extraction/werr"
+	"aquarium/modules/extraction/sam"
 	"database/sql"
 	"errors"
 	"log"
@@ -20,6 +21,7 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"evtx":       evtx.Evtx{},
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},
+	"sam":        sam.Sam{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
