@@ -1,11 +1,10 @@
-body{
+#content {
     text-align: left;
 }
 
-#content {
+h1{
     text-align: center;
 }
-
 
 .dossier_arborescence{
     margin-left: 20px;
