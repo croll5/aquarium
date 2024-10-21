@@ -37,6 +37,7 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 	var nbLignes int
 	for k, v := range liste_extracteurs {
 		reponse, err := requete.Query(k)
+		defer reponse.Close()
 		reponse.Next()
 		reponse.Scan(&nbLignes)
 		if err != nil {
