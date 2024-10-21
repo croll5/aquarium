@@ -27,6 +27,11 @@ details[open] > summary {
     list-style-type: '🙂';
 }
 
-#patientez_extraction{
+#patientez{
+    display: none;
+}
+
+/*div contenant l'arborescence et sa légende*/
+#affichage_arbo{
     display: none;
 }

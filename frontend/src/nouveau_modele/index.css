@@ -1,0 +1,23 @@
+div.champ{
+    padding: 10px;
+    text-align: left;
+}
+
+#div_valider{
+    margin-top: 2.5%;
+    text-align: center;
+}
+
+#valider{
+    display: none;
+}
+
+input[type="checkbox"] {
+    height: 20px;
+    width: 20px;
+    accent-color: #EBC331;
+}
+
+#patientez_analyse{
+    display: none;
+}

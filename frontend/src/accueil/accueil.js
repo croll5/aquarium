@@ -15,3 +15,7 @@ function analyse_existante(){
         }
     })
 }
+
+function nouveau_modele(){
+    window.location.replace("../nouveau_modele/index.html");
+}

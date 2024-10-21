@@ -1,5 +1,5 @@
 function choix_enregistrement(){
-    parent.window.go.main.App.CreationNouveauProjet().then(resultat =>{
+    parent.window.go.main.App.CreationDossierNouveauModele().then(resultat =>{
         document.getElementById("enregistrement").value = resultat;
         document.getElementById("archives").value = "";
         document.getElementById("valider").style.display = "none";
@@ -9,7 +9,7 @@ function choix_enregistrement(){
 function choix_orc(){
     let chemin_enreg = document.getElementById("enregistrement").value;
     if(chemin_enreg == ""){
-        alert("Vous deviez d'abord choisir où vous voulez enregistrer votre ORC")
+        alert("Vous deviez d'abord choisir où vous voulez enregistrer votre modèle")
     } 
     else{
         document.getElementById("patientez").style.display = "inline";
@@ -20,8 +20,8 @@ function choix_orc(){
                 document.getElementById("valider").style.display = "none";
             }
             else{
-                let nom_auteur = document.getElementById("auteur").value;
-                if(nom_auteur != ""){
+                let nom_modele = document.getElementById("nom_modele").value;
+                if(nom_modele != ""){
                     document.getElementById("valider").style.display = "inline";
                 }
             }
@@ -31,11 +31,11 @@ function choix_orc(){
     }
 }
 
-function change_auteur(){
-    let nom_auteur = document.getElementById("auteur").value;
+function change_nom_modele(){
+    let nom_modele = document.getElementById("nom_modele").value;
     let enregistrement = document.getElementById("enregistrement").value;
     let archives = document.getElementById("archives").value;
-    if(nom_auteur == "" || enregistrement == "" || archives == ""){
+    if(nom_modele == "" || enregistrement == "" || archives == ""){
         document.getElementById("valider").style.display = "none";
     }
     else{
@@ -44,17 +44,11 @@ function change_auteur(){
 }
 
 function validation(){
-    let auteur = document.getElementById("auteur").value;
+    let nom_modele = document.getElementById("nom_modele").value;
     let description = document.getElementById("description").value;
-    parent.window.go.main.App.ValidationCreationProjet(auteur, description).then(resultat =>{
-        if(resultat){ 
-            window.location.replace("../analyse/extraction/index.html");
-            parent.document.getElementsByTagName("header")[0].style.display = "inline";
-            let onglet_courant = parent.document.getElementById("onglet_extraction");
-            onglet_courant.style.backgroundColor = "#FCF5DC";
-            onglet_courant.style.color = "#000";
-        }else{
-            window.location.replace("../accueil/index.html")
-        }
+    let supprimerORC = document.getElementById("avec_nettoyage").checked;
+    document.getElementById("patientez_analyse").style.display = "inline";
+    parent.window.go.main.App.ValidationCreationModele(nom_modele, description, supprimerORC).then(resultat =>{
+        window.location.replace("../accueil/index.html");
     })
 }

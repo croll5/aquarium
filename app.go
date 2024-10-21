@@ -48,6 +48,7 @@ func (a *App) shutdown(ctx context.Context) {
 }
 
 func (a *App) signalerErreur(erreur error) {
+	log.Println("ERR | Erreur non traitée : ", erreur)
 	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 		Type:    runtime.ErrorDialog,
 		Title:   "Erreur dans l'écriture du projet",
@@ -68,6 +69,24 @@ func (a *App) CreationNouveauProjet() string {
 			Type:    runtime.ErrorDialog,
 			Title:   "Problème dans la création de l'analyse",
 			Message: "Les fichiers d'analyse n'ont pas pu être créés. Vérifiez que le dossier sélectionné est vide et que vous avez les droits en écriture :/"})
+		return ""
+	}
+	return chemin_projet
+}
+
+func (a *App) CreationDossierNouveauModele() string {
+	// Partie création du squelette de l'analyse
+	projet, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Choix de l'emplacement du modèle"})
+	if err != nil {
+		return ""
+	}
+	chemin_projet = projet
+	if gestionprojet.CreationDossierModele(chemin_projet) != nil {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.ErrorDialog,
+			Title:   "Problème dans la création du modèle",
+			Message: "Les fichiers du modèle n'ont pas pu être créés. Vérifiez que le dossier sélectionné est vide et que vous avez les droits en écriture :/"})
 		return ""
 	}
 	return chemin_projet
@@ -103,10 +122,20 @@ func (a *App) ValidationCreationProjet(nomAnalyste string, description string) b
 	return true
 }
 
+func (a *App) ValidationCreationModele(nomModele string, description string, supprimerOrc bool) bool {
+	err := gestionprojet.EcritureFichierModeleAqua(nomModele, description, time.Now(), chemin_projet)
+	if err != nil {
+		a.signalerErreur(err)
+		return false
+	}
+	a.ExtraireArborescence(false)
+	return true
+}
+
 func (a *App) OuvrirAnalyseExistante() bool {
 	fichier, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title:   "Ouvrir une analyse existante",
-		Filters: []runtime.FileFilter{{DisplayName: "Aquarium", Pattern: "*.aqua"}},
+		Filters: []runtime.FileFilter{{DisplayName: "Aquarium", Pattern: "analyse.aqua"}},
 	})
 	if err != nil {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
@@ -145,16 +174,31 @@ func (a *App) ExtraireElements(module string, description string) {
 	}
 }
 
-func (a *App) ArborescenceMachineAnalysee() arborescence.Arborescence {
-	res, err := arborescence.GetArborescence(chemin_projet)
+func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.MetaDonnees {
+	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier)
 	if err != nil {
 		a.signalerErreur(err)
 	}
 	return res
 }
 
-func (a *App) ExtraireArborescence() arborescence.Arborescence {
-	res, err := arborescence.ExtraireArborescence(chemin_projet)
+func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
+	var cheminModele = ""
+	var err error
+	if avecModele {
+		cheminModele, err = runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+			Title:   "Choisissez le modele",
+			Filters: []runtime.FileFilter{{DisplayName: "Modèles aqua", Pattern: "modele.aqua"}},
+		})
+		if err != nil || cheminModele == "" {
+			runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+				Type:    runtime.ErrorDialog,
+				Message: "Vous devez choisir un fichier modele.aqua. \nSi vous n'avez pas de modèle, il est possible d'en créer un en vous rendant sur la page d'accueil.\nSi vous ne souhaitez pas utiliser de modèle, décochez l'option « Comparer l'arborescence avec celle d'un modèle. »",
+			})
+			return arborescence.Arborescence{}
+		}
+	}
+	res, err := arborescence.ExtraireArborescence(chemin_projet, filepath.Dir(cheminModele))
 	if err != nil {
 		a.signalerErreur(err)
 	}
