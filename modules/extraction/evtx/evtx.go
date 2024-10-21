@@ -5,7 +5,7 @@ import "log"
 type Evtx struct{}
 
 func (e Evtx) Extraction(cheminProjet string) error {
-	log.Println("Bonjour, je suis censé faire des extractions")
+	log.Println("Bonjour, je suis censé faire des extractions {Evtx}")
 	return nil
 }
 

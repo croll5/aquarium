@@ -1,7 +1,6 @@
 package gestionprojet
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -12,7 +11,10 @@ import (
 	"time"
 
 	"github.com/bodgit/sevenzip"
-	_ "github.com/mattn/go-sqlite3"
+
+	"database/sql"
+
+	_ "modernc.org/sqlite"
 )
 
 func IsDirEmpty(name string) (bool, error) {
@@ -51,7 +53,7 @@ func CreationArborescence(chemin string) bool {
 	defer fichier.Close()
 	fichier.WriteString("coucou")
 	// Création de la base de données qui contiendra la chronologie des évènements
-	bd, err := sql.Open("sqlite3", filepath.Join(chemin, "analyse", "extractions.db"))
+	bd, err := sql.Open("sqlite", filepath.Join(chemin, "analyse", "extractions.db"))
 	if err != nil {
 		log.Println(err)
 		return false

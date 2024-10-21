@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset=utf-8 />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nouveau modèle</title>
-    <link rel="stylesheet" href="../accueil/accueil.css">
-    <link rel="stylesheet" href="../main.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="../accueil/bulles.js"></script>
-    <script src="index.js"></script>
+    <title>Aquarium - Nouveau modèle</title>
+    <script src="../templates/app.js"></script>
+    <link rel="stylesheet" href="../css/nouveau_modele.css">
+    <script src="../js/nouveau_modele.js"></script>
+    <script src="../js/utils/bulles.js"></script>
 </head>
 <body>
+<header style="display: none"></header>
+
+<div id="content">
+
     <div class="bubble-cursor"></div>
     <h1>Création d'un nouveau modèle</h1>
     <h3 id="patientez">Import de l’ORC en cours... En attendant, nous vous conseillons de buller 🫧😏</h3>
@@ -42,5 +43,21 @@
             <button class="bouton_clair" id="valider" onclick="validation()">Valider</button>
         </div>
     </div>
+
+</div>
+
+
+<footer></footer>
 </body>
 </html>
+
+<!--
+    Ceci est une de page type prête à l'emploi.
+    Elle utilise l'ensemble des éléments du dossier "templates" grâce à "import_template.js".
+    Vous avez plus qu'a créé votre page dans la balise `div id="content">`.
+    N'oubliez pas de créer un fichier CSS pour cette page et de l'importer.
+    Même chose pour le fichier JS.
+
+    Oubliez pas de supprimer tous les commentaires après avoir copier-coller de fichier
+    Votre fichier HTML doit etre mit dans le dossier html pour que les templates fonctionnent
+-->

@@ -18,7 +18,7 @@ import (
 *
 */
 func AjoutEvenementDansBDD(cheminProjet string, extracteur string, horodatage time.Time, source string, message string) error {
-	bd, err := sql.Open("sqlite3", filepath.Join(cheminProjet, "analyse", "extractions.db"))
+	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
 	if err != nil {
 		return err
 	}

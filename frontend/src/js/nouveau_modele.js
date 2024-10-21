@@ -10,7 +10,7 @@ function choix_orc(){
     let chemin_enreg = document.getElementById("enregistrement").value;
     if(chemin_enreg == ""){
         alert("Vous deviez d'abord choisir où vous voulez enregistrer votre modèle")
-    } 
+    }
     else{
         document.getElementById("patientez").style.display = "inline";
         document.getElementById("formulaire").style.display = "none";
@@ -49,6 +49,6 @@ function validation(){
     let supprimerORC = document.getElementById("avec_nettoyage").checked;
     document.getElementById("patientez_analyse").style.display = "inline";
     parent.window.go.main.App.ValidationCreationModele(nom_modele, description, supprimerORC).then(resultat =>{
-        window.location.replace("../accueil/index.html");
+        window.location.replace("../index.html"); //"../accueil/index.html"
     })
 }

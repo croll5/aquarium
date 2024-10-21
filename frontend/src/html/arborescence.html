@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="../../main.css">
-    <link rel="stylesheet" href="../analyse.css">
-    <link rel="stylesheet" href="index.css">
-    <script src="index.js" async></script>
+    <title>Aquarium - Arborescence</title>
+    <script src="../templates/app.js"></script>
+    <link rel="stylesheet" href="../css/arborescence.css">
+    <script src="../js/arborescence.js" async></script>
 </head>
-<body id="body_arbo">
-    
+<body>
+<header></header>
+
+<div id="content">
+
     <h1>Arborescence de la machine analysée</h1>
     <p id="patientez">🫧 L'extraction est en cours. Vous pouvez patienter en salle d'attente 🫧</p>
-    <!--Menu permttant à l'utilisateur de lancer une extraction de l'arborescence-->
-    <div id="extraction_arborescence">
+    <!--Menu permettant à l'utilisateur de lancer une extraction de l'arborescence-->    <div id="extraction_arborescence">
         <p>L'arborescence n'a pas encore été extraite de la capture ORC. Appuyez sur le bouton "Extraire" pour le faire.</p>
         <input type="checkbox" id="avec_modele" checked>
         <label for="avec_modele">Comparer l'arborescence avec celle d'un modèle. <br>
@@ -39,5 +38,9 @@
             <!--On va ajouter les fichiers d'arborescence ici-->
         </div>
     </div>
+</div>
+
+
+<footer></footer>
 </body>
 </html>
