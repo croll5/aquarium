@@ -1,10 +1,15 @@
-construireArborescence("arborescence", []);
+
+window.onload = function() {
+    executeWhenReady(function() {
+        construireArborescence("arborescence", []);
+    });
+};
 
 /** Fonction permettant d'afficher le contenu d'un dossier
- * 
+ *
  * @param {*} id_racine identifiant du dossier duquel on veut afficher le contenu
  * @param {*} chemin_num chemin dans l'arborescence (json) sur laquelle on se base
- * @returns 
+ * @returns
  */
 function construireArborescence(id_racine, chemin_num){
     // On récupère un pointeur vers le dossier duquel on veut afficher le contenu
@@ -15,13 +20,13 @@ function construireArborescence(id_racine, chemin_num){
     }
     try {
         // On indique à l'utilisateur qu'il faut patienter
-        document.body.style.cursor = "wait"; 
+        document.body.style.cursor = "wait";
     } catch (error) {
     }
-    // On interroge une fonction go qui renvoie une liste contenant les métadonnées des fichiers 
+    // On interroge une fonction go qui renvoie une liste contenant les métadonnées des fichiers
     // et dossiers contenus dans le dossier concerné
-    parent.window.go.main.App.ArborescenceMachineAnalysee(chemin_num).then(resultat =>{ 
-        // Si l'on a aucun résultat, cela signifie que l'arborescence n'a pas encore été extraite. 
+    parent.window.go.main.App.ArborescenceMachineAnalysee(chemin_num).then(resultat =>{
+        // Si l'on a aucun résultat, cela signifie que l'arborescence n'a pas encore été extraite.
         // On affiche donc un menu permettant à l'utilisateur de lancer l'extraction
         if(resultat.length == 0){
             document.getElementById("extraction_arborescence").style.display = "inline";
@@ -86,13 +91,13 @@ function construireArborescence(id_racine, chemin_num){
             }
         }
         // On remet le curseur standard pour indiquer que les calculs sont achevés
-        document.body.style.cursor = "default"; 
+        document.body.style.cursor = "default";
         // On affiche l'arborescence et sa légende
         document.getElementById("affichage_arbo").style.display = "inline";
     })
-    
+
 }
-/** Fonction permettant d'extraire l'arborescence d'un ORC en faisant 
+/** Fonction permettant d'extraire l'arborescence d'un ORC en faisant
  *  appel à la fonction Go ExtraireArborescence
  */
 function extraire_arborescence(){
@@ -113,7 +118,7 @@ function extraire_arborescence(){
  * demandés par l'utilisateur
  * Cette fonction se déclenche lorsque l'utilisateur coche ou décoche une case de la secion "légende"
  * @param {*} id_checkbox : l'identifiant de la "checkbox" que l'utilisateur a changée
- * @param {*} nom_classe : non de la classe des éléments à afficher ou masquer 
+ * @param {*} nom_classe : non de la classe des éléments à afficher ou masquer
  * (par exemple "legitimite_aucune" pour les fichiers n'étant pas présents dans le modèle)
  */
 function affichage_legitimite(id_checkbox, nom_classe){
@@ -133,3 +138,4 @@ function affichage_legitimite(id_checkbox, nom_classe){
         }
     }
 }
+
