@@ -5,11 +5,11 @@ import (
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
 	"context"
+	"fmt"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"log"
 	"path/filepath"
 	"time"
-
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 var chemin_projet string
@@ -24,9 +24,13 @@ func NewApp() *App {
 	return &App{}
 }
 
-// startup is called at application startup
+/****************************************************************************/
+/************************* APP FUNCTIONS **********************************/
+/****************************************************************************/
+
+// startup is called when the app starts. The context is saved
+// so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
-	// Perform your setup here
 	a.ctx = ctx
 }
 
@@ -47,13 +51,70 @@ func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 }
 
+// Call this function when a bug appear
 func (a *App) signalerErreur(erreur error) {
+	log.Println("ERR | Erreur non traitée : ", erreur)
 	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 		Type:    runtime.ErrorDialog,
 		Title:   "Erreur dans l'écriture du projet",
 		Message: "Félicitation ! Vous venez de trouver un bogue dans le logiciel Aquarium !\n C'est cadeau : \n " + erreur.Error(),
 	})
 }
+
+/****************************************************************************/
+/************************* TEST FUNCTIONS **********************************/
+/****************************************************************************/
+
+// BlancPageFunction returns a greeting for the given name
+func (a *App) BlancPageFunction(text string) string {
+	return fmt.Sprintf("Hello %s, It's free1 time!", text)
+}
+
+/***************************************************************************************/
+/************************* INDEX FUNCTIONS **********************************/
+/***************************************************************************************/
+
+func (a *App) OuvrirAnalyseExistante() bool {
+	fichier, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title:   "Ouvrir une analyse existante",
+		Filters: []runtime.FileFilter{{DisplayName: "Aquarium", Pattern: "analyse.aqua"}},
+	})
+	if err != nil {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "Problème dans la sélection du fichier",
+			Message: "Veuillez sélectionner un fichier au format aquarium valide",
+		})
+		return false
+	}
+	if fichier == "" {
+		return false
+	}
+	chemin_projet = filepath.Dir(fichier)
+	return true
+}
+
+func (a *App) CreationDossierNouveauModele() string {
+	// Partie création du squelette de l'analyse
+	projet, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Choix de l'emplacement du modèle"})
+	if err != nil {
+		return ""
+	}
+	chemin_projet = projet
+	if gestionprojet.CreationDossierModele(chemin_projet) != nil {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.ErrorDialog,
+			Title:   "Problème dans la création du modèle",
+			Message: "Les fichiers du modèle n'ont pas pu être créés. Vérifiez que le dossier sélectionné est vide et que vous avez les droits en écriture :/"})
+		return ""
+	}
+	return chemin_projet
+}
+
+/***************************************************************************************/
+/************************* NOUVELLE ANALYSE FUNCTIONS **********************************/
+/***************************************************************************************/
 
 func (a *App) CreationNouveauProjet() string {
 	// Partie création du squelette de l'analyse
@@ -103,25 +164,19 @@ func (a *App) ValidationCreationProjet(nomAnalyste string, description string) b
 	return true
 }
 
-func (a *App) OuvrirAnalyseExistante() bool {
-	fichier, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title:   "Ouvrir une analyse existante",
-		Filters: []runtime.FileFilter{{DisplayName: "Aquarium", Pattern: "*.aqua"}},
-	})
+func (a *App) ValidationCreationModele(nomModele string, description string, supprimerOrc bool) bool {
+	err := gestionprojet.EcritureFichierModeleAqua(nomModele, description, time.Now(), chemin_projet)
 	if err != nil {
-		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-			Type:    runtime.InfoDialog,
-			Title:   "Problème dans la sélection du fichier",
-			Message: "Veuillez sélectionner un fichier au format aquarium valide",
-		})
+		a.signalerErreur(err)
 		return false
 	}
-	if fichier == "" {
-		return false
-	}
-	chemin_projet = filepath.Dir(fichier)
+	a.ExtraireArborescence(false)
 	return true
 }
+
+/***************************************************************************************/
+/************************* Extraction FUNCTIONS  PAGE **********************************/
+/***************************************************************************************/
 
 func (a *App) ListeExtractionsPossibles() map[string]string {
 	resultat, err := extraction.ListeExtracteursHtml(chemin_projet)
@@ -145,19 +200,44 @@ func (a *App) ExtraireElements(module string, description string) {
 	}
 }
 
-func (a *App) ArborescenceMachineAnalysee() arborescence.Arborescence {
-	res, err := arborescence.GetArborescence(chemin_projet)
+/***************************************************************************************/
+/************************* Arborescence FUNCTIONS  PAGE ********************************/
+/***************************************************************************************/
+
+func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.MetaDonnees {
+	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier)
 	if err != nil {
 		a.signalerErreur(err)
 	}
 	return res
 }
 
-func (a *App) ExtraireArborescence() arborescence.Arborescence {
-	res, err := arborescence.ExtraireArborescence(chemin_projet)
+/***************************************************************************************/
+/************************* ??? ********************************/
+/***************************************************************************************/
+
+func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
+	var cheminModele = ""
+	var err error
+	if avecModele {
+		cheminModele, err = runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+			Title:   "Choisissez le modele",
+			Filters: []runtime.FileFilter{{DisplayName: "Modèles aqua", Pattern: "modele.aqua"}},
+		})
+		if err != nil || cheminModele == "" {
+			runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+				Type:    runtime.ErrorDialog,
+				Message: "Vous devez choisir un fichier modele.aqua. \nSi vous n'avez pas de modèle, il est possible d'en créer un en vous rendant sur la page d'accueil.\nSi vous ne souhaitez pas utiliser de modèle, décochez l'option « Comparer l'arborescence avec celle d'un modèle. »",
+			})
+			return arborescence.Arborescence{}
+		}
+	}
+	res, err := arborescence.ExtraireArborescence(chemin_projet, filepath.Dir(cheminModele))
+
 	if err != nil {
 		a.signalerErreur(err)
 	}
+
 	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 		Type:    runtime.InfoDialog,
 		Title:   "Extraction terminée",

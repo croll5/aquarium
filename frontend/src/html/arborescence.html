@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Aquarium - Arborescence</title>
+    <script src="../templates/app.js"></script>
+    <link rel="stylesheet" href="../css/arborescence.css">
+    <script src="../js/arborescence.js" async></script>
+</head>
+<body>
+<header></header>
+
+<div id="content">
+
+    <h1>Arborescence de la machine analysée</h1>
+    <p id="patientez">🫧 L'extraction est en cours. Vous pouvez patienter en salle d'attente 🫧</p>
+    <!--Menu permettant à l'utilisateur de lancer une extraction de l'arborescence-->    <div id="extraction_arborescence">
+        <p>L'arborescence n'a pas encore été extraite de la capture ORC. Appuyez sur le bouton "Extraire" pour le faire.</p>
+        <input type="checkbox" id="avec_modele" checked>
+        <label for="avec_modele">Comparer l'arborescence avec celle d'un modèle. <br>
+            <i>Un modèle peut être créé à partir de la collecte ORC d'une machine non susceptible d'être compromise depuis la page d'accueil</i>
+        </label>
+        <p>⚠️ Attention : cette extration peut prendre un certain temps.</p>
+        <button class="bouton_sombre" onclick="extraire_arborescence()">Extraire</button>
+    </div>
+    <div id="affichage_arbo">
+        <!--Légende des indicateurs de légitimité-->
+        <div id="legende">
+            <h3>Choix des indicateurs de légitimité à afficher</h3>
+            <input type="checkbox" id="affiche_inconnu" onchange="affichage_legitimite('affiche_inconnu', 'legitimite_aucune')" checked>
+            <label for="affiche_inconnu">Fichiers non présents dans le modèle (😵)</label><br>
+            <input type="checkbox" id="affiche_suspect" onchange="affichage_legitimite('affiche_suspect', 'legitimite_suspect')" checked>
+            <label for="affiche_suspect">Fichiers présents dans le modèle avec une empreinte différente (🥴)</label><br>
+            <input type="checkbox" id="affiche_ok" onchange="affichage_legitimite('affiche_ok', 'legitimite_ok')" checked>
+            <label for="affiche_ok">Fichiers présents dans le modèle avec la même empreinte (😇)</label><br>
+        </div>
+        <h3>Arborescence</h3>
+        <div id="arborescence">
+            <!--On va ajouter les fichiers d'arborescence ici-->
+        </div>
+    </div>
+</div>
+
+
+<footer></footer>
+</body>
+</html>

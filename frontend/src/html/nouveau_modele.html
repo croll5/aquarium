@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Aquarium - Nouveau modèle</title>
+    <script src="../templates/app.js"></script>
+    <link rel="stylesheet" href="../css/nouveau_modele.css">
+    <script src="../js/nouveau_modele.js" async></script>
+    <script src="../js/utils/bulles.js" async></script>
+</head>
+<body>
+<header style="display: none"></header>
+
+<div id="content">
+
+    <div class="bubble-cursor"></div>
+    <h1>Création d'un nouveau modèle</h1>
+    <h3 id="patientez">Import de l’ORC en cours... En attendant, nous vous conseillons de buller 🫧😏</h3>
+    <h3 id="patientez_analyse">Analyse de l’ORC en cours... En attendant, nous vous conseillons de buller 🫧😏</h3>
+    <div id="formulaire">
+        <div class="champ">
+            <label for="enregistrement">Dossier d’enregistrement du modèle :</label><br>
+            <input type="text" class="input_clair" id="enregistrement" onchange="choix_enregistrement()">
+            <button class="bouton_clair" onclick="choix_enregistrement()">Choisir un dossier</button>
+        </div>
+        <div class="champ">
+            <label for="nom_modele">Nom du modèle :</label><br>
+            <input type="text" id="nom_modele" class="input_clair" onchange="change_nom_modele()">
+        </div>
+        <div class="champ">
+            <label for="description">Description :</label><br>
+            <textarea id="description" class="input_clair"></textarea>
+        </div>
+        <div class="champ">
+            <input type="checkbox" id="avec_nettoyage" checked>
+            <label for="avec_nettoyage">Supprimer les archives du modèle après extraction des caractéristiques principales.</label>
+        </div>
+        <div class="champ">
+            <label for="archives">Archives ORC à ajouter :</label><br>
+            <input type="text" id="archives" class="input_clair" onchange="choix_orc()">
+            <button class="bouton_clair" onclick="choix_orc()">Choisir des fichiers</button>
+        </div>
+        <div id="div_valider">
+            <button class="bouton_clair" id="valider" onclick="validation()">Valider</button>
+        </div>
+    </div>
+
+</div>
+
+
+<footer></footer>
+</body>
+</html>
+
+<!--
+    Ceci est une de page type prête à l'emploi.
+    Elle utilise l'ensemble des éléments du dossier "templates" grâce à "import_template.js".
+    Vous avez plus qu'a créé votre page dans la balise `div id="content">`.
+    N'oubliez pas de créer un fichier CSS pour cette page et de l'importer.
+    Même chose pour le fichier JS.
+
+    Oubliez pas de supprimer tous les commentaires après avoir copier-coller de fichier
+    Votre fichier HTML doit etre mit dans le dossier html pour que les templates fonctionnent
+-->

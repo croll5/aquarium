@@ -1,8 +1,8 @@
 package gestionprojet
 
 import (
-	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -11,7 +11,10 @@ import (
 	"time"
 
 	"github.com/bodgit/sevenzip"
-	_ "github.com/mattn/go-sqlite3"
+
+	"database/sql"
+
+	_ "modernc.org/sqlite"
 )
 
 func IsDirEmpty(name string) (bool, error) {
@@ -50,7 +53,7 @@ func CreationArborescence(chemin string) bool {
 	defer fichier.Close()
 	log.Println(filepath.Join(chemin, "analyse", "extractions.db"))
 	// Création de la base de données qui contiendra la chronologie des évènements
-	bd, err := sql.Open("sqlite3", filepath.Join(chemin, "analyse", "extractions.db"))
+	bd, err := sql.Open("sqlite", filepath.Join(chemin, "analyse", "extractions.db"))
 	if err != nil {
 		log.Println(err)
 		return false
@@ -63,6 +66,26 @@ func CreationArborescence(chemin string) bool {
 	requete = "CREATE TABLE indicateurs_evenements(id_indicateur INT, id_evenement INT, FOREIGN KEY(id_indicateur) REFERENCES indicateurs(id), FOREIGN KEY(id_evenement) REFERENCES chronologie(id))"
 	bd.Exec(requete)
 	return true
+}
+
+func CreationDossierModele(chemin string) error {
+	estvide, err := IsDirEmpty(chemin)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if !estvide {
+		log.Println(err)
+		return errors.New("Le dossier " + chemin + " n'est pas vide.")
+	}
+	os.MkdirAll(filepath.Join(chemin, "analyse"), os.ModeDir)
+	fichier, err := os.Create(filepath.Join(chemin, "modele.aqua"))
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer fichier.Close()
+	return nil
 }
 
 /* Fonction permettant l'ouverture des ORCs et leur copie dans le répertoire de l'analyse
@@ -145,6 +168,28 @@ func EcritureFichierAqua(nomAnalyste string, description string, debutAnalyse ti
 	fichier, err := os.OpenFile(filepath.Join(cheminProjet, "analyse.aqua"), os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		log.Println("Problème dans l'ouverture du fichier analyse.aqua : ", err.Error())
+		return err
+	}
+	defer fichier.Close()
+	_, err = fichier.Write(caracteristiques_json)
+	if err != nil {
+		log.Println("Problème dans l'écriture des données aqua : ", err.Error())
+		return err
+	}
+	return nil
+}
+
+func EcritureFichierModeleAqua(nomModele string, description string, dateCreation time.Time, cheminProjet string) error {
+	var creation string = dateCreation.Format("02/01/2006 15 h 04")
+	caracteristiques := map[string]string{"nom_modele": nomModele, "date_creation": creation, "description": description}
+	caracteristiques_json, err := json.Marshal(caracteristiques)
+	if err != nil {
+		log.Println("Problème dans la conversion de map en json : ", err.Error())
+		return err
+	}
+	fichier, err := os.OpenFile(filepath.Join(cheminProjet, "modele.aqua"), os.O_WRONLY, os.ModeAppend)
+	if err != nil {
+		log.Println("Problème dans l'ouverture du fichier modele.aqua : ", err.Error())
 		return err
 	}
 	defer fichier.Close()

@@ -7,6 +7,10 @@ h1{
     text-align: center;
 }
 
+.liste_options {
+    color: black;
+    padding: 1%;
+}
 .liste_options:hover{
     cursor: pointer;
     font-weight: bolder;

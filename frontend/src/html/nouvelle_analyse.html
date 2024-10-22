@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Aquarium - Nouvelle analyse</title>
+    <script src="../templates/app.js"></script>
+    <link rel="stylesheet" href="../css/nouvelle_analyse.css">
+    <script src="../js/nouvelle_analyse.js" async></script>
+    <script src="../js/utils/bulles.js" async></script>
+</head>
+<body>
+<header style="display: none"></header>
+
+<div class="bubble-cursor"></div>
+<h1 class="title">Nouvelle analyse ORC</h1>
+<h3 id="patientez">Import de l’ORC en cours... En attendant, nous vous conseillons de buller 🫧😏</h3>
+<div id="formulaire">
+    <div class="champ">
+        <label for="enregistrement">Dossier d’enregistrement de l’analyse :</label><br>
+        <input type="text" class="input_clair" id="enregistrement" onchange="choix_enregistrement()">
+        <button class="bouton_clair" onclick="choix_enregistrement()">Choisir un dossier</button>
+    </div>
+    <div class="champ">
+        <label for="auteur">Nom de l’auteur :</label><br>
+        <input type="text" id="auteur" class="input_clair" onchange="change_auteur()">
+    </div>
+    <div class="champ">
+        <label for="description">Description de l’incident à l’origine de l’analyse :</label><br>
+        <textarea name="" id="description" class="input_clair"></textarea>
+    </div>
+    <div class="champ">
+        <label for="archives">Archives ORC à analyser :</label><br>
+        <input type="text" id="archives" class="input_clair" onchange="choix_orc()">
+        <button class="bouton_clair" onclick="choix_orc()">Choisir des fichiers</button>
+    </div>
+    <div id="div_valider">
+        <button class="bouton_clair" id="valider" onclick="validation()">Valider</button>
+    </div>
+</div>
+
+
+
+<footer></footer>
+</body>
+</html>

@@ -4,6 +4,7 @@ import (
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/navigateur"
 	"aquarium/modules/extraction/sam"
+	"aquarium/modules/extraction/werr"
 	"database/sql"
 	"errors"
 	"log"
@@ -19,13 +20,14 @@ type Extracteur interface {
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"evtx":       evtx.Evtx{},
 	"navigateur": navigateur.Navigateur{},
+	"werr":       werr.Werr{},
 	"sam":        sam.Sam{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 	// On itère sur tous les extracteurs
 	var resultat map[string]string = map[string]string{}
-	bd, err := sql.Open("sqlite3", filepath.Join(cheminProjet, "analyse", "extractions.db"))
+	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
 	if err != nil {
 		log.Println(err)
 		return map[string]string{}, err
@@ -35,6 +37,7 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 	var nbLignes int
 	for k, v := range liste_extracteurs {
 		reponse, err := requete.Query(k)
+		defer reponse.Close()
 		reponse.Next()
 		reponse.Scan(&nbLignes)
 		if err != nil {
