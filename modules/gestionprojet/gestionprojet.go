@@ -48,7 +48,7 @@ func CreationArborescence(chemin string) bool {
 		return false
 	}
 	defer fichier.Close()
-	fichier.WriteString("coucou")
+	log.Println(filepath.Join(chemin, "analyse", "extractions.db"))
 	// Création de la base de données qui contiendra la chronologie des évènements
 	bd, err := sql.Open("sqlite3", filepath.Join(chemin, "analyse", "extractions.db"))
 	if err != nil {
