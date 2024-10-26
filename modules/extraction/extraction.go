@@ -2,6 +2,7 @@ package extraction
 
 import (
 	"aquarium/modules/extraction/evtx"
+	"aquarium/modules/extraction/getthis"
 	"aquarium/modules/extraction/navigateur"
 	"aquarium/modules/extraction/sam"
 	"aquarium/modules/extraction/werr"
@@ -22,6 +23,7 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},
 	"sam":        sam.Sam{},
+	"getthis":    getthis.Getthis{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
