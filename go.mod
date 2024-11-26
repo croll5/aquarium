@@ -3,11 +3,15 @@ module aquarium
 go 1.23.1
 
 require (
+	github.com/0xrawsec/golang-evtx v1.2.9
 	github.com/bodgit/sevenzip v1.5.2
+	github.com/pkg/errors v0.9.1
 	github.com/wailsapp/wails/v2 v2.9.2
 	modernc.org/sqlite v1.33.1
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
 )
+
+require github.com/0xrawsec/golang-utils v1.3.0 // indirect
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
@@ -35,7 +39,6 @@ require (
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/samber/lo v1.38.1 // indirect
