@@ -1,4 +1,4 @@
-module aquarium
+module github.com/croll5/aquarium
 
 go 1.23.1
 

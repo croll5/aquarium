@@ -1,10 +1,11 @@
 package extraction
 
 import (
-	"aquarium/modules/extraction/evtx"
-	"aquarium/modules/extraction/navigateur"
-	"aquarium/modules/extraction/sam"
-	"aquarium/modules/extraction/werr"
+	"github.com/croll5/aquarium/modules/extraction/evtx"
+	"github.com/croll5/aquarium/modules/extraction/navigateur"
+	"github.com/croll5/aquarium/modules/extraction/sam"
+	"github.com/croll5/aquarium/modules/extraction/werr"
+	"github.com/croll5/aquarium/modules/extraction/divers"
 	"database/sql"
 	"errors"
 	"log"
@@ -22,12 +23,14 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},
 	"sam":        sam.Sam{},
+	"divers":     divers.Divers{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 	// On itère sur tous les extracteurs
 	var resultat map[string]string = map[string]string{}
 	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
+	
 	if err != nil {
 		log.Println(err)
 		return map[string]string{}, err
@@ -43,6 +46,7 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 		if err != nil {
 			return map[string]string{}, err
 		}
+		log.Println(filepath.Join(cheminProjet, "collecteORC"))
 		if v.PrerequisOK(filepath.Join(cheminProjet, "collecteORC")) && nbLignes == 0 {
 			resultat[k] = v.Description()
 		}
@@ -54,6 +58,6 @@ func Extraction(module string, cheminProjet string) error {
 	if liste_extracteurs[module] == nil {
 		return errors.New("Erreur : module " + module + " non reconnu")
 	}
-	err := liste_extracteurs[module].Extraction(cheminProjet)
+	err := liste_extracteurs[module].Extraction(filepath.Join(cheminProjet, "collecteORC"))
 	return err
 }

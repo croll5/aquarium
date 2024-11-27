@@ -1,9 +1,10 @@
 package main
 
+
 import (
-	"aquarium/modules/arborescence"
-	"aquarium/modules/extraction"
-	"aquarium/modules/gestionprojet"
+	"github.com/croll5/aquarium/modules/arborescence"
+	"github.com/croll5/aquarium/modules/extraction"
+	"github.com/croll5/aquarium/modules/gestionprojet"
 	"context"
 	"fmt"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
