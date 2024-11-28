@@ -3,6 +3,7 @@ package evtx
 import (
 	"aquarium/modules/gestionprojet"
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,40 +17,42 @@ import (
 // Requêtes SQL
 var creationTable = "CREATE TABLE IF NOT EXISTS evtx(horodatage DATETIME, eventID int, eventRecordID int, processID VARCHAR(7), threadID VARCHAR(7), level VARCHAR(2), providerGuid VARCHAR(36), providerName VARCHAR(50), task VARCHAR(7), message TEXT, source TEXT, PRIMARY KEY (horodatage, eventRecordID, source))"
 var recuperationMessageEvtx = "SELECT messages.message FROM messages INNER JOIN providers ON messages.provider_id = providers.id WHERE providers.name = ? AND messages.event_id = ?"
-var ajoutEvenementDansBDD = "INSERT INTO Evtx VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+var ajoutEvenementDansBDD = "INSERT INTO Evtx VALUES "
 
 type Evtx struct{}
 
 // -------------------------- FONCTIONS LOCALES -------------------------- //
 
-func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *sql.Stmt, requeteMessagesEvtx *sql.Stmt, fichierSource string) error {
-	var message string
+func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *[]string, requeteMessagesEvtx *sql.Stmt, fichierSource string) error {
+	var message string = ""
 	var nbErreurs int = 0
 	var chemin = evtx.GoEvtxPath{"Event", "System", "Provider", "Name"}
 	provider, err := evenement.GetString(&chemin)
 	if err != nil {
 		nbErreurs++
-		log.Println("Problème dans la récupération du nom de provider", err)
-	} else {
-		resultat, err := requeteMessagesEvtx.Query(provider, evenement.EventID())
-		if err != nil {
-			log.Println("Problème dans l'exécution de la requête SQL de récupération du message windows", err)
-			return err
-		}
-		defer resultat.Close()
-		resultat.Next()
-		resultat.Scan(&message)
+		provider = "NaN"
+		// log.Println("Problème dans la récupération du nom de provider", err)
 	}
+	// else {
+	// 	resultat, err := requeteMessagesEvtx.Query(provider, evenement.EventID())
+	// 	if err != nil {
+	// 		// log.Println("Problème dans l'exécution de la requête SQL de récupération du message windows", err)
+	// 		return err
+	// 	}
+	// 	defer resultat.Close()
+	// 	resultat.Next()
+	// 	resultat.Scan(&message)
+	// }
 
 	// Completion du message avec les informations de l'evenement
 	chemin = evtx.GoEvtxPath{"Event", "EventData"}
 	infosEvenement, err := evenement.Get(&chemin)
 	if err != nil {
 		nbErreurs++
-		log.Println("Problème dans la récupération des informations de l'évènemenemt Windows")
+		// log.Println("Problème dans la récupération des informations de l'évènemenemt Windows")
 	} else {
 		var infosEvenementJson []byte = evtx.ToJSON(infosEvenement)
-		message += "\n" + string(infosEvenementJson)
+		message += "\n" + strings.ReplaceAll(string(infosEvenementJson), "\"", "“")
 	}
 	// Ajout de l'évènement dans la base de données
 	chemin = evtx.GoEvtxPath{"Event", "System", "Execution", "ProcessID"}
@@ -83,17 +86,15 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *sq
 		task = "NaN"
 	}
 	if nbErreurs > 1 {
-		message += "\n" + string(evtx.ToJSON(evenement))
+		message += "\n" + strings.ReplaceAll(string(evtx.ToJSON(evenement)), "\"", "“")
 	}
-	_, err = requeteInsertionEvtx.Exec(evenement.TimeCreated(), evenement.EventID(), evenement.EventRecordID(), processID, threadID, level, providerGuid, provider, task, message, fichierSource)
-	if err != nil {
-		log.Println("Problème dans l'écriture de l'évènement dans la base de données")
-		return err
-	}
+	//_, err = requeteInsertionEvtx.
+	var valeurs string = strings.Join([]string{"\"" + evenement.TimeCreated().String() + "\"", fmt.Sprint(evenement.EventID()), fmt.Sprint(evenement.EventRecordID()), processID, threadID, level, "\"" + providerGuid + "\"", "\"" + strings.ReplaceAll(provider, "\"", "“") + "\"", task, "\"" + message + "\"", "\"" + strings.ReplaceAll(fichierSource, "\"", "“") + "\""}, ",")
+	*requeteInsertionEvtx = append(*requeteInsertionEvtx, "("+valeurs+")")
 	return nil
 }
 
-func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *sevenzip.File, requeteInsertionEvtx *sql.Stmt, requeteMessagesEvtx *sql.Stmt, cheminTemp string, fichierSource string) error {
+func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *sevenzip.File, bd *sql.DB, requeteMessagesEvtx *sql.Stmt, cheminTemp string, fichierSource string) error {
 	err := gestionprojet.ExtraireFichierDepuis7z(fichier, cheminTemp)
 	if err != nil {
 		return err
@@ -108,16 +109,33 @@ func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *seve
 	}
 	listeEvenements := fichierEvtx.FastEvents()
 	var probleme error = nil
+	var requeteInsertionEvtx []string = []string{}
 	for evenement := range listeEvenements {
-		err := ajouterGoEvtxMapDansBDD(evenement, requeteInsertionEvtx, requeteMessagesEvtx, fichierSource)
+		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, requeteMessagesEvtx, fichierSource)
 		if err != nil {
 			probleme = err
 		}
 	}
+	if len(requeteInsertionEvtx) == 0 {
+		return nil
+	}
+	var requeteInsertionEvtxFinale string = ajoutEvenementDansBDD + strings.Join(requeteInsertionEvtx, ",")
+	//log.Println(requeteInsertionEvtxFinale)
+	_, err = bd.Exec(requeteInsertionEvtxFinale)
+	if err != nil {
+		log.Println("--------------------------------------------------------------------------------")
+		log.Println("----------------------------- ERREUR -------------------------------------------")
+		log.Println("--------------------------------------------------------------------------------")
+		log.Println(requeteInsertionEvtxFinale)
+		log.Println("--------------------------------------------------------------------------------")
+		log.Println("----------------------------- ERREUR -------------------------------------------")
+		log.Println("--------------------------------------------------------------------------------")
+		return err
+	}
 	return probleme
 }
 
-func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string, nomDossier string, requeteInsertionEvtx *sql.Stmt, requeteMessageEvtx *sql.Stmt) (error, error) {
+func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string, nomDossier string, bd *sql.DB, requeteMessageEvtx *sql.Stmt) (error, error) {
 	var probleme error = nil
 	r, err := sevenzip.OpenReaderWithPassword(filepath.Join(cheminProjet, "collecteORC", nomDossier, "Event.7z"), "avproof")
 	if err != nil {
@@ -126,7 +144,7 @@ func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string
 	defer r.Close()
 	for _, fichierEvtx := range r.File {
 		var fichierSource string = filepath.Join(nomDossier, "Event", fichierEvtx.Name)
-		err = e.extraireEvenementsDepuisFichier(cheminProjet, fichierEvtx, requeteInsertionEvtx, requeteMessageEvtx, cheminTemp, fichierSource)
+		err = e.extraireEvenementsDepuisFichier(cheminProjet, fichierEvtx, bd, requeteMessageEvtx, cheminTemp, fichierSource)
 		if err != nil {
 			probleme = err
 		}
@@ -148,11 +166,6 @@ func (e Evtx) Extraction(cheminProjet string) error {
 	}
 	requete.Exec()
 	defer bd.Close()
-	requeteInsertionEvtx, err := bd.Prepare(ajoutEvenementDansBDD)
-	if err != nil {
-		log.Println("Problème dans la préparation de la requête d'insersion dans la base de données")
-		return err
-	}
 	// Récupération du chemin de l'exécutable
 	emplacementExecutable, err := os.Executable()
 	if err != nil {
@@ -162,7 +175,6 @@ func (e Evtx) Extraction(cheminProjet string) error {
 	if err != nil {
 		return errors.New("Impossible d'atteindre la base de donnée des messages.")
 	}
-	log.Println(emplacementExecutable)
 	// Vérification de l'existence de la base de données
 	_, err = os.Stat(filepath.Join(filepath.Dir(emplacementExecutable), "ressources", "messages_evtx.db"))
 	if err != nil {
@@ -184,9 +196,10 @@ func (e Evtx) Extraction(cheminProjet string) error {
 	var cheminTemp string = filepath.Join(cheminProjet, "temp", "evtx")
 	os.MkdirAll(cheminTemp, os.ModeDir)
 	defer os.RemoveAll(cheminTemp)
-	pbGeneral, probleme := e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "General", requeteInsertionEvtx, requeteMessageEvtx)
-	pbLittle, err := e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "Little", requeteInsertionEvtx, requeteMessageEvtx)
+	pbGeneral, probleme := e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "General", bd, requeteMessageEvtx)
+	pbLittle, err := e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "Little", bd, requeteMessageEvtx)
 	if err != nil {
+		log.Println("J'ai trouvé le coupable")
 		probleme = err
 	}
 	if pbGeneral != nil && pbLittle != nil {
