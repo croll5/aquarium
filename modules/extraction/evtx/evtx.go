@@ -15,7 +15,7 @@ import (
 )
 
 // Requêtes SQL
-var creationTable = "CREATE TABLE IF NOT EXISTS evtx(horodatage DATETIME, eventID int, eventRecordID int, processID VARCHAR(7), threadID VARCHAR(7), level VARCHAR(2), providerGuid VARCHAR(36), providerName VARCHAR(50), task VARCHAR(7), message TEXT, source TEXT, PRIMARY KEY (horodatage, eventRecordID, source))"
+var creationTable = "CREATE TABLE IF NOT EXISTS evtx(horodatage DATETIME, eventID int, eventRecordID int, processID int, threadID int, level int, providerGuid VARCHAR(36), providerName VARCHAR(50), task int, message TEXT, source TEXT, PRIMARY KEY (horodatage, eventRecordID, source))"
 var recuperationMessageEvtx = "SELECT messages.message FROM messages INNER JOIN providers ON messages.provider_id = providers.id WHERE providers.name = ? AND messages.event_id = ?"
 var ajoutEvenementDansBDD = "INSERT INTO Evtx VALUES "
 
@@ -59,19 +59,19 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *[]
 	processID, err := evenement.GetString(&chemin)
 	if err != nil {
 		nbErreurs++
-		processID = "NaN"
+		processID = "-1"
 	}
 	chemin = evtx.GoEvtxPath{"Event", "System", "Execution", "ThreadID"}
 	threadID, err := evenement.GetString(&chemin)
 	if err != nil {
 		nbErreurs++
-		threadID = "NaN"
+		threadID = "-1"
 	}
 	chemin = evtx.GoEvtxPath{"Event", "System", "Level"}
 	level, err := evenement.GetString(&chemin)
 	if err != nil {
 		nbErreurs++
-		level = "NaN"
+		level = "-1"
 	}
 	chemin = evtx.GoEvtxPath{"Event", "System", "Provider", "Guid"}
 	providerGuid, err := evenement.GetString(&chemin)
@@ -83,7 +83,7 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *[]
 	task, err := evenement.GetString(&chemin)
 	if err != nil {
 		nbErreurs++
-		task = "NaN"
+		task = "-1"
 	}
 	if nbErreurs > 1 {
 		message += "\n" + strings.ReplaceAll(string(evtx.ToJSON(evenement)), "\"", "“")
