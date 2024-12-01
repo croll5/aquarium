@@ -1,5 +1,7 @@
 package main
 
+// execution du projet: wails dev
+
 import (
 	"aquarium/modules/arborescence"
 	"aquarium/modules/extraction"

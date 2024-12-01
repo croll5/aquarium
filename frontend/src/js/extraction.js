@@ -4,10 +4,11 @@ window.onload = function() {
     executeWhenReady(function() {
         parent.window.go.main.App.ListeExtractionsPossibles().then(resultat => {
             let div_possibilites = document.getElementById("possibilites_extractions");
+            checkBox = "NO - "
             // Pour chaque extracteur possible, on l'ajoute sur la page
             for (let [key, value] of Object.entries(resultat)) {
                 let paragraphe = document.createElement('p');
-                paragraphe.innerText = "" + value + "";
+                paragraphe.innerText = "" + checkBox + value + "";
                 paragraphe.id = key;
                 paragraphe.className = "liste_options";
                 paragraphe.onclick = function() { extraire_elements(key) };

@@ -1,5 +1,6 @@
 package getthis //getthis main // TODO: use package getthis for debugging in this folder
-
+// compiler du go         : go build getthis.go
+// execution du programme : ./getthis.exe
 import (
 	"bytes"
 	"database/sql"
@@ -15,7 +16,8 @@ import (
 	"strings"
 )
 
-type Getthis struct{}
+type Getthis struct {
+}
 
 /* ******************************************************************** */
 /* ********************** Getthis Methods ***************************** */
@@ -23,10 +25,10 @@ type Getthis struct{}
 
 func (gt Getthis) Extraction(cheminProjet string) error {
 	log.Println("Bonjour, je suis censé faire des extractions {Getthis}")
+	log.Println("dbPath:" + filepath.Join(cheminProjet, "analyse", "extractions.db"))
 	fileToSearch := "GetThis.csv"
 	zipExtension := ".7z"
 	zipPassword := "avproof"
-	colnameFileName := "filePath"
 	// For each unzipped CSV files found
 	list_GetThis, err := searchFilesInFolder(fileToSearch, cheminProjet)
 	if err != nil {
@@ -39,7 +41,7 @@ func (gt Getthis) Extraction(cheminProjet string) error {
 			return err
 		}
 		// Export data
-		err = exportDfToDb(df, cheminProjet)
+		err = exportDfToDb(df, cheminProjet, getThis, "getthis")
 		if err != nil {
 			return err
 		}
@@ -63,12 +65,11 @@ func (gt Getthis) Extraction(cheminProjet string) error {
 				return err
 			}
 			// Add a filePath column
-			df = dfNewColumn(df, colnameFileName, getThis7z)
-			err = exportDfToDb(df, cheminProjet)
+			err = exportDfToDb(df, cheminProjet, getThis7z, "getthis")
 			if err != nil {
 				return err
 			}
-			return nil // TODO: Used for save just one file
+			//return nil // TODO: Used for save just one file
 		}
 		// Search zip file in zip file
 		z, err := searchFilesIn7z(zipExtension, archivePath, zipPassword)
@@ -186,45 +187,86 @@ func readCsvIn7zFile(zipPath string, localisationIn7zFile string, password strin
 
 }
 
-func exportDfToDb(df dataframe.DataFrame, cheminProjet string) error {
-	return fmt.Errorf("ERROR: exportDfToDb() not implemented (not working)") // TODO: Used for not save in db (not working)
-	tableName := "getthis"
-	uniqueCols := df.Names()
-	// Open the sqlite BDD
-	db, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "..", "extractions.db"))
-	if err != nil {
-		return fmt.Errorf("ERROR: exportDfToDb() : %w", err)
+func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string) error {
+	//DB infos
+	dbPath := filepath.Join(cheminProjet, "analyse", "extractions.db")
+
+	// Add a filePath column to save the GetThis filename
+	colnameFileName := "filePath"
+	colvalueList := strings.Split(strings.Split(filname, "::")[0], "\\")
+	colvalue := filepath.Join(colvalueList[len(colvalueList)-2], colvalueList[len(colvalueList)-1])
+	colvalue = strings.Replace(colvalue, "\\", "/", -1)
+	df = dfNewColumn(df, colnameFileName, colvalue)
+	fmt.Println(colvalue)
+
+	// Columns filter/selection if columns exist
+	/*columnSelection := []string{colnameFileName, "FullName", "MD5", "CreationDate", "LastModificationDate", "LastAccessDate"}
+	columns := listItemsInList(columnSelection, df.Names())
+	if len(columnSelection) != len(columns) {
+		return fmt.Errorf("ERROR: exportDfToDb(E01): [Wrong columns size]")
 	}
-	defer func(bd *sql.DB) {
-		_ = bd.Close()
-	}(db)
+	// Select the specified columns
+	df = df.Select(columns)*/
+	columns := df.Names()         // For no columns filter
+	columnSelection := df.Names() // For no columns filter
 
-	err = createTableIfNotExists(db, tableName, uniqueCols)
+	// Open or create the sqliteDB
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("ERROR: exportDfToDb(EO2) [Can't check the DB existance]: %w", err)
+	}
+	defer db.Close()
+
+	// Check the table exist or create it //TODO A deplacer au début de gt.Extraction() car utile qu'une seule fois
+	err = createTableIfNotExists(db, tableName, columnSelection)
+	if err != nil {
+		return fmt.Errorf("ERROR: exportDfToDb(_) [Can't check the Table existance]: %w", err)
 	}
 
-	fmt.Println("Try open: " + filepath.Join(cheminProjet, "..", "analyse", "extractions.db"))
+	// Remove all preview values for this GetThis file
+	queryDelete := fmt.Sprintf(`DELETE FROM '%s' WHERE filePath = '%s'`, tableName, colvalue)
+	_, err = db.Exec(queryDelete)
+	if err != nil {
+		return fmt.Errorf("ERROR: exportDfToDb(EO3) [Can't delete old values]: %w", err)
+	}
 
+	// Start a transaction
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("ERROR: exportDfToDb(EO4) [Can't start a transaction]: %w", err)
+	}
+
+	// Prepare the insert query
+	queryAdd := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		tableName,
+		strings.Join(columns, ","),
+		strings.Repeat("?,", len(columns)-1)+"?")
+	stmt, err := tx.Prepare(queryAdd)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("ERROR: exportDfToDb(EO5) [Can't Prepare query]: %w", err)
+	}
+	defer stmt.Close()
+
+	// Ajout des lignes dans la table
 	for i := 0; i < df.Nrow(); i++ {
-		row := df.Subset([]int{i})
-		exists, err := checkIfRowExists(db, tableName, row, uniqueCols)
-		if err != nil {
-			return err
+		//row := df.Subset([]int{i})
+		values := make([]interface{}, df.Ncol())
+		for j := 0; j < df.Ncol(); j++ {
+			values[j] = df.Elem(0, j).String()
 		}
-		if !exists {
-			values := make([]interface{}, row.Ncol())
-			for j := 0; j < row.Ncol(); j++ {
-				values[j] = row.Elem(0, j).String()
-			}
-			query := fmt.Sprintf("INSERT INTO %s VALUES (%s)", tableName, placeholders(len(values)))
-			_, err = db.Exec(query, values...)
-			if err != nil {
-				return err
-			}
+		_, err = stmt.Exec(values...)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("ERROR: exportDfToDb(EO6) [Can't add data]: %w", err)
 		}
 	}
-	fmt.Println("Add data in DB successful")
+
+	// Commit la transaction
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("ERROR: exportDfToDb(EO7) [Can't Commit transaction]: %w", err)
+	}
 	return nil
 }
 
@@ -305,6 +347,20 @@ func createTableIfNotExists(db *sql.DB, tableName string, columns []string) erro
 	return err
 } // TODO: TEMP, is for db saving
 
+/** Find and return all elements of smallList existing in bigList **/
+func listItemsInList(smallList, bigList []string) []string {
+	var result []string
+	for _, smallItem := range smallList {
+		for _, bigItem := range bigList {
+			if strings.Contains(bigItem, smallItem) {
+				result = append(result, smallItem)
+				break
+			}
+		}
+	}
+	return result
+}
+
 /* ******************************************************************** */
 /* **************************** Main  ********************************* */
 /* ******************************************************************** */
@@ -320,11 +376,11 @@ func unexportedFunction() {
 } // TODO: memo de la portabilitee des fonctions
 
 func main() {
-	/*directory := "C:\\Users\\charm\\Downloads\\Nouveau dossier\\collecteORC"
+	directory := "C:\\Users\\charm\\Downloads\\Nouveau dossier"
 	getthis := Getthis{}
 	err := getthis.Extraction(directory)
 	if err != nil {
 		fmt.Println(err)
 		return
-	}*/
+	}
 } // TODO: main() for debugging
