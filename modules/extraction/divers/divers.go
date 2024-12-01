@@ -89,7 +89,7 @@ func (d Divers) extraireEtEnregistrerEvenements(contenu []byte, nomFichier strin
 		if match := sectionStartRegex.FindStringSubmatch(line); match != nil {
 			sectionTimestamp, _ := time.Parse("2006/01/02 15:04:05.000", match[1])
 			message := "Début de la section de mise à jour de pilotes"
-			if err := utilitaires.AjoutEvenementDansBDD(filepath.Dir(cheminProjet), "divers", sectionTimestamp, nomFichier, message); err != nil {
+			if err := utilitaires.AjoutEvenementDansBDD(cheminProjet, "divers", sectionTimestamp, nomFichier, message); err != nil {
 				log.Printf("Erreur lors de l'ajout de l'événement de début de section: %v", err)
 			}
 		}
@@ -103,7 +103,7 @@ func (d Divers) extraireEtEnregistrerEvenements(contenu []byte, nomFichier strin
 				eventTimestamp.Hour(), eventTimestamp.Minute(), eventTimestamp.Second(), eventTimestamp.Nanosecond(), time.UTC)
 
 			message := "Tentative de désinstallation du pilote: " + driverPath
-			if err := utilitaires.AjoutEvenementDansBDD(filepath.Dir(cheminProjet), "divers", eventTimestamp, nomFichier, message); err != nil {
+			if err := utilitaires.AjoutEvenementDansBDD(cheminProjet, "divers", eventTimestamp, nomFichier, message); err != nil {
 				log.Printf("Erreur lors de l'ajout de l'événement de pilote : %v", err)
 			}
 		}
