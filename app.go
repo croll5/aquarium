@@ -1,8 +1,11 @@
 package main
 
-// execution du projet: wails dev
+// go mod init aquarium
+// go mod tidy
+// wails dev
 
 import (
+	"aquarium/modules/aquabase"
 	"aquarium/modules/arborescence"
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
@@ -11,10 +14,12 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"log"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
 var chemin_projet string
+var chemin_bdd string
 
 // App struct
 type App struct {
@@ -93,6 +98,7 @@ func (a *App) OuvrirAnalyseExistante() bool {
 		return false
 	}
 	chemin_projet = filepath.Dir(fichier)
+	chemin_bdd = filepath.Join(chemin_projet, "analyse", "extractions.db")
 	return true
 }
 
@@ -104,6 +110,7 @@ func (a *App) CreationDossierNouveauModele() string {
 		return ""
 	}
 	chemin_projet = projet
+	chemin_bdd = filepath.Join(chemin_projet, "analyse", "extractions.db")
 	if gestionprojet.CreationDossierModele(chemin_projet) != nil {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
@@ -126,6 +133,7 @@ func (a *App) CreationNouveauProjet() string {
 		return ""
 	}
 	chemin_projet = projet
+	chemin_bdd = filepath.Join(chemin_projet, "analyse", "extractions.db")
 	if !gestionprojet.CreationArborescence(chemin_projet) {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
@@ -212,6 +220,20 @@ func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.Me
 		a.signalerErreur(err)
 	}
 	return res
+}
+
+/***************************************************************************************/
+/************************* DB_INFO PAGE ************************************************/
+/***************************************************************************************/
+func (a *App) Get_db_info() map[string]string {
+	adb := aquabase.Init(chemin_bdd)
+	return adb.GetAllTableNames()
+}
+
+func (a *App) Get_header_table(tableName string, limitJS string) []map[string]interface{} {
+	limit, _ := strconv.Atoi(limitJS)
+	adb := aquabase.Init(chemin_bdd)
+	return adb.SelectAllFrom(tableName, limit)
 }
 
 /***************************************************************************************/

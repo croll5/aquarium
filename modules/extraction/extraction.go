@@ -1,12 +1,12 @@
 package extraction
 
 import (
+	"aquarium/modules/extraction/divers"
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/getthis"
 	"aquarium/modules/extraction/navigateur"
 	"aquarium/modules/extraction/sam"
 	"aquarium/modules/extraction/werr"
-	"aquarium/modules/extraction/divers"
 	"database/sql"
 	"errors"
 	"log"
@@ -47,7 +47,7 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 		if err != nil {
 			return map[string]string{}, err
 		}
-		log.Println(filepath.Join(cheminProjet, "collecteORC"))
+		//log.Println(filepath.Join(cheminProjet, "collecteORC"))
 		if v.PrerequisOK(filepath.Join(cheminProjet, "collecteORC")) && nbLignes == 0 {
 			resultat[k] = v.Description()
 		}

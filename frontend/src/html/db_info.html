@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Title New Page</title>
+    <script src="../templates/app.js"></script>
+    <!--<link rel="stylesheet" href="../css/newPage.css">--> <!-- Fichier CSS pour votre page-->
+    <script src="../js/db_info.js"></script>
+</head>
+<body>
+<header></header>
+
+<div id="content">
+    <div id="db_infos"></div>
+    <select name="tableSelection" id="table_selection" onchange="print_table_head()"></select>
+    <div id="table_info"></div>
+    <select name="rows_limit" id="rows_limit" onchange="print_table_head()">
+        <option value="5" selected="selected">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="25">50</option>
+        <option value="100">100</option>
+        <option value="250">250</option>
+        <option value="500">500</option>
+    </select>
+    <div id="table_values" class="container mt-5"></div>
+
+
+</div>
+
+
+<footer></footer>
+</body>
+</html>

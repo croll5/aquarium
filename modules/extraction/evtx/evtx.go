@@ -10,7 +10,7 @@ func (e Evtx) Extraction(cheminProjet string) error {
 }
 
 func (e Evtx) Description() string {
-	return "Évènements Windows (fichier .evtx)"
+	return "Évènements Windows (fichier .evtx) [NULL]"
 }
 
 func (e Evtx) PrerequisOK(cheminORC string) bool {

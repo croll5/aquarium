@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"aquarium/modules/extraction/utilitaires"
 	"github.com/bodgit/sevenzip"
-	"github.com/croll5/aquarium/modules/extraction/utilitaires"
 )
 
 type Divers struct{}
@@ -19,7 +19,7 @@ type Divers struct{}
 // Extraction analyse le contenu de l'archive TextLogs.7z et extrait les événements pertinents.
 func (d Divers) Extraction(cheminProjet string) error {
 	// Définition du chemin de l'archive TextLogs.7z
-	textLogsPath := filepath.Join(cheminProjet, "General", "TextLogs.7z")
+	textLogsPath := filepath.Join(cheminProjet, "collecteORC", "General", "TextLogs.7z")
 
 	// Ouverture de l'archive TextLogs.7z
 	archive, err := sevenzip.OpenReader(textLogsPath)
@@ -141,12 +141,9 @@ func (d Divers) PrerequisOK(cheminORC string) bool {
 		//log.Println(filepath.Dir(file.Name))
 		// test
 		if filepath.Dir(file.Name) == "divers" {
-			log.Println("ca marche")
 			return true
 		}
 	}
-
-
 
 	return false
 }

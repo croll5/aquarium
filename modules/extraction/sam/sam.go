@@ -1,7 +1,7 @@
 package sam
 
 import (
-	"github.com/croll5/aquarium/modules/extraction/utilitaires"
+	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"fmt"
 	"io"
