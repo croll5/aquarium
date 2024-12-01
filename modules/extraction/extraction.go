@@ -6,6 +6,7 @@ import (
 	"aquarium/modules/extraction/navigateur"
 	"aquarium/modules/extraction/sam"
 	"aquarium/modules/extraction/werr"
+	"aquarium/modules/extraction/divers"
 	"database/sql"
 	"errors"
 	"log"
@@ -24,6 +25,7 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"werr":       werr.Werr{},
 	"sam":        sam.Sam{},
 	"getthis":    getthis.Getthis{},
+	"divers":     divers.Divers{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
@@ -45,6 +47,7 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 		if err != nil {
 			return map[string]string{}, err
 		}
+		log.Println(filepath.Join(cheminProjet, "collecteORC"))
 		if v.PrerequisOK(filepath.Join(cheminProjet, "collecteORC")) && nbLignes == 0 {
 			resultat[k] = v.Description()
 		}
@@ -56,6 +59,7 @@ func Extraction(module string, cheminProjet string) error {
 	if liste_extracteurs[module] == nil {
 		return errors.New("Erreur : module " + module + " non reconnu")
 	}
+	//err := liste_extracteurs[module].Extraction(filepath.Join(cheminProjet, "collecteORC")) // Master AbdelMoad: commit 04a90c8ebc005011aae072aa56441a6d656b68db
 	err := liste_extracteurs[module].Extraction(cheminProjet)
 	return err
 }
