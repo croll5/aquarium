@@ -96,7 +96,7 @@ function executeWhenReady(callback) {
         } catch (err) {
             console.error("Error checking parent window:", err);
         }
-    }, 100); // Vérifie toutes les 50ms
+    }, 200); // Vérifie toutes les Xms
 }
 
 

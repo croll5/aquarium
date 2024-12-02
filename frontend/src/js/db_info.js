@@ -7,7 +7,7 @@ window.onload = function() {
 };
 
 
-function print_db_infos(module_id) {
+function print_db_infos() {
     parent.window.go.main.App.Get_db_info().then(resultat => {
         //console.log(resultat);
         let table_name = document.getElementById("table_selection")
