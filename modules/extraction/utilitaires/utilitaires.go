@@ -33,6 +33,20 @@ func AjoutEvenementDansBDD(cheminProjet string, extracteur string, horodatage ti
 	return err
 }
 
+func AjoutLogsNavigateur(cheminProjet string, horodatage time.Time, url string, title string, domain_name string, visit_count int) error {
+    bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
+    if err != nil {
+    	return err
+    }
+    defer bd.Close()
+    requete, err := bd.Prepare ("INSERT INTO navigateurs(horodatage, url, title, domain_name, visit_count) VALUES (?, ?, ?, ?, ?)")
+    if err != nil {
+    		return err
+    	}
+    	_, err = requete.Exec(horodatage, url, title, domain_name, visit_count)
+    	return err
+}
+
 func FileTimeVersGo(date []byte) time.Time {
 	var dateInt = int64(binary.LittleEndian.Uint64(date))
 	var difference = dateInt / 10000000
