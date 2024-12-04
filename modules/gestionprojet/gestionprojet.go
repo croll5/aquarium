@@ -65,6 +65,8 @@ func CreationArborescence(chemin string) bool {
 	bd.Exec(requete)
 	requete = "CREATE TABLE indicateurs_evenements(id_indicateur INT, id_evenement INT, FOREIGN KEY(id_indicateur) REFERENCES indicateurs(id), FOREIGN KEY(id_evenement) REFERENCES chronologie(id))"
 	bd.Exec(requete)
+	requete = "CREATE TABLE navigateurs(id INTEGER PRIMARY KEY AUTOINCREMENT, horodatage DATETIME, url VARCHAR(50), title VARCHAR(50), domain_name VARCHAR(25), visit_count INT)"
+	bd.Exec(requete)
 	return true
 }
 
@@ -111,7 +113,7 @@ func RecuperationOrcs(listeOrcs []string, cheminAnalyse string) bool {
 	return true
 }
 
-/* Fonction permettant d'extrire un fichier d'un dossier compressé en 7z
+/* Fonction permettant d'extraire un fichier d'un dossier compressé en 7z
  */
 func extractFile(file *sevenzip.File, destination string) error {
 	rc, err := file.Open()

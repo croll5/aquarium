@@ -5,11 +5,9 @@ go 1.23.1
 require (
 	github.com/bodgit/sevenzip v1.5.2
 	github.com/wailsapp/wails/v2 v2.9.2
-<<<<<<< HEAD
 	modernc.org/sqlite v1.33.1
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
-=======
->>>>>>> 55d4136256aa072d3c0220f882790cf9db3f7667
+
 )
 
 require (
