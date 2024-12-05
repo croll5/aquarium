@@ -7,10 +7,14 @@ h1{
     text-align: center;
 }
 
-.liste_options {
-    color: black;
-    padding: 1%;
+details > summary {
+    list-style-type: '😊';
 }
+
+details[open] > summary {
+    list-style-type: '🙂';
+}
+
 .liste_options:hover{
     cursor: pointer;
     font-weight: bolder;

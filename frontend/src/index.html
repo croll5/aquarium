@@ -1,28 +1,30 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
+
 <head>
-    <title>Aquarium - Home</title>
-    <script src="templates/app.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge, Chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Main Source Files -->
+    <link rel="stylesheet" href="bibliotheque.css" />
     <link rel="stylesheet" href="css/index.css">
     <script src="js/index.js"></script>
-    <script src="js/utils/bulles.js"></script>
 </head>
-<body>
-<header style="display: none"></header>
 
-
-<h1>Bienvenue dans l’Aquarium</h1>
-<div class="bubble-cursor"></div>
-<div>
-    <button class="bouton_clair" onclick="nouvelle_analyse()">Créer une nouvelle analyse</button>
-    <button class="bouton_clair" onclick="analyse_existante()">Ouvrir une analyse existante</button>
-    <br><br>
-    <button class="bouton_clair" onclick="nouveau_modele()">Créer un nouveau modèle</button>
-</div>
-
-<img src="assets/images/logo-aquarium.png" alt="Logo Aquarium" id="logo-aquarium">
-
-
-<footer></footer>
+<body id="app" class="app">
+    <header style="display: none;">
+        <button id="onglet_extraction" class="onglet" onclick="change_onglet('html/extraction.html','onglet_extraction')">Extraction</button>
+        <button id="onglet_chronologie" class="onglet" onclick="change_onglet('html/chronologie.html','onglet_chronologie')">Chronologie</button>
+        <button id="onglet_arborescence" class="onglet" onclick="change_onglet('html/arborescence.html','onglet_arborescence')">Arborescence</button>
+        <!--  -->
+    </header>
+    <main>
+        <iframe src="html/accueil.html" title="frame"></iframe>
+    </main>
+    <footer onclick="accueil()">
+        <p>Application de QUestionnement et d'Analyse des Relevés Informatiques pour l'identification des Vecteurs de Malveillance</p>
+        <!--  -->
+    </footer>
 </body>
+
 </html>
