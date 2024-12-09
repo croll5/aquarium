@@ -18,3 +18,4 @@ function accueil(){
 }
 
 var contrastes = false;
+var dyslexie = false;

@@ -11,6 +11,20 @@ function changer_contrastes(){
     }
 }
 
+if(parent.dyslexie){
+    document.getElementById("dyslexie").checked = true;
+}
+function changer_dyslexie(){
+    if(document.getElementById("dyslexie").checked){
+        parent.dyslexie = true;
+        police_dyslexie()
+    }
+    else{
+        parent.dyslexie = false;
+        document.body.style.fontFamily = "Comic Sans Ms"
+    }
+}
+
 function contrastes_normaux(){
     let couleurs = document.documentElement;
     couleurs.style.setProperty('--bleu-1', '#001D64');

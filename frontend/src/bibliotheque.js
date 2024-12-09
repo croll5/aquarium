@@ -1,6 +1,9 @@
 if(parent.contrastes){
     contrastes_eleves();
 }
+if(parent.dyslexie){
+    police_dyslexie();
+}
 
 function contrastes_eleves(){
     let couleurs = document.documentElement;
@@ -16,4 +19,8 @@ function contrastes_eleves(){
     couleurs.style.setProperty('--or-4', '#FFF');
     couleurs.style.setProperty('--or-5', '#FFF');
     couleurs.style.setProperty('--or-6', '#FFF');
+}
+
+function police_dyslexie(){
+    document.body.style.fontFamily = "Open Dyslexic";
 }

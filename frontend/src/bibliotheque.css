@@ -1,3 +1,16 @@
+@font-face {
+    font-family: Open Dyslexic;
+    src: url("assets/fonts/Open_dyslexic/OpenDyslexic-Bold.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexic-BoldItalic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexic-Italic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexic-Regular.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Bold.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-BoldItalic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Italic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Regular.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicMono-Regular.otf");
+}
+
 :root{
     /* Les variantes de bleu */
     --bleu-1 : #001D64;
@@ -13,18 +26,19 @@
     --or-4 : #F1D46B;
     --or-5 : #F6E4A4;
     --or-6 : #FCF5DC;
-    /* La police utilisée */
-    font-family: Comic Sans MS;
 }
 
 body{
     display: flex;
     flex-direction: column;
     overflow: overlay;
+    
+    /* La police utilisée */
+    font-family: Comic Sans Ms;
 }
 
 .bouton_clair, .bouton_sombre{
-    font-family: Comic Sans MS;
+    font-family: inherit;
     padding: 10px;
     border-radius: 5px;
     border: none;
@@ -55,7 +69,7 @@ body{
     padding: 10px;
     border-radius: 5px;
     border: none;
-    font-family: Comic Sans MS;
+    font-family: inherit;
 }
 
 button.onglet{
@@ -63,7 +77,7 @@ button.onglet{
     border-bottom-right-radius: 0;
     border-top-left-radius: 7px;
     border-top-right-radius: 7px;
-    font-family: Comic Sans MS;
+    font-family: inherit;
     background-color: var(--or-1);
     color: var(--or-6);
     padding: 10px;
