@@ -19,3 +19,7 @@ function analyse_existante(){
 function nouveau_modele(){
     window.location.replace("../html/nouveau_modele.html");
 }
+
+function parametres(){
+    window.location.replace("../html/parametres.html")
+}

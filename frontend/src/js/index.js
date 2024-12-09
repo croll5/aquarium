@@ -13,5 +13,8 @@ function change_onglet(destination, id_onglet){
 }
 
 function accueil(){
-    window.location.replace("/")
+    document.getElementsByTagName("iframe")[0].src = "html/accueil.html";
+    document.getElementsByTagName("header")[0].style.display = "none";
 }
+
+var contrastes = false;

@@ -1,7 +1,23 @@
-
+:root{
+    /* Les variantes de bleu */
+    --bleu-1 : #001D64;
+    --bleu-2 : #002C9A;
+    --bleu-3 : #0045F2;
+    --bleu-4 : #5787FF;
+    --bleu-5 : #ABC3FF;
+    --bleu-6 : #E5ECFF;
+    /* Les variantes de doré */
+    --or-1 : #856B0D;
+    --or-2 : #CAA314;
+    --or-3 : #EBC331;
+    --or-4 : #F1D46B;
+    --or-5 : #F6E4A4;
+    --or-6 : #FCF5DC;
+    /* La police utilisée */
+    font-family: Comic Sans MS;
+}
 
 body{
-    font-family: Comic Sans MS;
     display: flex;
     flex-direction: column;
     overflow: overlay;
@@ -15,27 +31,27 @@ body{
 }
 
 .bouton_clair{
-    background-color: #F1D46B;
+    background-color: var(--or-4);
 }
 
 .bouton_clair:hover{
-    background-color: #EBC331;
+    background-color: var(--or-3);
     cursor: pointer;
 }
 
 .bouton_sombre{
-    background-color: #002C9A;
-    color: #FCF5DC;
+    background-color: var(--bleu-2);
+    color: var(--or-6);
 }
 
 .bouton_sombre:hover{
     cursor: pointer;
-    background-color: #001D64;
-    color: #F6E4A4;
+    background-color: var(--bleu-1);
+    color: var(--or-5);
 }
 
 .input_clair{
-    background-color: #F6E4A4;
+    background-color: var(--or-5);
     padding: 10px;
     border-radius: 5px;
     border: none;
@@ -48,14 +64,14 @@ button.onglet{
     border-top-left-radius: 7px;
     border-top-right-radius: 7px;
     font-family: Comic Sans MS;
-    background-color: #856B0D;
-    color: #FCF5DC;
+    background-color: var(--or-1);
+    color: var(--or-6);
     padding: 10px;
     border: none;
 }
 
 button.onglet:hover{
     cursor: pointer;
-    background-color: #CAA314;
+    background-color: var(--or-2);
 }
 
