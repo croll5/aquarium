@@ -1,5 +1,4 @@
 body {
-    cursor: none;
     overflow: hidden; /* Empêche les bulles de dépasser la fenêtre */
     background-color: var(--bleu-2);
     color: var(--or-5);

@@ -19,3 +19,4 @@ function accueil(){
 
 var contrastes = false;
 var dyslexie = false;
+var non_aux_bubulles = false;

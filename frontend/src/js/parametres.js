@@ -25,6 +25,21 @@ function changer_dyslexie(){
     }
 }
 
+if(parent.non_aux_bubulles){
+    document.getElementById("non_aux_bubulles").checked = true;
+}
+function enlever_bubulles(){
+    if(document.getElementById("non_aux_bubulles").checked){
+        parent.non_aux_bubulles = true;
+    }else{
+        parent.non_aux_bubulles = false;
+    }
+}
+
+function quitter_parametres(){
+    window.location.replace("accueil.html");
+}
+
 function contrastes_normaux(){
     let couleurs = document.documentElement;
     couleurs.style.setProperty('--bleu-1', '#001D64');
