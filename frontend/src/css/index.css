@@ -1,19 +1,41 @@
-
-body {
-    text-align: center;
-    background-color: #002C9A;
-    color: #f0e3ab;
-    cursor: none;
+body{
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0;
 }
 
+html, body {
+    height: 100%;
+}
 
+header, footer {
+    background-color: #001D64;
+    color: #EBC331;
+    text-align: center;
+    padding: 5px;
+}
 
+footer p{
+    margin: 0;
+}
 
-#logo-aquarium {
-    width: 100%;
-    position: absolute;
-    z-index: -1;
-    margin: 1%
+footer:hover{
+    cursor: pointer;
+}
 
+main {
+    flex: 1;
+    display: flex;
+}
+
+iframe {
+    flex: 1;
+    border: none;
+}
+
+header{
+    padding-bottom: 0;
+    text-align: left;
 }
 

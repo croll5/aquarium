@@ -1,0 +1,46 @@
+body {
+    overflow: hidden; /* Empêche les bulles de dépasser la fenêtre */
+    background-color: var(--bleu-2);
+    color: var(--or-5);
+    text-align: center;
+}
+
+.bubble {
+    position: absolute;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(173, 216, 230, 0.7) 60%, rgba(173, 216, 230, 0.5) 100%);
+    border-radius: 50%;
+    pointer-events: none; /* Empêche les bulles d'interagir avec d'autres éléments */
+    animation: float 3s forwards;
+}
+
+input[type="checkbox"] {
+    height: 20px;
+    width: 20px;
+    accent-color: var(--or-3);
+}
+
+div.champ{
+    padding: 10px;
+    text-align: left;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-200px);
+        opacity: 0;
+    }
+}
+
+#logo-aquarium{
+    width: 100%;
+    position: absolute;
+    z-index: -1;
+}
+
+#patientez{
+    display: none;
+}
