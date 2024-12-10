@@ -120,7 +120,7 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 	for i := 0; i < df.Nrow(); i++ {
 		values := make([]interface{}, df.Ncol())
 		for j := 0; j < df.Ncol(); j++ {
-			values[j] = df.Elem(0, j).String()
+			values[j] = df.Elem(i, j).String()
 		}
 		_, err = stmt.Exec(values...)
 		if err != nil {

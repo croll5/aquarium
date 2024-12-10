@@ -36,7 +36,12 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 		log.Println(err)
 		return map[string]string{}, err
 	}
-	defer bd.Close()
+	defer func(bd *sql.DB) {
+		err := bd.Close()
+		if err != nil {
+
+		}
+	}(bd)
 	requete, err := bd.Prepare("SELECT count(*) FROM chronologie WHERE extracteur=?;")
 	if err != nil {
 		return resultat, errors.New("Problème dans l'ouverture de la base de données d'analyse. \nAssurez vous que vous n'avez pas supprimé de fichiers ou recommencez une analyse. \n" + err.Error())
@@ -47,7 +52,12 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 		if err != nil {
 			return resultat, errors.New("Problème dans l'ouverture de la base de données d'analyse. \nAssurez vous que vous n'avez pas supprimé de fichiers ou recommencez une analyse. \n" + err.Error())
 		}
-		defer reponse.Close()
+		defer func(reponse *sql.Rows) {
+			err := reponse.Close()
+			if err != nil {
+
+			}
+		}(reponse)
 		reponse.Next()
 		err = reponse.Scan(&nbLignes)
 		if err != nil {
