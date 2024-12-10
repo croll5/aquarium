@@ -1,0 +1,21 @@
+body{
+    background-color: var(--or-6);
+}
+
+h1{
+    color: var(--bleu-1);
+    text-align: center;
+}
+
+details > summary {
+    list-style-type: '😊';
+}
+
+details[open] > summary {
+    list-style-type: '🙂';
+}
+
+.liste_options:hover{
+    cursor: pointer;
+    font-weight: bolder;
+}

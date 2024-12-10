@@ -1,0 +1,91 @@
+@font-face {
+    font-family: Open Dyslexic;
+    src: url("assets/fonts/Open_dyslexic/OpenDyslexic-Bold.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexic-BoldItalic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexic-Italic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexic-Regular.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Bold.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-BoldItalic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Italic.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Regular.otf"),
+    url("assets/fonts/Open_dyslexic/OpenDyslexicMono-Regular.otf");
+}
+
+:root{
+    /* Les variantes de bleu */
+    --bleu-1 : #001D64;
+    --bleu-2 : #002C9A;
+    --bleu-3 : #0045F2;
+    --bleu-4 : #5787FF;
+    --bleu-5 : #ABC3FF;
+    --bleu-6 : #E5ECFF;
+    /* Les variantes de doré */
+    --or-1 : #856B0D;
+    --or-2 : #CAA314;
+    --or-3 : #EBC331;
+    --or-4 : #F1D46B;
+    --or-5 : #F6E4A4;
+    --or-6 : #FCF5DC;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    overflow: overlay;
+    
+    /* La police utilisée */
+    font-family: Comic Sans Ms;
+}
+
+.bouton_clair, .bouton_sombre{
+    font-family: inherit;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+}
+
+.bouton_clair{
+    background-color: var(--or-4);
+}
+
+.bouton_clair:hover{
+    background-color: var(--or-3);
+    cursor: pointer;
+}
+
+.bouton_sombre{
+    background-color: var(--bleu-2);
+    color: var(--or-6);
+}
+
+.bouton_sombre:hover{
+    cursor: pointer;
+    background-color: var(--bleu-1);
+    color: var(--or-5);
+}
+
+.input_clair{
+    background-color: var(--or-5);
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    font-family: inherit;
+}
+
+button.onglet{
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    font-family: inherit;
+    background-color: var(--or-1);
+    color: var(--or-6);
+    padding: 10px;
+    border: none;
+}
+
+button.onglet:hover{
+    cursor: pointer;
+    background-color: var(--or-2);
+}
+
