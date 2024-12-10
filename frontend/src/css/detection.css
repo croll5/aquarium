@@ -1,0 +1,17 @@
+.contenuRegle{
+    padding: 15px;
+    margin: 15px;
+    border: solid;
+    border-radius: 10px;
+    border-color: var(--bleu-2);
+    border-style: dashed;
+}
+
+.sql{
+    width: 95%;
+}
+
+input[type="range"]:disabled { 
+    pointer-events: none; 
+    opacity: 1; 
+}

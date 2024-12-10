@@ -2,14 +2,16 @@ package main
 
 import (
 	"aquarium/modules/arborescence"
+	"aquarium/modules/detection"
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
 	"context"
 	"fmt"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"log"
 	"path/filepath"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 var chemin_projet string
@@ -212,10 +214,6 @@ func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.Me
 	return res
 }
 
-/***************************************************************************************/
-/************************* ??? ********************************/
-/***************************************************************************************/
-
 func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 	var cheminModele = ""
 	var err error
@@ -244,4 +242,32 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 		Message: "L'extraction de l'arborescence s'est terminée avec succès !",
 	})
 	return res
+}
+
+/***************************************************************************************/
+/************************* Detection FUNCTIONS  PAGE ********************************/
+/***************************************************************************************/
+
+func (a *App) ListeReglesDetection(lancerRegles bool) map[string]int {
+	regles, err := detection.ListeReglesDetection(chemin_projet, lancerRegles)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return regles
+}
+
+func (a *App) InfosRegleDetection(nomRegle string) detection.Regle {
+	regles, err := detection.DetailsRegleDetection(chemin_projet, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return regles
+}
+
+func (a *App) ResultatRegleDetection(nomRegle string) int {
+	resultat, err := detection.ResultatRegleDetection(chemin_projet, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }

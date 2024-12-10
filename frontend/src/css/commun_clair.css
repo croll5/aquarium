@@ -15,6 +15,11 @@ details[open] > summary {
     list-style-type: '🙂';
 }
 
+summary:hover{
+    cursor: pointer;
+    font-weight: bolder;
+}
+
 .liste_options:hover{
     cursor: pointer;
     font-weight: bolder;

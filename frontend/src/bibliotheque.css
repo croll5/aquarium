@@ -89,3 +89,11 @@ button.onglet:hover{
     background-color: var(--or-2);
 }
 
+.code{
+    border: solid, 1px;
+    border-color: var(--bleu-5);
+    background-color: var(--bleu-6);
+    padding: 7px;
+    font-family: Consolas;
+    border-radius: 5px;
+}
