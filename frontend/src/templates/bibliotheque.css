@@ -1,14 +1,14 @@
 @font-face {
     font-family: Open Dyslexic;
-    src: url("assets/fonts/Open_dyslexic/OpenDyslexic-Bold.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexic-BoldItalic.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexic-Italic.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexic-Regular.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Bold.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-BoldItalic.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Italic.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexicAlta-Regular.otf"),
-    url("assets/fonts/Open_dyslexic/OpenDyslexicMono-Regular.otf");
+    src: url("../assets/fonts/Open_dyslexic/OpenDyslexic-Bold.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexic-BoldItalic.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexic-Italic.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexic-Regular.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexicAlta-Bold.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexicAlta-BoldItalic.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexicAlta-Italic.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexicAlta-Regular.otf"),
+    url("../assets/fonts/Open_dyslexic/OpenDyslexicMono-Regular.otf");
 }
 
 :root{
@@ -34,7 +34,7 @@ body{
     overflow: overlay;
     
     /* La police utilisée */
-    font-family: Comic Sans Ms;
+    font-family: Comic Sans Ms, serif;
 }
 
 .bouton_clair, .bouton_sombre{

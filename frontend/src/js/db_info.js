@@ -1,9 +1,7 @@
 var sqlTable_list = {}
 
 window.onload = function() {
-    executeWhenReady(function() {
         print_db_infos();
-    });
 };
 
 

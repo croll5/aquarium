@@ -1,11 +1,8 @@
 var sqlTable_list = {}
 
 
-
 window.onload = function() {
-    executeWhenReady(function() {
         print_graph();
-
         // Sample data
        /* let data = [
             {category: 'A', value: 30},
@@ -17,8 +14,6 @@ window.onload = function() {
             {category: 'G', value: 55}
         ];
         barplot_v2(data)*/
-
-    });
 };
 
 
