@@ -3,6 +3,7 @@ package navigateur
 import (
     "database/sql"
     "io"
+    "io/ioutil"
     "aquarium/modules/extraction/utilitaires"
     "log"
     "fmt"
@@ -34,18 +35,44 @@ func (n Navigateur) Extraction(chemin_projet string) error {
     dest_path := chemin_projet + "\\collecteORC\\Browsers\\History"
     extractArchive(path, dest_path)
     
-    //Récupérer les logs
+    
+    //Init tab logs
     var logs []Log
     logs = make([]Log, 0)
-
-    openDataFiles(dest_path + "\\Firefox_Vista_History\\B030D72430D6F078_190000001A7F07_E0000001A9CF0_4_places.sqlite_{00000000-0000-0000-0000-000000000000}.data", req_Firefox, &logs)
-    fmt.Printf("Taille du tableau de log : %d\n", len(logs))
-    openDataFiles(dest_path + "\\Chrome_Vista_History\\B030D72430D6F078_4200000017F074_1000000285C28_3_History_{00000000-0000-0000-0000-000000000000}.data", req_Chrome, &logs)
-    fmt.Printf("Taille du tableau de log : %d\n", len(logs))
-    openDataFiles(dest_path + "\\Edge_Anhaeim_History\\B030D72430D6F078_5000000029BBA_A000000029BCC_3_History_{00000000-0000-0000-0000-000000000000}.data", req_Edge, &logs)
-    fmt.Printf("Taille du tableau de log : %d\n", len(logs))
     
-    fmt.Printf("Log : %s",logs[10].Time_string)
+    //List of files
+    
+    files, err := ioutil.ReadDir(dest_path)
+    if err != nil {
+    	log.Fatal(err)
+    }
+    
+    for _, f := range files {
+    	fmt.Println(f.Name())
+    	if (f.IsDir()){
+    	    extractFiles, err := ioutil.ReadDir(dest_path + "\\" + f.Name())
+    	    if err != nil {
+                	log.Fatal(err)
+            }
+            for _, extractFile := range extractFiles{
+                var pathNavigator = dest_path + "\\" + f.Name()
+                switch f.Name() {
+                    case "Firefox_Vista_History":
+                        openDataFiles(pathNavigator + "\\" + extractFile.Name(),req_Firefox, &logs)
+                        break
+                    case "Chrome_Vista_History" :
+                        openDataFiles(pathNavigator + "\\" + extractFile.Name(), req_Chrome, &logs)
+                        break
+                    case "Edge_Anhaeim_History" : 
+                        openDataFiles(pathNavigator + "\\" + extractFile.Name(), req_Edge, &logs)
+                        break
+                    default : 
+                        fmt.Println("Navigateur non pris en charge")
+                }
+            }
+    	}
+    }
+
     
     for _, log := range logs {
         utilitaires.AjoutLogsNavigateur(chemin_projet, log.Time_date, log.Url, log.Title, log.Domain_name, log.Visit_count)
@@ -66,21 +93,26 @@ func openDataFiles(filePath string, requete string, logs *[]Log){
 
     db, err := sql.Open("sqlite", filePath)
     if err != nil {
-        fmt.Printf("Failed to open database")
+        fmt.Printf("Failed to open database\n")
         return
     }
     defer db.Close()
 
     data, err := db.Query(requete)
     if err != nil{
-        fmt.Printf("Failed to retrieve data")
+        fmt.Printf("Failed to retrieve data\n")
         return
     }
     
     for data.Next(){
         var log Log
         data.Scan(&log.Url, &log.Title, &log.Domain_name, &log.Time_string, &log.Visit_count)
-        log.ConvertStringToTime();
+        
+        if (len(log.Domain_name) > 0 && log.Domain_name != "NONE"){
+            log.Reverse_domain()
+        }
+        
+        log.ConvertStringToTime()
         *logs = append(*logs, log)    
         
     }   
@@ -131,3 +163,5 @@ func extractArchive(archive string, destination string) error {
 
 	return nil
 }
+
+
