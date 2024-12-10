@@ -63,19 +63,22 @@ func (gt Getthis) Extraction(cheminProjet string) error {
 		// Search CSV files in zip file
 		list7z_GetThis, err := searchFilesIn7z(fileToSearch, archivePath, zipPassword)
 		if err != nil {
-			return err
+			fmt.Println("Error skipped searchFilesIn7z: "+fileToSearch+" --- ", err)
+			continue //return err
 		}
 		for _, getThis7z := range list7z_GetThis {
 			zipPath, csvName := splitEndPath(getThis7z, "::")
 			// Extract data for all CSV found
 			df, err := readCsvIn7zFile(zipPath, csvName, zipPassword)
 			if err != nil {
-				return err
+				fmt.Println("Error skipped readCsvIn7zFile: "+getThis7z+" --- ", err)
+				continue //return err
 			}
 			// Add a filePath column
 			err = exportDfToDb(df, cheminProjet, getThis7z, "getthis")
 			if err != nil {
-				return err
+				fmt.Println("Error skipped exportDfToDb: "+getThis7z+" --- ", err)
+				continue //return err
 			}
 			//return nil // Used for save just one file
 		}

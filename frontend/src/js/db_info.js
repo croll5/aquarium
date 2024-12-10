@@ -31,9 +31,11 @@ function print_table_head() {
     let table_name = document.getElementById("table_selection").value;
     let rows_limit = document.getElementById("rows_limit").value;
     console.log(sqlTable_list[table_name])
+
     document.getElementById("table_info").innerHTML = sqlTable_list[table_name];
     parent.window.go.main.App.Get_header_table(table_name, rows_limit).then(resultat => {
-        console.log(resultat);
+        //console.log(resultat);
+        console.table(resultat);
         let div_db_infos = document.getElementById("table_values");
         div_db_infos.innerHTML = ''
         // Créer un conteneur avec une barre de défilement horizontal
