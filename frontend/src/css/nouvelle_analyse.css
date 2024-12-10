@@ -1,32 +1,8 @@
-
-body{
-    background-color: #002C9A;
-    color: #f0e3ab;
-    margin-top: 1%;
-    cursor: none;
-}
-
-
-
-
-.title, #patientez {
-    text-align: center;
-}
-
-#formulaire {
-    margin-left: 0.75%;
-}
-
-div.champ{
-    padding: 10px;
-    text-align: left;
-}
-
 #div_valider{
     margin-top: 2.5%;
     text-align: center;
 }
 
-#valider, #patientez{
+#valider{
     display: none;
 }

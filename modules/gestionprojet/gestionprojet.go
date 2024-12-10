@@ -108,14 +108,14 @@ func RecuperationOrcs(listeOrcs []string, cheminAnalyse string) bool {
 			return false
 		}
 		// Ectraction à proprement parler
-		extractArchive(listeOrcs[i], filepath.Join(cheminAnalyse, "collecteORC", strings.Replace(caracteristiques[3], ".7z", "", 1)))
+		ExtractArchive7z(listeOrcs[i], filepath.Join(cheminAnalyse, "collecteORC", strings.Replace(caracteristiques[3], ".7z", "", 1)))
 	}
 	return true
 }
 
 /* Fonction permettant d'extraire un fichier d'un dossier compressé en 7z
  */
-func extractFile(file *sevenzip.File, destination string) error {
+func ExtraireFichierDepuis7z(file *sevenzip.File, destination string) error {
 	rc, err := file.Open()
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func extractFile(file *sevenzip.File, destination string) error {
  * Cette fonction utilise la bibliothèque sevenzip,
  * dont la documentation est présente ici : https://pkg.go.dev/github.com/bodgit/sevenzip
  */
-func extractArchive(archive string, destination string) error {
+func ExtractArchive7z(archive string, destination string) error {
 	r, err := sevenzip.OpenReader(archive)
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func extractArchive(archive string, destination string) error {
 	defer r.Close()
 
 	for _, f := range r.File {
-		if err = extractFile(f, destination); err != nil {
+		if err = ExtraireFichierDepuis7z(f, destination); err != nil {
 			return err
 		}
 	}
