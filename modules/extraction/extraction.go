@@ -1,7 +1,9 @@
 package extraction
 
 import (
+	"aquarium/modules/extraction/divers"
 	"aquarium/modules/extraction/evtx"
+	"aquarium/modules/extraction/getthis"
 	"aquarium/modules/extraction/navigateur"
 	"aquarium/modules/extraction/sam"
 	"aquarium/modules/extraction/werr"
@@ -22,6 +24,8 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},
 	"sam":        sam.Sam{},
+	"getthis":    getthis.Getthis{},
+	"divers":     divers.Divers{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
@@ -32,7 +36,12 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 		log.Println(err)
 		return map[string]string{}, err
 	}
-	defer bd.Close()
+	defer func(bd *sql.DB) {
+		err := bd.Close()
+		if err != nil {
+
+		}
+	}(bd)
 	requete, err := bd.Prepare("SELECT count(*) FROM chronologie WHERE extracteur=?;")
 	if err != nil {
 		return resultat, errors.New("Problème dans l'ouverture de la base de données d'analyse. \nAssurez vous que vous n'avez pas supprimé de fichiers ou recommencez une analyse. \n" + err.Error())
@@ -43,12 +52,18 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]string, error) {
 		if err != nil {
 			return resultat, errors.New("Problème dans l'ouverture de la base de données d'analyse. \nAssurez vous que vous n'avez pas supprimé de fichiers ou recommencez une analyse. \n" + err.Error())
 		}
-		defer reponse.Close()
+		defer func(reponse *sql.Rows) {
+			err := reponse.Close()
+			if err != nil {
+
+			}
+		}(reponse)
 		reponse.Next()
 		err = reponse.Scan(&nbLignes)
 		if err != nil {
 			return map[string]string{}, err
 		}
+		//log.Println(filepath.Join(cheminProjet, "collecteORC"))
 		if v.PrerequisOK(filepath.Join(cheminProjet, "collecteORC")) && nbLignes == 0 {
 			resultat[k] = v.Description()
 		}
@@ -60,6 +75,7 @@ func Extraction(module string, cheminProjet string) error {
 	if liste_extracteurs[module] == nil {
 		return errors.New("Erreur : module " + module + " non reconnu")
 	}
+	//err := liste_extracteurs[module].Extraction(filepath.Join(cheminProjet, "collecteORC")) // Master AbdelMoad: commit 04a90c8ebc005011aae072aa56441a6d656b68db
 	err := liste_extracteurs[module].Extraction(cheminProjet)
 	return err
 }

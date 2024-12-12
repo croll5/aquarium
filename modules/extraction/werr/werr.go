@@ -14,5 +14,5 @@ func (w Werr) PrerequisOK(cheminORC string) bool {
 }
 
 func (w Werr) Description() string {
-	return "Fichier d'erreurs Windows"
+	return "Fichier Werr [NULL]"
 }

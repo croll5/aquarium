@@ -171,7 +171,12 @@ func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string
 	if err != nil {
 		return err, nil
 	}
-	defer r.Close()
+	defer func(r *sevenzip.ReadCloser) {
+		err := r.Close()
+		if err != nil {
+
+		}
+	}(r)
 	// On parcourt tous les fichiers du dossier compressé et on les met dans la base de données
 	for _, fichierEvtx := range r.File {
 		var fichierSource string = filepath.Join(nomDossier, "Event", fichierEvtx.Name)
@@ -196,8 +201,16 @@ func (e Evtx) Extraction(cheminProjet string) error {
 	if err != nil {
 		return err
 	}
-	requete.Exec()
-	defer bd.Close()
+	_, err = requete.Exec()
+	if err != nil {
+		return err
+	}
+	defer func(bd *sql.DB) {
+		err := bd.Close()
+		if err != nil {
+
+		}
+	}(bd)
 	// Récupération du chemin de l'exécutable
 	emplacementExecutable, err := os.Executable()
 	if err != nil {
@@ -226,8 +239,16 @@ func (e Evtx) Extraction(cheminProjet string) error {
 	// }
 	var probleme error = nil
 	var cheminTemp string = filepath.Join(cheminProjet, "temp", "evtx")
-	os.MkdirAll(cheminTemp, os.ModeDir)
-	defer os.RemoveAll(cheminTemp)
+	err = os.MkdirAll(cheminTemp, os.ModeDir)
+	if err != nil {
+		return err
+	}
+	defer func(path string) {
+		err := os.RemoveAll(path)
+		if err != nil {
+
+		}
+	}(cheminTemp)
 	pasDossier, probleme := e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "General", bd)
 	if pasDossier != nil {
 		// Tous les évènements de Little/evtx sont aussi dans General/evtx, il est donc inutile de les rééxtraire
