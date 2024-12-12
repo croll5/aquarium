@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -249,9 +250,16 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 /***************************************************************************************/
 
 func (a *App) ListeReglesDetection(lancerRegles bool) map[string]int {
-	regles, err := detection.ListeReglesDetection(chemin_projet, lancerRegles)
+	regles, reglesEnErreur, err := detection.ListeReglesDetection(chemin_projet, lancerRegles)
 	if err != nil {
 		a.signalerErreur(err)
+	}
+	if len(reglesEnErreur) != 0 {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "Certaines règles contiennent des erreurs",
+			Message: "Les règles suivantes ont renvoyé une erreur.\n - " + strings.Join(reglesEnErreur, "\n - ") + "\nNous vous conseillons de vérifier leur syntaxe.",
+		})
 	}
 	return regles
 }
@@ -268,6 +276,13 @@ func (a *App) ResultatRegleDetection(nomRegle string) int {
 	resultat, err := detection.ResultatRegleDetection(chemin_projet, nomRegle)
 	if err != nil {
 		a.signalerErreur(err)
+	}
+	if resultat == 0 {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "Certaines règles contiennent des erreurs",
+			Message: "L'exécution de cette règle a renvoyé une erreur.\nNous vous conseillons de vérifier sa syntaxe.",
+		})
 	}
 	return resultat
 }

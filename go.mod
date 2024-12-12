@@ -5,7 +5,6 @@ go 1.23.1
 require (
 	github.com/0xrawsec/golang-evtx v1.2.9
 	github.com/bodgit/sevenzip v1.5.2
-	github.com/go-gota/gota v0.12.0
 	github.com/pkg/errors v0.9.1
 	github.com/wailsapp/wails/v2 v2.9.2
 	modernc.org/sqlite v1.33.1
@@ -55,7 +54,6 @@ require (
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
-	gonum.org/v1/gonum v0.9.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240107210532-573471604cb6 // indirect
 	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect

@@ -50,7 +50,7 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	defer bd.Close()
 	resultat, err := bd.Query(detailsRegle.SQL)
 	if err != nil {
-		return 0, err
+		return 0, nil
 	}
 	defer resultat.Close()
 	if resultat.Next() {
@@ -81,14 +81,15 @@ func emplacementRegles() string {
 /* FONCTIONS GLOBALES */
 
 /* Fonction qui renvoie une liste de règles associées à leur état (0:non lancé, 1:négatif, 2:positif) */
-func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]int, error) {
+func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]int, []string, error) {
 	var listeRegles map[string]int = map[string]int{}
 	// On commence par chercher l'emplacement du logiciel aquarium
 	fichiersRegles, err := os.ReadDir(emplacementRegles())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var probleme error = nil
+	var reglesEnErreur []string = []string{}
 	for _, fichierRegle := range fichiersRegles {
 		var nomRegle string = strings.Replace(fichierRegle.Name(), ".json", "", 1)
 		if lancerRegles {
@@ -98,12 +99,14 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]in
 				probleme = err
 				listeRegles[nomRegle] = 0
 				log.Println("detection.go => lancerRegle(", nomRegle, ") : ", err)
+			} else if listeRegles[nomRegle] == 0 {
+				reglesEnErreur = append(reglesEnErreur, nomRegle)
 			}
 		} else {
 			listeRegles[nomRegle] = 0
 		}
 	}
-	return listeRegles, probleme
+	return listeRegles, reglesEnErreur, probleme
 }
 
 func ResultatRegleDetection(cheminProjet string, nomRegle string) (int, error) {
