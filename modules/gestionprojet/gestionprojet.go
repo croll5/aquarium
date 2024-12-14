@@ -1,6 +1,8 @@
 package gestionprojet
 
 import (
+	"aquarium/modules/extraction"
+	"aquarium/modules/extraction/utilitaires"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,8 +13,6 @@ import (
 	"time"
 
 	"github.com/bodgit/sevenzip"
-
-	"database/sql"
 
 	_ "modernc.org/sqlite"
 )
@@ -51,22 +51,8 @@ func CreationArborescence(chemin string) bool {
 		return false
 	}
 	defer fichier.Close()
-	fichier.WriteString("coucou")
 	// Création de la base de données qui contiendra la chronologie des évènements
-	bd, err := sql.Open("sqlite", filepath.Join(chemin, "analyse", "extractions.db"))
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	defer bd.Close()
-	var requete string = "CREATE TABLE chronologie(id INT PRIMARY KEY, extracteur VARCHAR(25), horodatage DATETIME, source VARCHAR(25), message TEXT)"
-	bd.Exec(requete)
-	requete = "CREATE TABLE indicateurs(id INT PRIMARY KEY, type VARCHAR(32), valeur VARCHAR(50), tlp VARCHAR(10), pap VARCHAR(10), commentaire TEXT)"
-	bd.Exec(requete)
-	requete = "CREATE TABLE indicateurs_evenements(id_indicateur INT, id_evenement INT, FOREIGN KEY(id_indicateur) REFERENCES indicateurs(id), FOREIGN KEY(id_evenement) REFERENCES chronologie(id))"
-	bd.Exec(requete)
-	requete = "CREATE TABLE navigateurs(id INTEGER PRIMARY KEY AUTOINCREMENT, horodatage DATETIME, url VARCHAR(50), title VARCHAR(50), domain_name VARCHAR(25), visit_count INT)"
-	bd.Exec(requete)
+	extraction.CreationBaseAnalyse(chemin)
 	return true
 }
 
@@ -113,31 +99,6 @@ func RecuperationOrcs(listeOrcs []string, cheminAnalyse string) bool {
 	return true
 }
 
-/* Fonction permettant d'extraire un fichier d'un dossier compressé en 7z
- */
-func ExtraireFichierDepuis7z(file *sevenzip.File, destination string) error {
-	rc, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer rc.Close()
-
-	log.Println("INFO | Dezippage du fichier ", file.Name)
-	os.MkdirAll(filepath.Join(destination, filepath.Dir(file.Name)), 0755)
-	fichierExtrait, err := os.Create(filepath.Join(destination, file.Name))
-	if err != nil {
-		log.Println("ERROR | Problème dans la création du fichier de copie : ", err.Error())
-	}
-	defer fichierExtrait.Close()
-
-	_, err = io.Copy(fichierExtrait, rc)
-	if err != nil {
-		log.Println("ERROR | Problème dans l'extraction de l'ORC : ", err.Error())
-	}
-
-	return nil
-}
-
 /* Fonction permettant de décompresser un dossier compressé en 7z
  * Cette fonction utilise la bibliothèque sevenzip,
  * dont la documentation est présente ici : https://pkg.go.dev/github.com/bodgit/sevenzip
@@ -150,7 +111,7 @@ func ExtractArchive7z(archive string, destination string) error {
 	defer r.Close()
 
 	for _, f := range r.File {
-		if err = ExtraireFichierDepuis7z(f, destination); err != nil {
+		if err = utilitaires.ExtraireFichierDepuis7z(f, destination); err != nil {
 			return err
 		}
 	}

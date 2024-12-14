@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"aquarium/modules/extraction/utilitaires"
+
 	"github.com/bodgit/sevenzip"
 )
 
@@ -146,4 +147,12 @@ func (d Divers) PrerequisOK(cheminORC string) bool {
 	}
 
 	return false
+}
+
+func (d Divers) CreationTable(cheminProjet string) error {
+	return nil
+}
+
+func (d Divers) PourcentageChargement() int {
+	return 0
 }

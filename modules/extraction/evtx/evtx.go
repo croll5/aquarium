@@ -1,8 +1,8 @@
 package evtx
 
 import (
-	"aquarium/modules/gestionprojet"
-	"database/sql"
+	"aquarium/modules/aquabase"
+	"aquarium/modules/extraction/utilitaires"
 	"fmt"
 	"log"
 	"os"
@@ -13,11 +13,6 @@ import (
 	"github.com/bodgit/sevenzip"
 	"github.com/pkg/errors"
 )
-
-// Requêtes SQL
-var creationTable = "CREATE TABLE IF NOT EXISTS evtx(horodatage DATETIME, eventID int, eventRecordID int, processID int, threadID int, level int, providerGuid VARCHAR(36), providerName VARCHAR(50), task int, message TEXT, source TEXT, PRIMARY KEY (horodatage, eventRecordID, source))"
-var recuperationMessageEvtx = "SELECT messages.message FROM messages INNER JOIN providers ON messages.provider_id = providers.id WHERE providers.name = ? AND messages.event_id = ?"
-var ajoutEvenementDansBDD = "INSERT INTO Evtx VALUES "
 
 type Evtx struct{}
 
@@ -31,7 +26,7 @@ type Evtx struct{}
 @param fichierSource : le chemin vers le fichier source
 @return : une erreur s'il y a eu des problèmes dans l'extraction des caractéristiques de l'évènement
 */
-func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *[]string, fichierSource string) error {
+func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aquabase.RequeteInsertion, fichierSource string) error {
 	var message string = ""
 	var nbErreurs int = 0
 	var chemin = evtx.GoEvtxPath{"Event", "System", "Provider", "Name"}
@@ -58,7 +53,7 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *[]
 		nbErreurs++
 	} else {
 		var infosEvenementJson []byte = evtx.ToJSON(infosEvenement)
-		message += "\n" + strings.ReplaceAll(string(infosEvenementJson), "\"", "“")
+		message += "\n" + strings.ReplaceAll(string(infosEvenementJson), "\"", "&quot;")
 	}
 	// Récupération du processID
 	chemin = evtx.GoEvtxPath{"Event", "System", "Execution", "ProcessID"}
@@ -98,9 +93,8 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *[]
 		message += "\n" + strings.ReplaceAll(string(evtx.ToJSON(evenement)), "\"", "“")
 	}
 	// Concaténation de toutes les informations précédemment récupérées
-	var valeurs string = strings.Join([]string{"\"" + evenement.TimeCreated().String() + "\"", fmt.Sprint(evenement.EventID()), fmt.Sprint(evenement.EventRecordID()), processID, threadID, level, "\"" + providerGuid + "\"", "\"" + strings.ReplaceAll(provider, "\"", "“") + "\"", task, "\"" + message + "\"", "\"" + strings.ReplaceAll(fichierSource, "\"", "“") + "\""}, ",")
-	// Ajout des parenthèses et concaténation avec la requête déjà existante
-	*requeteInsertionEvtx = append(*requeteInsertionEvtx, "("+valeurs+")")
+	var valeurAAjouter []string = []string{evenement.TimeCreated().String(), fmt.Sprint(evenement.EventID()), fmt.Sprint(evenement.EventRecordID()), processID, threadID, level, providerGuid, provider, task, message, fichierSource}
+	requeteInsertionEvtx.AjouterDansRequete(valeurAAjouter)
 	return nil
 }
 
@@ -113,9 +107,9 @@ Fonction qui, à partir d'un fichier evtx zippé, ajoute tous ses évènements �
 @param cheminTemp : le chemin vers un répertoire temporaire
 @param fichierSource : le chemin du fichier evtx à extraire
 */
-func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *sevenzip.File, bd *sql.DB, cheminTemp string, fichierSource string) error {
+func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *sevenzip.File, cheminTemp string, fichierSource string) error {
 	// On commence par copier le fichier concerné dans le dossier temporaire
-	err := gestionprojet.ExtraireFichierDepuis7z(fichier, cheminTemp)
+	err := utilitaires.ExtraireFichierDepuis7z(fichier, cheminTemp)
 	if err != nil {
 		return err
 	}
@@ -132,7 +126,7 @@ func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *seve
 	// On récupère la liste des évènements
 	listeEvenements := fichierEvtx.FastEvents()
 	var probleme error = nil
-	var requeteInsertionEvtx []string = []string{}
+	var requeteInsertionEvtx aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("Evtx")
 	for evenement := range listeEvenements {
 		// On ajoute chaque évènement à la requete
 		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource)
@@ -140,18 +134,11 @@ func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *seve
 			probleme = err
 		}
 	}
-	// S'il n'y a rien dans la requete, c'est que le fichier est vide
-	if len(requeteInsertionEvtx) == 0 {
-		return nil
-	}
-	// On forme la requête...
-	var requeteInsertionEvtxFinale string = ajoutEvenementDansBDD + strings.Join(requeteInsertionEvtx, ",")
-	// ... et on l'exécute
-	_, err = bd.Exec(requeteInsertionEvtxFinale)
+	// On exécute la requete
+	err = requeteInsertionEvtx.Executer(cheminProjet)
 	// Si l'on n'a pas pu l'exécuter, on renvoie une erreur
 	if err != nil {
-		log.Println("Requête échouée :")
-		log.Println(requeteInsertionEvtxFinale)
+		log.Println("ERROR - extraireEvenementDepuisFichier : ", err)
 		return err
 	}
 	return probleme
@@ -164,23 +151,18 @@ Fonction qui extrait tous les fichiers evtx d'un dossier donnée
 @param nomDossier : le nom du dossier duquel extraire les évènements
 @param bd : un pointeur vers la base de données dans laquelle écrire les évènements
 */
-func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string, nomDossier string, bd *sql.DB) (error, error) {
+func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string, nomDossier string) (error, error) {
 	var probleme error = nil
 	// On ouvre le dossier compressé avec la bibliothèque 7zip
 	r, err := sevenzip.OpenReaderWithPassword(filepath.Join(cheminProjet, "collecteORC", nomDossier, "Event.7z"), "avproof")
 	if err != nil {
 		return err, nil
 	}
-	defer func(r *sevenzip.ReadCloser) {
-		err := r.Close()
-		if err != nil {
-
-		}
-	}(r)
+	defer r.Close()
 	// On parcourt tous les fichiers du dossier compressé et on les met dans la base de données
 	for _, fichierEvtx := range r.File {
 		var fichierSource string = filepath.Join(nomDossier, "Event", fichierEvtx.Name)
-		err = e.extraireEvenementsDepuisFichier(cheminProjet, fichierEvtx, bd, cheminTemp, fichierSource)
+		err = e.extraireEvenementsDepuisFichier(cheminProjet, fichierEvtx, cheminTemp, fichierSource)
 		if err != nil {
 			probleme = err
 		}
@@ -192,39 +174,23 @@ func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string
 
 /* Fonction d'extraction des fichiers evtx */
 func (e Evtx) Extraction(cheminProjet string) error {
-	// Ouverture de la base de données et création d'une nouvelle table
-	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
-	if err != nil {
-		return errors.New("Problème dans l'ouverture de la base de données d'analyse. \nAssurez vous que vous n'avez pas supprimé de fichiers ou recommencez une analyse. \n" + err.Error())
-	}
-	requete, err := bd.Prepare(creationTable)
-	if err != nil {
-		return err
-	}
-	_, err = requete.Exec()
-	if err != nil {
-		return err
-	}
-	defer func(bd *sql.DB) {
-		err := bd.Close()
-		if err != nil {
-
-		}
-	}(bd)
+	// Création d'une nouvelle table
+	var aquabase aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	aquabase.CreateTableIfNotExist("evtx", []string{"horodatage", "eventID", "eventRecordID", "processID", "threadID", "level", "providerGuid", "providerName", "task", "message", "source"})
 	// Récupération du chemin de l'exécutable
-	emplacementExecutable, err := os.Executable()
-	if err != nil {
-		return errors.New("Impossible d'atteindre la base de donnée des messages.")
-	}
-	emplacementExecutable, err = filepath.EvalSymlinks(emplacementExecutable)
-	if err != nil {
-		return errors.New("Impossible d'atteindre la base de donnée des messages.")
-	}
+	// emplacementExecutable, err := os.Executable()
+	// if err != nil {
+	// 	return errors.New("Impossible d'atteindre la base de donnée des messages.")
+	// }
+	// emplacementExecutable, err = filepath.EvalSymlinks(emplacementExecutable)
+	// if err != nil {
+	// 	return errors.New("Impossible d'atteindre la base de donnée des messages.")
+	// }
 	// Vérification de l'existence de la base de données
-	_, err = os.Stat(filepath.Join(filepath.Dir(emplacementExecutable), "ressources", "messages_evtx.db"))
-	if err != nil {
-		return errors.New("La base des messages evtx Windows n'est pas présente dans le dossier " + filepath.Join(filepath.Dir(emplacementExecutable), "ressources") + "Ou n'a pas le bon nom (messages_evtx.db)\nVous pouvez la télécharger à l'adresse suivante https://github.com/Velocidex/evtx-data ou réinstaller le logiciel (https://github.com/croll5/aquarium/releases)")
-	}
+	// _, err = os.Stat(filepath.Join(filepath.Dir(emplacementExecutable), "ressources", "messages_evtx.db"))
+	// if err != nil {
+	// 	return errors.New("La base des messages evtx Windows n'est pas présente dans le dossier " + filepath.Join(filepath.Dir(emplacementExecutable), "ressources") + "Ou n'a pas le bon nom (messages_evtx.db)\nVous pouvez la télécharger à l'adresse suivante https://github.com/Velocidex/evtx-data ou réinstaller le logiciel (https://github.com/croll5/aquarium/releases)")
+	// }
 	// // Ouverture de la base de données des messages evtx
 	// bdMessagesEvtx, err := sql.Open("sqlite", filepath.Join(filepath.Dir(emplacementExecutable), "ressources", "messages_evtx.db"))
 	// if err != nil {
@@ -239,20 +205,15 @@ func (e Evtx) Extraction(cheminProjet string) error {
 	// }
 	var probleme error = nil
 	var cheminTemp string = filepath.Join(cheminProjet, "temp", "evtx")
-	err = os.MkdirAll(cheminTemp, os.ModeDir)
+	err := os.MkdirAll(cheminTemp, os.ModeDir)
 	if err != nil {
 		return err
 	}
-	defer func(path string) {
-		err := os.RemoveAll(path)
-		if err != nil {
-
-		}
-	}(cheminTemp)
-	pasDossier, probleme := e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "General", bd)
+	defer os.RemoveAll(cheminTemp)
+	pasDossier, probleme := e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "General")
 	if pasDossier != nil {
 		// Tous les évènements de Little/evtx sont aussi dans General/evtx, il est donc inutile de les rééxtraire
-		pasDossier, probleme = e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "Little", bd)
+		pasDossier, probleme = e.extraireEvementsDansDossier(cheminProjet, cheminTemp, "Little")
 		if pasDossier != nil {
 			return errors.New("Les fichiers General\\Event.7z et Little\\Event.7z ne peuvent être ouverts.")
 		}
@@ -283,4 +244,12 @@ func (e Evtx) PrerequisOK(cheminCollecte string) bool {
 		}
 	}
 	return false
+}
+
+func (e Evtx) CreationTable(cheminProjet string) error {
+	return nil
+}
+
+func (e Evtx) PourcentageChargement() int {
+	return 0
 }

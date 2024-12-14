@@ -3,8 +3,13 @@ package utilitaires
 import (
 	"database/sql"
 	"encoding/binary"
+	"io"
+	"log"
+	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/bodgit/sevenzip"
 )
 
 /*
@@ -33,17 +38,17 @@ func AjoutEvenementDansBDD(cheminProjet string, extracteur string, horodatage ti
 }
 
 func AjoutLogsNavigateur(cheminProjet string, horodatage time.Time, url string, title string, domain_name string, visit_count int) error {
-    bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
-    if err != nil {
-    	return err
-    }
-    defer bd.Close()
-    requete, err := bd.Prepare ("INSERT INTO navigateurs(horodatage, url, title, domain_name, visit_count) VALUES (?, ?, ?, ?, ?)")
-    if err != nil {
-    		return err
-    	}
-    	_, err = requete.Exec(horodatage, url, title, domain_name, visit_count)
-    	return err
+	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
+	if err != nil {
+		return err
+	}
+	defer bd.Close()
+	requete, err := bd.Prepare("INSERT INTO navigateurs(horodatage, url, title, domain_name, visit_count) VALUES (?, ?, ?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	_, err = requete.Exec(horodatage, url, title, domain_name, visit_count)
+	return err
 }
 
 func FileTimeVersGo(date []byte) time.Time {
@@ -52,4 +57,29 @@ func FileTimeVersGo(date []byte) time.Time {
 	var complement = dateInt % 10000000
 	var referentiel = time.Date(1601, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 	return time.Unix(referentiel+difference, complement)
+}
+
+/* Fonction permettant d'extraire un fichier d'un dossier compressé en 7z
+ */
+func ExtraireFichierDepuis7z(file *sevenzip.File, destination string) error {
+	rc, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+
+	log.Println("INFO | Dezippage du fichier ", file.Name)
+	os.MkdirAll(filepath.Join(destination, filepath.Dir(file.Name)), 0755)
+	fichierExtrait, err := os.Create(filepath.Join(destination, file.Name))
+	if err != nil {
+		log.Println("ERROR | Problème dans la création du fichier de copie : ", err.Error())
+	}
+	defer fichierExtrait.Close()
+
+	_, err = io.Copy(fichierExtrait, rc)
+	if err != nil {
+		log.Println("ERROR | Problème dans l'extraction de l'ORC : ", err.Error())
+	}
+
+	return nil
 }

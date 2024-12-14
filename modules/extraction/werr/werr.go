@@ -16,3 +16,11 @@ func (w Werr) PrerequisOK(cheminORC string) bool {
 func (w Werr) Description() string {
 	return "Fichier Werr [NULL]"
 }
+
+func (w Werr) CreationTable(cheminProjet string) error {
+	return nil
+}
+
+func (w Werr) PourcentageChargement() int {
+	return 0
+}

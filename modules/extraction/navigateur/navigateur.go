@@ -1,16 +1,18 @@
 package navigateur
 
 import (
+	"aquarium/modules/aquabase"
 	"aquarium/modules/extraction/utilitaires"
 	"database/sql"
 	"fmt"
-	"github.com/bodgit/sevenzip"
 	"io"
 	"io/ioutil"
 	"log"
-	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
+
+	"github.com/bodgit/sevenzip"
+	_ "modernc.org/sqlite"
 )
 
 const (
@@ -83,6 +85,16 @@ func (n Navigateur) Description() string {
 
 func (n Navigateur) PrerequisOK(cheminORC string) bool {
 	return true
+}
+
+func (n Navigateur) CreationTable(cheminProjet string) error {
+	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	base.CreateTableIfNotExist("navigateurs", []string{"horodatage", "url", "title", "domain_name", "visit_count"})
+	return nil
+}
+
+func (n Navigateur) PourcentageChargement() int {
+	return 0
 }
 
 func openDataFiles(filePath string, requete string, logs *[]Log) {
