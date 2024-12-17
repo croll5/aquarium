@@ -1,0 +1,29 @@
+.dossier_arborescence{
+    margin-left: 20px;
+    font-weight: normal;
+}
+
+.dossier_arborescence > summary:hover{
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.fichier_arborescence{
+    margin: 0px;
+    margin-left: 20px;
+    font-weight: bolder;
+}
+
+#extraction_arborescence{
+    display: none;
+    text-align: center;
+}
+
+#patientez{
+    display: none;
+}
+
+/*div contenant l'arborescence et sa légende*/
+#affichage_arbo{
+    display: none;
+}

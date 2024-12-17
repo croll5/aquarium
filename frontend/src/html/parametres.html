@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parametres</title>
+    <link rel="stylesheet" href="../templates/bibliotheque.css">
+    <link rel="stylesheet" href="../templates/commun_sombre.css">
+    <script src="../js/outils/bubulles.js" async></script>
+    <script src="../js/parametres.js" async></script>
+    <script src="../templates/bibliotheque.js" async></script>
+</head>
+<body>
+    <h1>Paramètres</h1>
+    <div class="champ">
+        <input type="checkbox" id="contrastes" onchange="changer_contrastes()">
+        <label for="contrastes">Mode contrastes élevés</label>
+    </div>
+    <div class="champ">
+        <input type="checkbox" id="dyslexie" onchange="changer_dyslexie()">
+        <label for="dyslexie">Police adaptée pour la dyslexie</label>
+    </div>
+    <div class="champ">
+        <input type="checkbox" id="non_aux_bubulles" onchange="enlever_bubulles()">
+        <label for="non_aux_bubulles">Désactiver l'affichage des bulles 🥲</label>
+    </div>
+    <div>
+    <button class="bouton_clair" onclick="quitter_parametres()">Enregistrer</button>
+</div>
+</body>
+</html>
