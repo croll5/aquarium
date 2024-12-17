@@ -66,5 +66,5 @@ func Extraction(module string, chemin_projet string) error {
 		return errors.New("Erreur : module " + module + " non reconnu")
 	}
 	err := liste_extracteurs[module].Extraction(chemin_projet)
-	return errn
+	return err
 }

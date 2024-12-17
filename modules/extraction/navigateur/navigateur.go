@@ -162,6 +162,10 @@ func extractArchive(archive string, destination string) error {
 	}
 
 	return nil
+<<<<<<< HEAD
 }
 
 
+=======
+}
+>>>>>>> dedd414 (extracteur_navigateur)
