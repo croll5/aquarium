@@ -10,6 +10,7 @@ require (
 	github.com/wailsapp/wails/v2 v2.9.2
 	modernc.org/sqlite v1.33.1
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
+
 )
 
 require github.com/0xrawsec/golang-utils v1.3.0 // indirect
