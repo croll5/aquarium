@@ -30,7 +30,10 @@ func (n Navigateur) Extraction(chemin_projet string) error {
     // Dézipper le dossier Browsers_history.7z
     path := chemin_projet + "\\collecteORC\\Browsers\\Browsers_history.7z" 
     if err := os.Mkdir(filepath.Join(chemin_projet, "\\collecteORC\\Browsers\\History"), os.ModeDir); err != nil {
-            log.Fatal(err)
+            return err
+            //AffichagePopUp("Extraction déjà effectuée","Vous ne pouvez pas réaliser cette action car l'extraction des données de navigation a déjà été réalisée.")
+            //log.Fatal(err)
+           
     }    
     dest_path := chemin_projet + "\\collecteORC\\Browsers\\History"
     extractArchive(path, dest_path)
@@ -162,10 +165,5 @@ func extractArchive(archive string, destination string) error {
 	}
 
 	return nil
-<<<<<<< HEAD
 }
 
-
-=======
-}
->>>>>>> dedd414 (extracteur_navigateur)
