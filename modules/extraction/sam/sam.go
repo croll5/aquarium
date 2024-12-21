@@ -100,8 +100,12 @@ func (s Sam) CreationTable(cheminProjet string) error {
 	return nil
 }
 
-func (s Sam) PourcentageChargement() int {
-	return 0
+func (s Sam) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+	return -1
+}
+
+func (s Sam) Annuler() bool {
+	return true
 }
 
 func (s Sam) Description() string {
@@ -119,4 +123,8 @@ func (s Sam) PrerequisOK(cheminCollecte string) bool {
 		}
 	}
 	return false
+}
+
+func (s Sam) DetailsEvenement(idEvt int) string {
+	return "Pas d'informations supplémentaires"
 }

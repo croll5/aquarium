@@ -16,6 +16,10 @@ import (
 
 type Evtx struct{}
 
+var progressionChargement float32 = -1
+var demandeInterruption bool = false
+var interruptionReussie bool = false
+
 // -------------------------- FONCTIONS LOCALES -------------------------- //
 
 /*
@@ -160,23 +164,38 @@ func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string
 	}
 	defer r.Close()
 	// On parcourt tous les fichiers du dossier compressé et on les met dans la base de données
-	for _, fichierEvtx := range r.File {
+	var nbFichiers float32 = float32(len(r.File))
+	for numFichier, fichierEvtx := range r.File {
+		if demandeInterruption {
+			err = interruptionExtracteur(cheminProjet)
+			if err == nil {
+				interruptionReussie = true
+				return nil, errors.New("Operation Annulee")
+			}
+		}
 		var fichierSource string = filepath.Join(nomDossier, "Event", fichierEvtx.Name)
 		err = e.extraireEvenementsDepuisFichier(cheminProjet, fichierEvtx, cheminTemp, fichierSource)
 		if err != nil {
 			probleme = err
 		}
+		progressionChargement = float32(numFichier*100) / nbFichiers
 	}
 	return nil, probleme
+}
+
+func interruptionExtracteur(cheminProjet string) error {
+	var bdd aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	var err error = bdd.RemoveFromWhere("evtx", "1=1")
+	progressionChargement = -1
+	return err
 }
 
 // ------------------------- FONCTIONS GLOBALES ------------------------- //
 
 /* Fonction d'extraction des fichiers evtx */
 func (e Evtx) Extraction(cheminProjet string) error {
+	progressionChargement = 0
 	// Création d'une nouvelle table
-	var aquabase aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	aquabase.CreateTableIfNotExist("evtx", []string{"horodatage", "eventID", "eventRecordID", "processID", "threadID", "level", "providerGuid", "providerName", "task", "message", "source"})
 	// Récupération du chemin de l'exécutable
 	// emplacementExecutable, err := os.Executable()
 	// if err != nil {
@@ -219,6 +238,12 @@ func (e Evtx) Extraction(cheminProjet string) error {
 		}
 	}
 	log.Println(probleme)
+	if probleme == nil || probleme.Error() != "Operation Annulee" {
+
+		progressionChargement = 101
+	} else {
+		progressionChargement = -1
+	}
 	return nil
 }
 
@@ -247,9 +272,37 @@ func (e Evtx) PrerequisOK(cheminCollecte string) bool {
 }
 
 func (e Evtx) CreationTable(cheminProjet string) error {
-	return nil
+	var aquabase aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	err := aquabase.CreateTableIfNotExist("evtx", []string{"horodatage", "eventID", "eventRecordID", "processID", "threadID", "level", "providerGuid", "providerName", "task", "message", "source"})
+	return err
 }
 
-func (e Evtx) PourcentageChargement() int {
-	return 0
+func (e Evtx) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+	if progressionChargement == -1 && verifierTableVide {
+		// On véfifie que l'extracteur n'a pas déjà été chargé
+		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		if base.EstTableVide("evtx") {
+			return -1
+		} else {
+			return 100
+		}
+	}
+	return progressionChargement
+}
+
+func (e Evtx) Annuler() bool {
+	if demandeInterruption {
+		if interruptionReussie {
+			demandeInterruption = false
+		}
+		return interruptionReussie
+	} else {
+		interruptionReussie = false
+		demandeInterruption = true
+	}
+	return false
+}
+
+func (e Evtx) DetailsEvenement(idEvt int) string {
+	return "Pas d'informations supplémentaires"
 }

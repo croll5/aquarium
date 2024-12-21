@@ -17,8 +17,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-type Getthis struct {
-}
+type Getthis struct{}
 
 /* ******************************************************************** */
 /* ********************** Getthis Methods ***************************** */
@@ -36,8 +35,16 @@ func (gt Getthis) CreationTable(cheminProjet string) error {
 	return nil
 }
 
-func (gt Getthis) PourcentageChargement() int {
-	return 0
+func (gt Getthis) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+	return -1
+}
+
+func (gt Getthis) Annuler() bool {
+	return true
+}
+
+func (gt Getthis) DetailsEvenement(idEvt int) string {
+	return "Pas d'informations supplémentaires"
 }
 
 func (gt Getthis) Extraction(cheminProjet string) error {

@@ -97,3 +97,13 @@ button.onglet:hover{
     font-family: Consolas;
     border-radius: 5px;
 }
+
+.bouton_invisible{
+    background-color: #fff0;
+    border: none;
+}
+
+.bouton_invisible:hover{
+    cursor: pointer;
+    font-weight: bolder;
+}

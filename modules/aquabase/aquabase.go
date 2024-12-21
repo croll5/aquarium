@@ -350,6 +350,18 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 	return results
 }
 
+func (adb Aquabase) EstTableVide(table string) bool {
+	bdd, err := GetBDD(adb.dbPath)
+	if err != nil {
+		return true
+	}
+	resultat, err := bdd.Query("SELECT * FROM " + table + " LIMIT 1")
+	if err != nil {
+		return false
+	}
+	return !resultat.Next()
+}
+
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */
 
 func nettoyage(entree string) string {
