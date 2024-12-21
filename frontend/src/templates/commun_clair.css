@@ -24,3 +24,9 @@ summary:hover{
     cursor: pointer;
     font-weight: bolder;
 }
+
+.non_cliquable{
+    cursor: not-allowed;
+    color: var(--bleu-1);
+    font-style: italic;
+}

@@ -191,7 +191,7 @@ func (a *App) ValidationCreationModele(nomModele string, description string, sup
 /************************* Extraction FUNCTIONS  PAGE **********************************/
 /***************************************************************************************/
 
-func (a *App) ListeExtractionsPossibles() map[string]string {
+func (a *App) ListeExtractionsPossibles() map[string]extraction.InfosExtracteur {
 	resultat, err := extraction.ListeExtracteursHtml(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)
@@ -211,6 +211,14 @@ func (a *App) ExtraireElements(module string, description string) {
 			Message: "L’extraction du module " + description + " s'est terminée avec succès !",
 		})
 	}
+}
+
+func (a *App) AnnulerExtraction(module string) bool {
+	return extraction.AnnulerExtraction(module)
+}
+
+func (a *App) ProgressionExtraction(idExtracteur string) float32 {
+	return extraction.ProgressionExtraction(chemin_projet, idExtracteur)
 }
 
 /***************************************************************************************/

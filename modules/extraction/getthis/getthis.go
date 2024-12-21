@@ -6,18 +6,18 @@ import (
 	"aquarium/modules/aquabase"
 	"bytes"
 	"fmt"
-	"github.com/bodgit/sevenzip"
-	"github.com/go-gota/gota/dataframe"
-	"github.com/go-gota/gota/series"
 	"io"
-	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/bodgit/sevenzip"
+	"github.com/go-gota/gota/dataframe"
+	"github.com/go-gota/gota/series"
+	_ "modernc.org/sqlite"
 )
 
-type Getthis struct {
-}
+type Getthis struct{}
 
 /* ******************************************************************** */
 /* ********************** Getthis Methods ***************************** */
@@ -29,6 +29,22 @@ func (gt Getthis) PrerequisOK(cheminORC string) bool {
 
 func (gt Getthis) Description() string {
 	return "Fichier Getthis"
+}
+
+func (gt Getthis) CreationTable(cheminProjet string) error {
+	return nil
+}
+
+func (gt Getthis) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+	return -1
+}
+
+func (gt Getthis) Annuler() bool {
+	return true
+}
+
+func (gt Getthis) DetailsEvenement(idEvt int) string {
+	return "Pas d'informations supplémentaires"
 }
 
 func (gt Getthis) Extraction(cheminProjet string) error {

@@ -3,14 +3,76 @@ package aquabase
 import (
 	"database/sql"
 	"fmt"
-	"github.com/go-gota/gota/dataframe"
+	"log"
+	"path/filepath"
 	"strings"
+
+	"github.com/go-gota/gota/dataframe"
 )
 
 /** Structure jouant le role d'interface avec la database
  */
 type Aquabase struct {
 	dbPath string
+}
+
+type RequeteInsertion struct {
+	nomTable string
+	valeurs  []string
+}
+
+var basesDeDonnees map[string]*sql.DB = map[string]*sql.DB{}
+
+/* -------------------------- GESTION DE LA BASE DE DONNÉES -------------------------- */
+
+/*
+	Fonction qui ouvre la base de données renseignée
+	 - @param chemin : le chemin vers la base de données
+	 - @return : un pointeur vers la base de données ouverte
+
+Remarque : si la base est déjà ouverte, le programme revoie juste un pointeur vers celle-ci
+*/
+func GetBDD(chemin string) (*sql.DB, error) {
+	if _, ok := basesDeDonnees[chemin]; ok {
+		return basesDeDonnees[chemin], nil
+	}
+	bdd, err := sql.Open("sqlite", chemin)
+	if err != nil {
+		return nil, err
+	}
+	return bdd, nil
+}
+
+/*
+		Fonction qui ouvre la base d’analyse
+
+	  - @param cheminProjet : le chemin du dossier d’analyse
+	  - @return : un pointeur vers la base ouverte, et s’il y a lieu une erreur
+*/
+func GetBaseExtraction(cheminProjet string) (*sql.DB, error) {
+	return GetBDD(filepath.Join(cheminProjet, "analyse", "extractions.db"))
+}
+
+/* Fonction permettant de fermer une base de données */
+func FermerBDD(cheminBDD string) error {
+	err := basesDeDonnees[cheminBDD].Close()
+	if err != nil {
+		return err
+	}
+	delete(basesDeDonnees, cheminBDD)
+	return nil
+}
+
+/* Fonction qui ferme toutes les bases de données ouvertes avec la fonction GetBDD */
+func FermerToutesLesBDD() error {
+	var probleme error = nil
+	for cle := range basesDeDonnees {
+		err := FermerBDD(cle)
+		if err != nil {
+			probleme = err
+		}
+	}
+	return probleme
 }
 
 /*
@@ -25,18 +87,22 @@ func Init(dbPath string) Aquabase {
 	return a
 }
 
+func InitBDDExtraction(cheminProjet string) Aquabase {
+	a := Aquabase{}
+	a.dbPath = filepath.Join(cheminProjet, "analyse", "extractions.db")
+	return a
+}
+
 /** Create a connexion to the database.
  * After this functino: use defer db.Close() to close the connexion
  * @return : the Aquabase database connexion & an error if exist
  * Exemple : db, err := adb.Login()
  */
 func (adb Aquabase) Login() (*sql.DB, error) {
-	db, err := sql.Open("sqlite", adb.dbPath)
-	if err != nil {
-		return db, fmt.Errorf("Connexion to DB failed: %w", err)
-	}
-	return db, err
+	return GetBDD(adb.dbPath)
 }
+
+/* -------------------------- GESTION DES TABLES -------------------------- */
 
 /** Create a table in the database
  * @tableName : name of the new table
@@ -65,6 +131,8 @@ func (adb Aquabase) CreateTableIfNotExist(tableName string, tableColumns []strin
 	return err
 }
 
+/* -------------------------- SUPPRESSION DE VALEURS -------------------------- */
+
 /** Delete values from a table with condition(s)
  * @tableName : name of the new table
  * @tableColumns : columns of the new table
@@ -86,6 +154,8 @@ func (adb Aquabase) RemoveFromWhere(table string, where string) error {
 	}
 	return nil
 }
+
+/* -------------------------- INSERTION DE VALEURS -------------------------- */
 
 /** Insert into a table a dataframe
  * @df : the dataframe to save in the db
@@ -132,6 +202,47 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 	err = tx.Commit()
 	return err
 }
+
+/*
+		Fonction d’initialisation d’une requête d’insertion dans la base extraction
+
+	  - @param nomTable : le nom de la base dans laquelle il faut insérer les valeurs
+	  - @return : un objet de type RequeteInsertion
+*/
+func InitRequeteInsertionExtraction(nomTable string) RequeteInsertion {
+	var requete RequeteInsertion = RequeteInsertion{}
+	requete.nomTable = nomTable
+	requete.valeurs = []string{}
+	return requete
+}
+
+func (requete *RequeteInsertion) AjouterDansRequete(valeurs []string) error {
+	// On commence par nettoyer toutes les valeurs
+	for i := range valeurs {
+		valeurs[i] = "\"" + nettoyage(valeurs[i]) + "\""
+	}
+	// On en fait une unique chaîne de caractères
+	requete.valeurs = append(requete.valeurs, "("+strings.Join(valeurs, ",")+")")
+	return nil
+}
+
+func (requete *RequeteInsertion) Executer(cheminProjet string) error {
+	if len(requete.valeurs) == 0 {
+		log.Println("Il n’y avait aucun évènement !")
+		return nil
+	}
+	var bdd *sql.DB
+	bdd, err := GetBaseExtraction(cheminProjet)
+	if err != nil {
+		return err
+	}
+	var texteRequete string = "INSERT INTO " + requete.nomTable + " VALUES "
+	texteRequete += strings.Join(requete.valeurs, ",")
+	_, err = bdd.Exec(texteRequete)
+	return err
+}
+
+/* -------------------------- LECTURE DE LA BASE -------------------------- */
 
 /** Pragma request to obtains all the table name of the database
  * @return : dict of all table with the text "Columns: %d - Rows: %d"
@@ -237,4 +348,26 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 		return []map[string]interface{}{{"Info": "no value in: " + table}}
 	}
 	return results
+}
+
+func (adb Aquabase) EstTableVide(table string) bool {
+	bdd, err := GetBDD(adb.dbPath)
+	if err != nil {
+		return true
+	}
+	resultat, err := bdd.Query("SELECT * FROM " + table + " LIMIT 1")
+	if err != nil {
+		return false
+	}
+	return !resultat.Next()
+}
+
+/* -------------------------- FONCTIONS ANNEXES -------------------------- */
+
+func nettoyage(entree string) string {
+	entree = strings.ReplaceAll(entree, "\"", "&quot;")
+	entree = strings.ReplaceAll(entree, "<", "&lt;")
+	entree = strings.ReplaceAll(entree, ">", "&gt;")
+	entree = strings.ReplaceAll(entree, "&", "&amp")
+	return entree
 }

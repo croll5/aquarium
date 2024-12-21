@@ -1,16 +1,18 @@
 package navigateur
 
 import (
+	"aquarium/modules/aquabase"
 	"aquarium/modules/extraction/utilitaires"
 	"database/sql"
 	"fmt"
-	"github.com/bodgit/sevenzip"
 	"io"
 	"io/ioutil"
 	"log"
-	_ "modernc.org/sqlite"
 	"os"
 	"path/filepath"
+
+	"github.com/bodgit/sevenzip"
+	_ "modernc.org/sqlite"
 )
 
 const (
@@ -19,9 +21,7 @@ const (
 	req_Edge    = "SELECT url, title, 'NONE', datetime(last_visit_time / 1000000, 'unixepoch'), visit_count FROM urls;"
 )
 
-type Navigateur struct {
-	extrait bool
-}
+type Navigateur struct{}
 
 func (n Navigateur) Extraction(chemin_projet string) error {
 
@@ -83,6 +83,24 @@ func (n Navigateur) Description() string {
 
 func (n Navigateur) PrerequisOK(cheminORC string) bool {
 	return true
+}
+
+func (n Navigateur) CreationTable(cheminProjet string) error {
+	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	base.CreateTableIfNotExist("navigateurs", []string{"horodatage", "url", "title", "domain_name", "visit_count"})
+	return nil
+}
+
+func (n Navigateur) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+	return -1
+}
+
+func (n Navigateur) Annuler() bool {
+	return true
+}
+
+func (n Navigateur) DetailsEvenement(idEvt int) string {
+	return "Pas d'informations supplémentaires"
 }
 
 func openDataFiles(filePath string, requete string, logs *[]Log) {
