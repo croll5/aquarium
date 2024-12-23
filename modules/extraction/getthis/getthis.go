@@ -17,6 +17,14 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+var colnameFileName string = "extracteur"
+var columnSelection []string = []string{colnameFileName, "FullName", "MD5", "CreationDate", "LastModificationDate", "LastAccessDate"}
+
+var pourcentageChargement float32 = -1
+
+var annulationDemandee bool = false
+var annulationReussie bool = false
+
 type Getthis struct{}
 
 /* ******************************************************************** */
@@ -32,15 +40,31 @@ func (gt Getthis) Description() string {
 }
 
 func (gt Getthis) CreationTable(cheminProjet string) error {
+	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	base.CreateTableIfNotExist("getthis", columnSelection)
 	return nil
 }
 
 func (gt Getthis) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
-	return -1
+	if pourcentageChargement == -1 {
+		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		if !base.EstTableVide("getthis") {
+			pourcentageChargement = 100
+		}
+	}
+	return pourcentageChargement
 }
 
 func (gt Getthis) Annuler() bool {
-	return true
+	if annulationReussie {
+		annulationReussie = false
+		return true
+	}
+	if !annulationDemandee {
+		annulationDemandee = true
+		annulationReussie = false
+	}
+	return annulationReussie
 }
 
 func (gt Getthis) DetailsEvenement(idEvt int) string {
@@ -48,6 +72,7 @@ func (gt Getthis) DetailsEvenement(idEvt int) string {
 }
 
 func (gt Getthis) Extraction(cheminProjet string) error {
+	pourcentageChargement = 0
 	//log.Println("Bonjour, je suis censé faire des extractions {Getthis}")
 	//log.Println("dbPath:" + filepath.Join(cheminProjet, "analyse", "extractions.db"))
 	fileToSearch := "GetThis.csv"
@@ -58,8 +83,16 @@ func (gt Getthis) Extraction(cheminProjet string) error {
 	if err != nil {
 		return err
 	}
-	for _, getThis := range list_GetThis {
+	for numFile, getThis := range list_GetThis {
 		// Extract data
+		if annulationDemandee {
+			err := viderTableGetThis(cheminProjet)
+			if err == nil {
+				annulationDemandee = false
+				annulationReussie = true
+				return nil
+			}
+		}
 		df, err := readCsv(getThis)
 		if err != nil {
 			return err
@@ -69,14 +102,23 @@ func (gt Getthis) Extraction(cheminProjet string) error {
 		if err != nil {
 			return err
 		}
+		pourcentageChargement = (float32(numFile) * 10) / float32(len(list_GetThis))
 	}
 	// For each zipped .7z files found
 	list_7zFile, err := searchFilesInFolder(zipExtension, cheminProjet)
 	if err != nil {
 		return err
 	}
-	for _, archivePath := range list_7zFile {
+	for numFile, archivePath := range list_7zFile {
 		// Search CSV files in zip file
+		if annulationDemandee {
+			err := viderTableGetThis(cheminProjet)
+			if err == nil {
+				annulationDemandee = false
+				annulationReussie = true
+				return nil
+			}
+		}
 		list7z_GetThis, err := searchFilesIn7z(fileToSearch, archivePath, zipPassword)
 		if err != nil {
 			fmt.Println("Error skipped searchFilesIn7z: "+fileToSearch+" --- ", err)
@@ -106,8 +148,13 @@ func (gt Getthis) Extraction(cheminProjet string) error {
 		if len(z) > 0 {
 			fmt.Println("WARNING: files under two archive layers : ", z)
 		}
+		pourcentageChargement = 10 + (float32(numFile)*90)/float32(len(list_7zFile))
 	}
 	// No problem in the function
+	pourcentageChargement = 101
+	if annulationReussie {
+		pourcentageChargement = -1
+	}
 	return nil
 }
 
@@ -207,11 +254,9 @@ func readCsvIn7zFile(zipPath string, localisationIn7zFile string, password strin
 }
 
 func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string) error {
-	dbPath := filepath.Join(cheminProjet, "analyse", "extractions.db")
-	adb := aquabase.Init(dbPath)
+	adb := aquabase.InitBDDExtraction(cheminProjet)
 
 	// Add a filePath column to save the GetThis filename
-	colnameFileName := "extracteur"
 
 	colvalueList := strings.Split(strings.Split(filname, "::")[0], "\\")
 	colvalue := filepath.Join(colvalueList[len(colvalueList)-2], colvalueList[len(colvalueList)-1])
@@ -220,7 +265,7 @@ func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, t
 	fmt.Println("Import GetThis to DB: " + colvalue)
 
 	// Columns filter/selection if columns exist
-	columnSelection := []string{colnameFileName, "FullName", "MD5", "CreationDate", "LastModificationDate", "LastAccessDate"}
+
 	columns := listItemsInList(columnSelection, df.Names())
 	if len(columnSelection) != len(columns) {
 		return fmt.Errorf("ERROR: exportDfToDb(E01): [Wrong columns size]")
@@ -294,4 +339,9 @@ func DfAddColumn(df dataframe.DataFrame, colname string, value string) dataframe
 		sourceColumn[i] = value
 	}
 	return df.Mutate(series.New(sourceColumn, series.String, colname))
+}
+
+func viderTableGetThis(cheminProjet string) error {
+	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	return base.RemoveFromWhere("getthis", "1=1")
 }

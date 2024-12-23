@@ -15,6 +15,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+var pourcentageChargement float32 = -1
+
 const (
 	req_Firefox = "SELECT url, title, rev_host, datetime(last_visit_date / 1000000, 'unixepoch'), visit_count FROM moz_places;"
 	req_Chrome  = "SELECT url, title, 'NONE', datetime(last_visit_time / 1000000, 'unixepoch'), visit_count FROM urls;"
@@ -24,6 +26,8 @@ const (
 type Navigateur struct{}
 
 func (n Navigateur) Extraction(chemin_projet string) error {
+
+	pourcentageChargement = 0
 
 	// Dézipper le dossier Browsers_history.7z
 	path := filepath.Join(chemin_projet, "collecteORC", "Browsers", "Browsers_history.7z")
@@ -51,7 +55,7 @@ func (n Navigateur) Extraction(chemin_projet string) error {
 			if err != nil {
 				log.Fatal(err)
 			}
-			for _, extractFile := range extractFiles {
+			for numFichier, extractFile := range extractFiles {
 				var pathNavigator = filepath.Join(destPath, f.Name())
 				switch f.Name() {
 				case "Firefox_Vista_History":
@@ -66,6 +70,7 @@ func (n Navigateur) Extraction(chemin_projet string) error {
 				default:
 					fmt.Println("Navigateur non pris en charge")
 				}
+				pourcentageChargement = float32(numFichier*100) / float32(len(extractFiles))
 			}
 		}
 	}
@@ -73,7 +78,7 @@ func (n Navigateur) Extraction(chemin_projet string) error {
 	for _, log := range logs {
 		utilitaires.AjoutLogsNavigateur(chemin_projet, log.Time_date, log.Url, log.Title, log.Domain_name, log.Visit_count)
 	}
-
+	pourcentageChargement = 101
 	return nil
 }
 
@@ -92,11 +97,18 @@ func (n Navigateur) CreationTable(cheminProjet string) error {
 }
 
 func (n Navigateur) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
-	return -1
+	if pourcentageChargement == -1 {
+		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		if !base.EstTableVide("navigateurs") {
+			pourcentageChargement = 100
+		}
+	}
+	return pourcentageChargement
 }
 
 func (n Navigateur) Annuler() bool {
-	return true
+	// Trop peu de fichiers pour que cela ne soit pertinent
+	return pourcentageChargement >= 100
 }
 
 func (n Navigateur) DetailsEvenement(idEvt int) string {
