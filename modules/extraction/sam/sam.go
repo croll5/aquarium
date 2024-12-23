@@ -16,6 +16,11 @@ import (
 	"www.velocidex.com/golang/regparser"
 )
 
+/* VARIABLES GLOBALES */
+var pourcentageChargement float32 = -1
+
+var colonnesTableSam []string = []string{"horodatage", "idCompte", "nomCompte", "operation", "source"}
+
 type Sam struct{}
 
 func traiterInfosCompte(compte *regparser.CM_KEY_NODE, dejaFait *map[string][]bool, nomCompte string, source string, requete *aquabase.RequeteInsertion) {
@@ -30,12 +35,12 @@ func traiterInfosCompte(compte *regparser.CM_KEY_NODE, dejaFait *map[string][]bo
 		// Eventuel ajout de la date de dernière connexion
 		var derniereConnexion time.Time = utilitaires.FileTimeVersGo(DonneesF[8:16])
 		if derniereConnexion.After(minimum) && derniereConnexion.Before(time.Now()) && (!(*dejaFait)[compte.Name()][0]) {
-			requete.AjouterDansRequete([]string{derniereConnexion.String(), compte.Name(), nomCompte, "derniereConnexion", source})
+			requete.AjouterDansRequete(derniereConnexion.String(), compte.Name(), nomCompte, "derniereConnexion", source)
 			(*dejaFait)[compte.Name()] = []bool{true, (*dejaFait)[compte.Name()][1]}
 		}
 		var creationCompte = utilitaires.FileTimeVersGo(DonneesF[24:32])
 		if creationCompte.After(minimum) && creationCompte.Before(time.Now()) && (!(*dejaFait)[compte.Name()][1]) {
-			requete.AjouterDansRequete([]string{creationCompte.String(), compte.Name(), nomCompte, "creation", source})
+			requete.AjouterDansRequete(creationCompte.String(), compte.Name(), nomCompte, "creation", source)
 			(*dejaFait)[compte.Name()] = []bool{(*dejaFait)[compte.Name()][0], true}
 		}
 	}
@@ -43,6 +48,7 @@ func traiterInfosCompte(compte *regparser.CM_KEY_NODE, dejaFait *map[string][]bo
 
 func (s Sam) Extraction(cheminProjet string) error {
 	// Ouverture du fichier SAM.7z, qui contient les fichiers SAM
+	pourcentageChargement = 0
 	r, err := sevenzip.OpenReaderWithPassword(filepath.Join(cheminProjet, "collecteORC", "SAM", "SAM.7z"), "avproof")
 	if err != nil {
 		return err
@@ -50,7 +56,7 @@ func (s Sam) Extraction(cheminProjet string) error {
 	defer r.Close()
 	var dejaFait map[string][]bool = map[string][]bool{}
 	// Parcourt des fichiers contenus dans SAM.7z
-	for _, fichierSAM := range r.File {
+	for numFichier, fichierSAM := range r.File {
 		rc, err := fichierSAM.Open()
 		if err != nil {
 			log.Println("Format de fichier non supporté : ", err.Error())
@@ -85,27 +91,37 @@ func (s Sam) Extraction(cheminProjet string) error {
 		}
 		deuxiemeEssai := registre.OpenKey("SAM/Domains/Account/Users")
 		enfants = deuxiemeEssai.Subkeys()
-		var requete aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("sam")
+		var requete aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("sam", colonnesTableSam)
 		for _, compte := range enfants {
 			traiterInfosCompte(compte, &dejaFait, nomsDesComptes[compte.Name()], fichierSAM.Name, &requete)
 		}
 		requete.Executer(cheminProjet)
+		pourcentageChargement = float32(numFichier) * 100 / float32(len(r.File))
 	}
+	pourcentageChargement = 101
 	return nil
 }
 
 func (s Sam) CreationTable(cheminProjet string) error {
 	var aqua aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	aqua.CreateTableIfNotExist("sam", []string{"horodatage", "idCompte", "nomCompte", "operation", "source"})
+	aqua.CreateTableIfNotExist("sam", colonnesTableSam)
 	return nil
 }
 
 func (s Sam) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
-	return -1
+	if pourcentageChargement == -1 {
+		var bdd aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		if !bdd.EstTableVide("sam") {
+			pourcentageChargement = 100
+		}
+	}
+	return pourcentageChargement
 }
 
 func (s Sam) Annuler() bool {
-	return true
+	// Il n'y a pas suffisement de fichiers pour que cela ne soit pertinent.
+	// On attend donc simplement que l'extraction soit terminée.
+	return pourcentageChargement >= 100
 }
 
 func (s Sam) Description() string {

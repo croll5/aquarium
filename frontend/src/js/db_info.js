@@ -68,7 +68,7 @@ function print_table_head() {
             let tr = document.createElement('tr');
             for (let [key, value] of Object.entries(valueRows)) {
                 let td = document.createElement('td');
-                td.innerText = value;
+                td.innerHTML = value;
                 tr.appendChild(td);
             }
             tbody.appendChild(tr);

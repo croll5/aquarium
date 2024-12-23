@@ -26,12 +26,12 @@ type Navigateur struct{}
 func (n Navigateur) Extraction(chemin_projet string) error {
 
 	// Dézipper le dossier Browsers_history.7z
-	path := chemin_projet + "\\collecteORC\\Browsers\\Browsers_history.7z"
-	if err := os.Mkdir(filepath.Join(chemin_projet, "\\collecteORC\\Browsers\\History"), os.ModeDir); err != nil {
+	path := filepath.Join(chemin_projet, "collecteORC", "Browsers", "Browsers_history.7z")
+	if err := os.Mkdir(filepath.Join(chemin_projet, "collecteORC", "Browsers", "History"), os.ModeDir); err != nil {
 		log.Fatal(err)
 	}
-	dest_path := chemin_projet + "\\collecteORC\\Browsers\\History"
-	extractArchive(path, dest_path)
+	destPath := filepath.Join(chemin_projet, "collecteORC", "Browsers", "History")
+	extractArchive(path, destPath)
 
 	//Init tab logs
 	var logs []Log
@@ -39,7 +39,7 @@ func (n Navigateur) Extraction(chemin_projet string) error {
 
 	//List of files
 
-	files, err := ioutil.ReadDir(dest_path)
+	files, err := ioutil.ReadDir(destPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,21 +47,21 @@ func (n Navigateur) Extraction(chemin_projet string) error {
 	for _, f := range files {
 		fmt.Println(f.Name())
 		if f.IsDir() {
-			extractFiles, err := ioutil.ReadDir(dest_path + "\\" + f.Name())
+			extractFiles, err := ioutil.ReadDir(filepath.Join(destPath, f.Name()))
 			if err != nil {
 				log.Fatal(err)
 			}
 			for _, extractFile := range extractFiles {
-				var pathNavigator = dest_path + "\\" + f.Name()
+				var pathNavigator = filepath.Join(destPath, f.Name())
 				switch f.Name() {
 				case "Firefox_Vista_History":
-					openDataFiles(pathNavigator+"\\"+extractFile.Name(), req_Firefox, &logs)
+					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Firefox, &logs)
 					break
 				case "Chrome_Vista_History":
-					openDataFiles(pathNavigator+"\\"+extractFile.Name(), req_Chrome, &logs)
+					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Chrome, &logs)
 					break
 				case "Edge_Anhaeim_History":
-					openDataFiles(pathNavigator+"\\"+extractFile.Name(), req_Edge, &logs)
+					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Edge, &logs)
 					break
 				default:
 					fmt.Println("Navigateur non pris en charge")
