@@ -19,6 +19,8 @@ import (
 /* VARIABLES GLOBALES */
 var pourcentageChargement float32 = -1
 
+var colonnesTableSam []string = []string{"horodatage", "idCompte", "nomCompte", "operation", "source"}
+
 type Sam struct{}
 
 func traiterInfosCompte(compte *regparser.CM_KEY_NODE, dejaFait *map[string][]bool, nomCompte string, source string, requete *aquabase.RequeteInsertion) {
@@ -33,12 +35,12 @@ func traiterInfosCompte(compte *regparser.CM_KEY_NODE, dejaFait *map[string][]bo
 		// Eventuel ajout de la date de dernière connexion
 		var derniereConnexion time.Time = utilitaires.FileTimeVersGo(DonneesF[8:16])
 		if derniereConnexion.After(minimum) && derniereConnexion.Before(time.Now()) && (!(*dejaFait)[compte.Name()][0]) {
-			requete.AjouterDansRequete([]string{derniereConnexion.String(), compte.Name(), nomCompte, "derniereConnexion", source})
+			requete.AjouterDansRequete(derniereConnexion.String(), compte.Name(), nomCompte, "derniereConnexion", source)
 			(*dejaFait)[compte.Name()] = []bool{true, (*dejaFait)[compte.Name()][1]}
 		}
 		var creationCompte = utilitaires.FileTimeVersGo(DonneesF[24:32])
 		if creationCompte.After(minimum) && creationCompte.Before(time.Now()) && (!(*dejaFait)[compte.Name()][1]) {
-			requete.AjouterDansRequete([]string{creationCompte.String(), compte.Name(), nomCompte, "creation", source})
+			requete.AjouterDansRequete(creationCompte.String(), compte.Name(), nomCompte, "creation", source)
 			(*dejaFait)[compte.Name()] = []bool{(*dejaFait)[compte.Name()][0], true}
 		}
 	}
@@ -89,7 +91,7 @@ func (s Sam) Extraction(cheminProjet string) error {
 		}
 		deuxiemeEssai := registre.OpenKey("SAM/Domains/Account/Users")
 		enfants = deuxiemeEssai.Subkeys()
-		var requete aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("sam")
+		var requete aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("sam", colonnesTableSam)
 		for _, compte := range enfants {
 			traiterInfosCompte(compte, &dejaFait, nomsDesComptes[compte.Name()], fichierSAM.Name, &requete)
 		}
@@ -102,7 +104,7 @@ func (s Sam) Extraction(cheminProjet string) error {
 
 func (s Sam) CreationTable(cheminProjet string) error {
 	var aqua aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	aqua.CreateTableIfNotExist("sam", []string{"horodatage", "idCompte", "nomCompte", "operation", "source"})
+	aqua.CreateTableIfNotExist("sam", colonnesTableSam)
 	return nil
 }
 

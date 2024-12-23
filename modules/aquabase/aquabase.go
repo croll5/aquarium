@@ -2,6 +2,7 @@ package aquabase
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -17,8 +18,9 @@ type Aquabase struct {
 }
 
 type RequeteInsertion struct {
-	nomTable string
-	valeurs  []string
+	nomTable      string
+	colonnesTable []string
+	valeurs       [][]interface{}
 }
 
 var basesDeDonnees map[string]*sql.DB = map[string]*sql.DB{}
@@ -118,7 +120,7 @@ func (adb Aquabase) CreateTableIfNotExist(tableName string, tableColumns []strin
 	}
 	defer db.Close()
 	// CREATE TABLE IF NOT EXISTS
-	query := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (", tableName)
+	query := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, ", tableName)
 	for i, col := range tableColumns {
 		query += fmt.Sprintf("%s TEXT", col)
 		if i < len(tableColumns)-1 {
@@ -209,20 +211,20 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 	  - @param nomTable : le nom de la base dans laquelle il faut insérer les valeurs
 	  - @return : un objet de type RequeteInsertion
 */
-func InitRequeteInsertionExtraction(nomTable string) RequeteInsertion {
+func InitRequeteInsertionExtraction(nomTable string, colonnesTable []string) RequeteInsertion {
 	var requete RequeteInsertion = RequeteInsertion{}
 	requete.nomTable = nomTable
-	requete.valeurs = []string{}
+	requete.colonnesTable = colonnesTable
+	requete.valeurs = make([][]interface{}, 0)
 	return requete
 }
 
-func (requete *RequeteInsertion) AjouterDansRequete(valeurs []string) error {
-	// On commence par nettoyer toutes les valeurs
-	for i := range valeurs {
-		valeurs[i] = "\"" + nettoyage(valeurs[i]) + "\""
+func (requete *RequeteInsertion) AjouterDansRequete(valeurs ...any) error {
+	if len(valeurs) != len(requete.colonnesTable) {
+		return errors.New("Mauvais nombre de colonnes")
 	}
 	// On en fait une unique chaîne de caractères
-	requete.valeurs = append(requete.valeurs, "("+strings.Join(valeurs, ",")+")")
+	requete.valeurs = append(requete.valeurs, valeurs)
 	return nil
 }
 
@@ -236,9 +238,34 @@ func (requete *RequeteInsertion) Executer(cheminProjet string) error {
 	if err != nil {
 		return err
 	}
-	var texteRequete string = "INSERT INTO " + requete.nomTable + " VALUES "
-	texteRequete += strings.Join(requete.valeurs, ",")
-	_, err = bdd.Exec(texteRequete)
+	// Préparation des instesions
+	var texteRequete string = "INSERT INTO " + requete.nomTable + "("
+	texteRequete += strings.Join(requete.colonnesTable, ",")
+	texteRequete += ") VALUES (" + strings.Repeat("?,", len(requete.colonnesTable)-1) + "?)"
+	// Création de la transaction
+	// Start a transaction
+	tx, err := bdd.Begin()
+	if err != nil {
+		return fmt.Errorf("ERROR: requete.Executer() impossible de creer la transaction : %w", err)
+	}
+	// Prepare the query insertion
+
+	stmt, err := tx.Prepare(texteRequete)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("ERROR: requete.Executer() [Can't Prepare query]: %w", err)
+	}
+	defer stmt.Close()
+	// Add rows in the table
+	for _, ligne := range requete.valeurs {
+		_, err = stmt.Exec(ligne...)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("ERROR: exportDfToDB() [Can't add data]: %w", err)
+		}
+	}
+	// Commit the transaction
+	err = tx.Commit()
 	return err
 }
 

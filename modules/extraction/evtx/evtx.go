@@ -3,7 +3,6 @@ package evtx
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/extraction/utilitaires"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,6 +18,8 @@ type Evtx struct{}
 var progressionChargement float32 = -1
 var demandeInterruption bool = false
 var interruptionReussie bool = false
+
+var colonnesTableEvtx = []string{"horodatage", "eventID", "eventRecordID", "processID", "threadID", "level", "providerGuid", "providerName", "task", "message", "source"}
 
 // -------------------------- FONCTIONS LOCALES -------------------------- //
 
@@ -97,8 +98,7 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aq
 		message += "\n" + strings.ReplaceAll(string(evtx.ToJSON(evenement)), "\"", "“")
 	}
 	// Concaténation de toutes les informations précédemment récupérées
-	var valeurAAjouter []string = []string{evenement.TimeCreated().String(), fmt.Sprint(evenement.EventID()), fmt.Sprint(evenement.EventRecordID()), processID, threadID, level, providerGuid, provider, task, message, fichierSource}
-	requeteInsertionEvtx.AjouterDansRequete(valeurAAjouter)
+	requeteInsertionEvtx.AjouterDansRequete(evenement.TimeCreated(), evenement.EventID(), evenement.EventRecordID(), processID, threadID, level, providerGuid, provider, task, message, fichierSource)
 	return nil
 }
 
@@ -130,7 +130,7 @@ func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *seve
 	// On récupère la liste des évènements
 	listeEvenements := fichierEvtx.FastEvents()
 	var probleme error = nil
-	var requeteInsertionEvtx aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("Evtx")
+	var requeteInsertionEvtx aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("Evtx", colonnesTableEvtx)
 	for evenement := range listeEvenements {
 		// On ajoute chaque évènement à la requete
 		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource)
@@ -273,7 +273,7 @@ func (e Evtx) PrerequisOK(cheminCollecte string) bool {
 
 func (e Evtx) CreationTable(cheminProjet string) error {
 	var aquabase aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	err := aquabase.CreateTableIfNotExist("evtx", []string{"horodatage", "eventID", "eventRecordID", "processID", "threadID", "level", "providerGuid", "providerName", "task", "message", "source"})
+	err := aquabase.CreateTableIfNotExist("evtx", colonnesTableEvtx)
 	return err
 }
 
