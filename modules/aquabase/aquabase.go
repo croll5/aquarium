@@ -39,6 +39,7 @@ func GetBDD(chemin string) (*sql.DB, error) {
 		return basesDeDonnees[chemin], nil
 	}
 	bdd, err := sql.Open("sqlite", chemin)
+	basesDeDonnees[chemin] = bdd
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,10 @@ func FermerToutesLesBDD() error {
 	for cle := range basesDeDonnees {
 		err := FermerBDD(cle)
 		if err != nil {
+			log.Println("[ERROR] Erreur dans la fermeture de la table ", cle, " : ", err)
 			probleme = err
+		} else {
+			log.Println("[INFO] Table ", cle, " fermée avec succès.")
 		}
 	}
 	return probleme
@@ -118,7 +122,6 @@ func (adb Aquabase) CreateTableIfNotExist(tableName string, tableColumns []strin
 	if err != nil {
 		return fmt.Errorf("CreateTableIfNotExist(): %w", err)
 	}
-	defer db.Close()
 	// CREATE TABLE IF NOT EXISTS
 	query := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, ", tableName)
 	for i, col := range tableColumns {
@@ -147,7 +150,6 @@ func (adb Aquabase) RemoveFromWhere(table string, where string) error {
 	if err != nil {
 		return fmt.Errorf("SaveDf(): %w", err)
 	}
-	defer db.Close()
 	// SLQ query
 	queryDelete := fmt.Sprintf(`DELETE FROM '%s' WHERE %s`, table, where)
 	_, err = db.Exec(queryDelete)
@@ -171,7 +173,6 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 	if err != nil {
 		return fmt.Errorf("SaveDf(): %w", err)
 	}
-	defer db.Close()
 	// Start a transaction
 	tx, err := db.Begin()
 	if err != nil {
@@ -281,7 +282,6 @@ func (adb Aquabase) GetAllTableNames() map[string]string {
 	if err != nil {
 		return map[string]string{"Error": "Can't connect to database"}
 	}
-	defer db.Close()
 	// Request the list of tables in the DB
 	tables := make(map[string]string)
 	rows, err := db.Query("SELECT name FROM sqlite_master WHERE type='table'")
@@ -337,7 +337,6 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 	if err != nil {
 		return []map[string]interface{}{{"Error": "SelectAllFrom(): Can't connect to database"}}
 	}
-	defer db.Close()
 	// SQL Request
 	query := fmt.Sprintf("SELECT * FROM %s LIMIT %d", table, limit)
 	rows, err := db.Query(query)
@@ -380,12 +379,15 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 func (adb Aquabase) EstTableVide(table string) bool {
 	bdd, err := GetBDD(adb.dbPath)
 	if err != nil {
+		log.Println("[ERROR] Problème dans l'ouverture de la base : ", err)
 		return true
 	}
 	resultat, err := bdd.Query("SELECT * FROM " + table + " LIMIT 1")
 	if err != nil {
-		return false
+		log.Println("[ERROR] Problème dans la récupération des informations de la table : ", err)
+		return true
 	}
+	defer resultat.Close()
 	return !resultat.Next()
 }
 
