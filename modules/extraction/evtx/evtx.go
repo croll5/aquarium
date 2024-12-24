@@ -58,7 +58,7 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aq
 		nbErreurs++
 	} else {
 		var infosEvenementJson []byte = evtx.ToJSON(infosEvenement)
-		message += "\n" + strings.ReplaceAll(string(infosEvenementJson), "\"", "&quot;")
+		message = string(infosEvenementJson)
 	}
 	// Récupération du processID
 	chemin = evtx.GoEvtxPath{"Event", "System", "Execution", "ProcessID"}
@@ -95,7 +95,7 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aq
 		task = "-1"
 	}
 	if nbErreurs > 1 {
-		message += "\n" + strings.ReplaceAll(string(evtx.ToJSON(evenement)), "\"", "“")
+		message = string(evtx.ToJSON(evenement))
 	}
 	// Concaténation de toutes les informations précédemment récupérées
 	requeteInsertionEvtx.AjouterDansRequete(evenement.TimeCreated(), evenement.EventID(), evenement.EventRecordID(), processID, threadID, level, providerGuid, provider, task, message, fichierSource)
