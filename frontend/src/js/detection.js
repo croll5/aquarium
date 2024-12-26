@@ -121,3 +121,67 @@ function lancer_regle(id, nom_regle){
         }
     })
 }
+
+window.onload = function() {
+    let modalBtns = [...document.querySelectorAll(".button")];
+    modalBtns.forEach(function (btn) {
+        btn.onclick = function () {
+            let modal = btn.getAttribute("data-modal");
+            document.getElementById(modal).style.display = "block";
+        };
+    });
+
+    window.onclick = function (event) {
+        if (event.target.className === "modal") {
+            event.target.style.display = "none";
+        }
+    };
+
+    const value = document.querySelector("#criticite_value");
+    const input = document.querySelector("#criticite");
+    value.textContent = input.value;
+    input.addEventListener("input", (event) => {
+        value.textContent = event.target.value;
+    });
+
+}
+
+function validateSQL() {
+    input = document.getElementById("sql");
+    const sqlPattern = /SELECT\s.*\sFROM\s.*\sWHERE\s.*/ig;
+    input.value = input.value.trim()
+    if (sqlPattern.test(input.value) && input != null) {
+        input.classList.remove('invalid');
+        return true;
+    } else {
+        input.classList.add('invalid');
+        alert("La requête SQL doit être au format 'SELECT % FROM % WHERE %': " + input.value);
+    }
+    return false;
+}
+
+
+function creation_regle() {
+    // Get form values
+    let nom = document.getElementById("nom").value;
+    let auteur = document.getElementById("auteur").value;
+    let description = document.getElementById("description").value;
+    let criticite = parseInt(document.getElementById("criticite").value);
+    let sql = document.getElementById("sql").value;
+
+    // Create JSON object
+    let regle = {
+        "nom": nom,
+        "auteur": auteur,
+        "description": description,
+        "criticite": criticite,
+        "sql": sql
+    };
+    // Convert JSON object to string
+    let jsonString = JSON.stringify(regle, null, 2);
+
+    parent.window.go.main.App.CreationReglesDetection(jsonString);
+}
+
+
+
