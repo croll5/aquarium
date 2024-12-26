@@ -53,6 +53,8 @@ func CreationArborescence(chemin string) bool {
 	defer fichier.Close()
 	// Création de la base de données qui contiendra la chronologie des évènements
 	extraction.CreationBaseAnalyse(chemin)
+	// Creation d'un dossier contenant les règles de detection de l'utilisateur
+	os.MkdirAll(filepath.Join(chemin, "regles_detection"), os.ModeDir)
 	return true
 }
 

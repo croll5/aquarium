@@ -1,0 +1,7 @@
+{
+    "nom":"Modification de la stratégie d'audit",
+    "auteur":"Cécile Rolland",
+    "description":"Évènement Windows indiquant une modification de la stratégie d'audit du système. Cela peut être le signe de ce qu'un attaquant tende d'effacer les traces d'une attaque.",
+    "criticite":2,
+    "sql":"SELECT * FROM evtx WHERE eventID=4719 OR eventID=612"
+}
