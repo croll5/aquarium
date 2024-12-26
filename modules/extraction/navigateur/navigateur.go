@@ -2,7 +2,6 @@ package navigateur
 
 import (
 	"aquarium/modules/aquabase"
-	"aquarium/modules/extraction/utilitaires"
 	"database/sql"
 	"fmt"
 	"io"
@@ -16,6 +15,7 @@ import (
 )
 
 var pourcentageChargement float32 = -1
+var colonnesTableNavigateurs []string = []string{"horodatage", "url", "title", "domain_name", "visit_count"}
 
 const (
 	req_Firefox = "SELECT url, title, rev_host, datetime(last_visit_date / 1000000, 'unixepoch'), visit_count FROM moz_places;"
@@ -25,27 +25,26 @@ const (
 
 type Navigateur struct{}
 
-func (n Navigateur) Extraction(chemin_projet string) error {
+func (n Navigateur) Extraction(cheminProjet string) error {
 
 	pourcentageChargement = 0
 
 	// Dézipper le dossier Browsers_history.7z
-	path := filepath.Join(chemin_projet, "collecteORC", "Browsers", "Browsers_history.7z")
-	if err := os.Mkdir(filepath.Join(chemin_projet, "collecteORC", "Browsers", "History"), os.ModeDir); err != nil {
-		log.Fatal(err)
+	path := filepath.Join(cheminProjet, "collecteORC", "Browsers", "Browsers_history.7z")
+	if err := os.Mkdir(filepath.Join(cheminProjet, "collecteORC", "Browsers", "History"), os.ModeDir); err != nil {
+		return err
 	}
-	destPath := filepath.Join(chemin_projet, "collecteORC", "Browsers", "History")
+	destPath := filepath.Join(cheminProjet, "collecteORC", "Browsers", "History")
 	extractArchive(path, destPath)
 
 	//Init tab logs
-	var logs []Log
-	logs = make([]Log, 0)
+	var requeteInsersion aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("navigateurs", colonnesTableNavigateurs)
 
 	//List of files
 
 	files, err := ioutil.ReadDir(destPath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, f := range files {
@@ -53,19 +52,19 @@ func (n Navigateur) Extraction(chemin_projet string) error {
 		if f.IsDir() {
 			extractFiles, err := ioutil.ReadDir(filepath.Join(destPath, f.Name()))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			for numFichier, extractFile := range extractFiles {
 				var pathNavigator = filepath.Join(destPath, f.Name())
 				switch f.Name() {
 				case "Firefox_Vista_History":
-					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Firefox, &logs)
+					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Firefox, &requeteInsersion)
 					break
 				case "Chrome_Vista_History":
-					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Chrome, &logs)
+					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Chrome, &requeteInsersion)
 					break
 				case "Edge_Anhaeim_History":
-					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Edge, &logs)
+					openDataFiles(filepath.Join(pathNavigator, extractFile.Name()), req_Edge, &requeteInsersion)
 					break
 				default:
 					fmt.Println("Navigateur non pris en charge")
@@ -75,8 +74,10 @@ func (n Navigateur) Extraction(chemin_projet string) error {
 		}
 	}
 
-	for _, log := range logs {
-		utilitaires.AjoutLogsNavigateur(chemin_projet, log.Time_date, log.Url, log.Title, log.Domain_name, log.Visit_count)
+	err = requeteInsersion.Executer(cheminProjet)
+	if err != nil {
+		pourcentageChargement = -1
+		return err
 	}
 	pourcentageChargement = 101
 	return nil
@@ -92,7 +93,7 @@ func (n Navigateur) PrerequisOK(cheminORC string) bool {
 
 func (n Navigateur) CreationTable(cheminProjet string) error {
 	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	base.CreateTableIfNotExist("navigateurs", []string{"horodatage", "url", "title", "domain_name", "visit_count"})
+	base.CreateTableIfNotExist("navigateurs", colonnesTableNavigateurs)
 	return nil
 }
 
@@ -115,7 +116,7 @@ func (n Navigateur) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
 
-func openDataFiles(filePath string, requete string, logs *[]Log) {
+func openDataFiles(filePath string, requete string, requeteInsertion *aquabase.RequeteInsertion) {
 
 	db, err := sql.Open("sqlite", filePath)
 	if err != nil {
@@ -139,7 +140,7 @@ func openDataFiles(filePath string, requete string, logs *[]Log) {
 		}
 
 		log.ConvertStringToTime()
-		*logs = append(*logs, log)
+		requeteInsertion.AjouterDansRequete(log.Time_string, log.Url, log.Title, log.Domain_name, log.Visit_count)
 
 	}
 }
