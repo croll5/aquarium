@@ -1,7 +1,7 @@
 package detection
 
 import (
-	"database/sql"
+	"aquarium/modules/aquabase"
 	"encoding/json"
 	"log"
 	"os"
@@ -41,22 +41,17 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Println(detailsRegle.SQL)
+	log.Println("[INFO] Exécution de la règle de détection ", detailsRegle.Nom, " : ", detailsRegle.SQL)
 	// On exécute la requête SQL
-	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
-	if err != nil {
-		return 0, err
-	}
-	defer bd.Close()
-	resultat, err := bd.Query(detailsRegle.SQL)
+	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	resultatVide, err := base.EstResultatVide(detailsRegle.SQL)
 	if err != nil {
 		return 0, nil
 	}
-	defer resultat.Close()
-	if resultat.Next() {
-		return 2, nil
-	} else {
+	if resultatVide {
 		return 1, nil
+	} else {
+		return 2, nil
 	}
 }
 
