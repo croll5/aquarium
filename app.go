@@ -351,3 +351,12 @@ func (a *App) CreationReglesDetection(json_rule string) bool {
 	}
 	return true
 }
+
+func (a *App) ResultatsSQL(nomRegle string) []map[string]interface{} {
+	chemin_regles := filepath.Join(chemin_projet, "regles_detection", nomRegle+".json")
+	resultat, err := detection.ResultatSQL(chemin_projet, chemin_regles, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}

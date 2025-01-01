@@ -402,6 +402,52 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 	return results
 }
 
+func (adb Aquabase) SelectFrom(sqlQuery string) []map[string]interface{} {
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		return []map[string]interface{}{{"Error": "SelectFrom(): Can't connect to database"}}
+	}
+	// SQL Request
+	var results []map[string]interface{}
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		rows, err := infosBdd.bdd.Query(sqlQuery)
+		if err != nil {
+			return errors.New("SelectFrom(): querying table data")
+		}
+		defer rows.Close()
+		// Take columns
+		columns, err := rows.Columns()
+		if err != nil {
+			return errors.New("SelectFrom(): getting columns")
+		}
+		// Create the dataframe
+		for rows.Next() {
+			columnPointers := make([]interface{}, len(columns))
+			columnValues := make([]interface{}, len(columns))
+			for i := range columnValues {
+				columnPointers[i] = &columnValues[i]
+			}
+			if err := rows.Scan(columnPointers...); err != nil {
+				return errors.New("SelectFrom(): scanning row: " + sqlQuery)
+			}
+			rowMap := make(map[string]interface{})
+			for i, colName := range columns {
+				rowMap[colName] = columnValues[i]
+			}
+			results = append(results, rowMap)
+		}
+		if err := rows.Err(); err != nil {
+			return errors.New("SelectFrom(): during rows iteration: " + sqlQuery)
+		}
+		return nil
+	})
+	if err != nil {
+		return []map[string]interface{}{{}}
+	}
+	return results
+}
+
 func (adb Aquabase) EstTableVide(table string) bool {
 	infosBdd, err := GetInfosBDD(adb.dbPath)
 	if err != nil {
