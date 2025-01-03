@@ -288,7 +288,7 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 /************************* Detection FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
-func (a *App) ListeReglesDetection(lancerRegles bool) map[string]int {
+func (a *App) ListeReglesDetection(lancerRegles bool) map[string]map[string]int {
 	regles, reglesEnErreur, err := detection.ListeReglesDetection(chemin_projet, lancerRegles)
 	if err != nil {
 		a.signalerErreur(err)
@@ -350,6 +350,13 @@ func (a *App) CreationReglesDetection(json_rule string) bool {
 		a.signalerErreur(err)
 	}
 	return true
+}
+
+func (a *App) Delete_rule(nomRegle string) {
+	err := detection.SuppressionRegleDetection(chemin_projet, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
 }
 
 func (a *App) ResultatsSQL(nomRegle string) []map[string]interface{} {

@@ -1,136 +1,6 @@
-afficher_regles(false);
-
-function afficher_regles(lancer) {
-    if (lancer) {
-        document.getElementById("regles").innerHTML = "";
-    }
-    parent.window.go.main.App.ListeReglesDetection(lancer).then(resultat => {
-        const conteneur = document.getElementById("regles");
-        const regles = Object.keys(resultat);
-        regles.forEach(regle => {
-            const detail_regle = document.createElement("details");
-            const contenu_regle = document.createElement("div");
-            contenu_regle.id = regle.replace(" ", "");
-            contenu_regle.classList.add("contenuRegle");
-            contenu_regle.setAttribute("resultat", resultat[regle]);
-
-            detail_regle.appendChild(contenu_regle);
-            detail_regle.onclick = () => informations_regle(contenu_regle.id, regle);
-
-            const titre_regle = document.createElement("summary");
-            titre_regle.textContent = regle;
-
-            const smiley = document.createElement("strong");
-            smiley.classList.add("etatRegle");
-            smiley.textContent = getSmiley(resultat[regle]);
-
-            titre_regle.appendChild(smiley);
-            detail_regle.appendChild(titre_regle);
-            conteneur.appendChild(detail_regle);
-        });
-    });
-}
-
-function getSmiley(etat) {
-    switch (etat) {
-        case 0: return " 😴";
-        case 1: return " 🤓";
-        case 2: return " 🥸";
-        default:return "";
-    }
-}
-
-function informations_regle(id, nom_regle) {
-    if (document.getElementById(id).childElementCount <= 1) {
-        parent.window.go.main.App.InfosRegleDetection(nom_regle).then(resultat => {
-            const regle = document.getElementById(id);
-            regle.appendChild(createCriticiteElement(resultat["criticite"]));
-            regle.appendChild(createParagraph("SQL", "code sql", resultat["sql"]));
-            regle.appendChild(createParagraph("Description", "", resultat["description"]));
-            regle.appendChild(createParagraph("Auteur", "", resultat["auteur"]));
-            appendActionButtons(regle, regle.getAttribute("resultat"), id, nom_regle);
-        });
-    }
-}
-
-function createParagraph(label, className, content) {
-    const p = document.createElement("p");
-    p.innerHTML = `<strong>${label} : </strong>${content}`;
-    p.className = className;
-    return p;
-}
-
-function createCriticiteElement(criticite) {
-    const rangeCriticite = document.createElement("input");
-    rangeCriticite.type = "range";
-    rangeCriticite.min = 0;
-    rangeCriticite.max = 5;
-    rangeCriticite.value = criticite;
-    rangeCriticite.readOnly = true;
-    rangeCriticite.style.accentColor = getCriticiteColor(criticite);
-
-    const criticiteDiv = document.createElement("div");
-    criticiteDiv.innerHTML = `<strong>Criticité : </strong>${criticite} `;
-    criticiteDiv.appendChild(rangeCriticite);
-    return criticiteDiv;
-}
-
-function getCriticiteColor(criticite) {
-    const colors = ["#18C700", "#72C702", "#C2D16C", "#E3A500", "#F06136", "#D42222"];
-    return colors[criticite] || "#000000";
-}
-
-function appendActionButtons(regle, resultatRegle, id, nom_regle) {
-    if (resultatRegle == 0) {
-        const lancerRegle = document.createElement("button");
-        lancerRegle.innerText = "Lancer cette règle";
-        lancerRegle.classList.add("bouton_sombre");
-        lancerRegle.onclick = () => lancer_regle(id, nom_regle);
-        regle.appendChild(lancerRegle);
-    } else if (resultatRegle == 2) {
-        const afficherResulataRegle = document.createElement("button");
-        afficherResulataRegle.innerText = "Afficher le résultat";
-        afficherResulataRegle.classList.add("bouton_sombre");
-        regle.appendChild(afficherResulataRegle);
-    }
-}
-
-
-function lancer_regle(id, nom_regle) {
-    parent.window.go.main.App.ResultatRegleDetection(nom_regle).then(resultat => {
-        const regle = document.getElementById(id);
-        const bouton = regle.querySelector("button");
-        const etatRegle = regle.parentNode.querySelector(".etatRegle");
-
-        if (resultat == 1) {
-            etatRegle.textContent = " 🤓";
-            bouton.remove();
-        } else if (resultat == 2) {
-            etatRegle.textContent = " 🥸";
-            bouton.innerText = "Afficher le résultat";
-            bouton.onclick = () => afficher_resultat_regle(id, nom_regle);
-        }
-    });
-}
-
-
-
-function validateSQL() {
-    const input = document.getElementById("sql");
-    const sqlPattern = /SELECT\s.*\sFROM\s.*\sWHERE\s.*/ig;
-    input.value = input.value.trim();
-
-    if (sqlPattern.test(input.value)) {
-        input.classList.remove('invalid');
-        return true;
-    } else {
-        input.classList.add('invalid');
-        alert("La requête SQL doit être au format 'SELECT % FROM % WHERE %': " + input.value);
-        return false;
-    }
-}
-
-
+/**
+ * Execution au chargement de la page
+ */
 window.onload = function() {
     document.querySelectorAll(".button").forEach(btn => {
         btn.onclick = () => {
@@ -155,8 +25,159 @@ window.onload = function() {
     // Ajoutez l'événement au bouton pour fermer toutes les règles
     const closeButton = document.querySelector('button[onclick="closeAllRules()"]');
     closeButton.addEventListener("click", closeAllRules);
+
+    afficher_regles(false);
 };
 
+
+/**
+ * Recuperation de l'ensemble des regles de detection au format json au chargement de la page
+ * @param {boolean} lancer - Si True alors execute la requete SQL de chaque regle
+ */
+function afficher_regles(lancer) {
+    const conteneur = document.getElementById("regles");
+    if (lancer) {
+        conteneur.innerHTML = "";
+    }
+    parent.window.go.main.App.ListeReglesDetection(lancer).then(resultat => {
+        const map_resultat = new Map(Object.entries(resultat));
+        map_resultat.forEach((values, regle) => {
+            // value for html balises
+            const contenu_id = regle//.replace(" ", "");
+            const contenu_state = values['state'];
+            const detail_smiley = (() => {
+                switch (contenu_state) {
+                    case 0: return " 😴";
+                    case 1: return " 🤓";
+                    case 2: return " 🥸";
+                    default: return "";
+                }
+            })();
+            // html block
+            const detail_regle = document.createElement('details');
+            detail_regle.innerHTML = `
+                    <div id="${contenu_id}" class="contenuRegle" resultat="${contenu_state}"></div>
+                    <summary>${regle}<strong class="etatRegle">${detail_smiley}</strong></summary>
+                `;
+            detail_regle.onclick = () => informations_regle(contenu_id, regle);
+            // Add element in the page
+            conteneur.appendChild(detail_regle);
+        });
+        document.getElementById("total").innerHTML = "Total:<br>"+map_resultat.size;
+        //document.getElementById("notExecuted").innerHTML = total-valided-detected;
+        //document.getElementById("valided").innerHTML = checkIn_regles.sql/regles(dring=0)
+        //document.getElementById("detected").innerHTML = checkIn_regles.sql/regles(dring=1)
+    });
+}
+
+/**
+ * Affiche les informations d'une regle au clic
+ */
+function informations_regle(id, nom_regle) {
+    if (document.getElementById(id).childElementCount <= 1) {
+        parent.window.go.main.App.InfosRegleDetection(nom_regle).then(resultat => {
+            // rule html balise and parameters
+            const regle = document.getElementById(id);
+            const criticiteColor = ["#18C700", "#72C702", "#C2D16C", "#E3A500", "#F06136", "#D42222"][resultat["criticite"]] || "#000000";
+            // html block to add
+            const detail_regle_open = `
+                <div>
+                    <strong>Criticité : </strong>${resultat["criticite"]}
+                    <input type="range" min="0" max="5" value="${resultat["criticite"]}" style="accent-color:${criticiteColor}" oninput="this.value=${resultat['criticite']}">
+                </div>
+                <p class="code sql"><strong>SQL : </strong>${resultat["sql"]}</p>
+                <p><strong>Description : </strong>${resultat["description"]}</p>
+                <p><strong>Auteur : </strong>${resultat["auteur"]}</p>
+            `;
+            // Add element in the page
+            regle.innerHTML += detail_regle_open;
+            // Button to print the dataframe result
+            if (regle.getAttribute("resultat") == 0) {
+                const bouton = document.createElement("button");
+                bouton.className = "bouton_sombre";
+                bouton.innerText = "Lancer cette règle";
+                bouton.onclick = () => lancer_regle(id, nom_regle);
+                regle.appendChild(bouton);
+            } else if (regle.getAttribute("resultat") == 2) {
+                const bouton = document.createElement("button");
+                bouton.className = "bouton_sombre";
+                bouton.innerText = "Afficher le résultat";
+                bouton.onclick = () => afficher_resultat_regle(id, nom_regle);
+                regle.appendChild(bouton);
+            }
+            // Button for local rules
+            if (!resultat["IsGlobal"]) {
+                // delete button
+                const boutonModif = document.createElement("button");
+                boutonModif.onclick = () => modifier_regle_panel(id, nom_regle);
+                boutonModif.className = "bouton_sombre";
+                boutonModif.innerText = "Modifier";
+                boutonModif.style = "background-color:orange; margin-left:1rem;"
+                regle.appendChild(boutonModif);
+                const boutonDel = document.createElement("button");
+                boutonDel.onclick = () => supprimer_regle(id, nom_regle);
+                boutonDel.className = "bouton_sombre";
+                boutonDel.innerText = "Supprimer";
+                boutonDel.style = "background-color:red; margin-left:1rem;"
+                regle.appendChild(boutonDel);
+
+            }
+        });
+    }
+}
+
+
+/**
+ * Lance une sequence d'execution de la requete SQL d'une regle au clic
+ */
+function lancer_regle(id, nom_regle) {
+    parent.window.go.main.App.ResultatRegleDetection(nom_regle).then(resultat => {
+        const regle = document.getElementById(id);
+        const bouton = regle.querySelector("button");
+        const etatRegle = regle.parentNode.querySelector(".etatRegle");
+        if (resultat == 1) {
+            etatRegle.textContent = " 🤓";
+            bouton.remove();
+        } else if (resultat == 2) {
+            etatRegle.textContent = " 🥸";
+            bouton.innerText = "Afficher le résultat";
+            bouton.onclick = () => afficher_resultat_regle(id, nom_regle);
+        }
+    });
+}
+
+
+/**
+ * Ferme tous les volets pliant
+ */
+function closeAllRules() {
+    const detailsElements = document.querySelectorAll("#regles details");
+    detailsElements.forEach(detail => {
+        detail.removeAttribute("open");
+    });
+}
+
+/**
+ * Verification de la requete SQL du formulaire de creation d'une regle
+ */
+function validateSQL() {
+    const input = document.getElementById("sql");
+    const sqlPattern = /SELECT\s.*\sFROM\s.*\sWHERE\s.*/ig;
+    input.value = input.value.trim();
+
+    if (sqlPattern.test(input.value)) {
+        input.classList.remove('invalid');
+        return true;
+    } else {
+        input.classList.add('invalid');
+        alert("La requête SQL doit être au format 'SELECT % FROM % WHERE %': " + input.value);
+        return false;
+    }
+}
+
+/**
+ * Creation d'une nouvelle regle
+ */
 function creation_regle() {
     const regle = {
         "nom": document.getElementById("nom").value,
@@ -168,24 +189,44 @@ function creation_regle() {
 
     const jsonString = JSON.stringify(regle, null, 2);
     parent.window.go.main.App.CreationReglesDetection(jsonString);
+
+    document.getElementById("popup-newRule").style.display = "none";
+    document.getElementById("regles").innerHTML = "";
+    afficher_regles(false);
+}
+
+function supprimer_regle(id, nom_regle) {
+    parent.window.go.main.App.Delete_rule(nom_regle).then(_ => {
+        document.getElementById("regles").innerHTML = "";
+        afficher_regles(false);
+    });
+}
+
+function modifier_regle_panel(id, nom_regle) {
+    parent.window.go.main.App.InfosRegleDetection(nom_regle).then(resultat => {
+        document.getElementById("nom").value = nom_regle;
+        document.getElementById("auteur").value = resultat["auteur"];
+        document.getElementById("description").value = resultat["description"];
+        document.getElementById("criticite").value = resultat["criticite"];
+        document.getElementById("sql").value = resultat["sql"];
+
+        document.getElementById("popup-newRule").style.display = "block";
+    });
 }
 
 
+
 function afficher_resultat_regle(id, nom_regle) {
-    res = parent.window.go.main.App.ResultatsSQL(nom_regle).then(resultat => {
-        if (resultat == null) {return;}
+     parent.window.go.main.App.ResultatsSQL(nom_regle).then(resultat => {
+        if (!resultat) {return;}
         // add results in the popup
         let div_db_infos = document.querySelector("#popup-resultRule #table_values");
-
-
-        console.table(resultat);
         div_db_infos.textContent = ''
+
         // Créer un conteneur avec une barre de défilement horizontal
         let scrollContainer = document.createElement('div');
         scrollContainer.style.maxHeight = '450px'
-        scrollContainer.style.overflowX = 'auto';
-        scrollContainer.style.overflowY = 'auto';
-
+        scrollContainer.style.overflow = 'auto';
 
         // Créer un tableau Bootstrap
         let table = document.createElement('table');
@@ -227,9 +268,4 @@ function afficher_resultat_regle(id, nom_regle) {
     });
 }
 
-function closeAllRules() {
-    const detailsElements = document.querySelectorAll("#regles details");
-    detailsElements.forEach(detail => {
-        detail.removeAttribute("open");
-    });
-}
+

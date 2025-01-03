@@ -12,10 +12,17 @@
 </head>
 <body>
     <h1>Détection d'anomalies</h1>
-    <div>
+    <div class="center" style="margin-bottom: 1rem;">
+        <button class="bouton_sombre" id="total" >Total:<br>0</button>
+        <button class="bouton_sombre" id="notExecuted">Non executé:<br>0</button>
+        <button class="bouton_sombre" id="valided">Validé:<br>0</button>
+        <button class="bouton_sombre" id="detected">Détécté:<br>0</button>
+    </div>
+    <div class="center">
         <button class="bouton_sombre" onclick="afficher_regles(true)">🔔 Lancer toutes les règles 🔔</button>
         <button class="button bouton_sombre" data-modal="popup-newRule">⚒️ Créer une nouvelle règle ⚒️</button>
         <button class="button bouton_sombre" onclick="closeAllRules()">⬆️ Replier tout ⬆️</button>
+        <button class="button bouton_sombre" onclick="closeAllRules()">🆘 Details 🆘</button>
     </div>
     <br>
     <div id="regles"></div>
