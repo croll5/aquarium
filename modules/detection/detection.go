@@ -2,7 +2,6 @@ package detection
 
 import (
 	"aquarium/modules/aquabase"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -37,7 +36,7 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	var detailsRegle regleSQL
 	donneesFichier, err := os.ReadFile(cheminRegle)
 	if err != nil {
-		log.Println("WARN | Le fichier de règle n'existe pas ou n'a pas pu être ouvert : ", err.Error())
+		log.Println("WARN | Le fichier de règle "+cheminRegle+" n'existe pas ou n'a pas pu être ouvert : ", err.Error())
 		return 0, err
 	}
 	err = json.Unmarshal(donneesFichier, &detailsRegle)
@@ -45,22 +44,52 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 		return 0, err
 	}
 	log.Println(detailsRegle.SQL)
+
 	// On exécute la requête SQL
-	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
-	if err != nil {
-		return 0, err
-	}
-	defer bd.Close()
-	resultat, err := bd.Query(detailsRegle.SQL)
-	if err != nil {
-		return 0, nil
-	}
-	defer resultat.Close()
-	if resultat.Next() {
+	var adb = aquabase.InitDB_Extraction(cheminProjet)
+	result := adb.SelectFrom(detailsRegle.SQL)
+	//fmt.Println(result)
+	fmt.Println(len(result))
+
+	// Renvoi 2 si le dataframe n'est pas vide sinon 1
+	if len(result) > 0 {
+
+		// Recuperation des noms de colonnes
+		columnsSet := make(map[string]struct{})
+		// Parcourir tous les éléments du DataFrame
+		for _, row := range result {
+			for key := range row {
+				columnsSet[key] = struct{}{}
+			}
+		}
+		// Convertir la map en slice
+		columns := make([]string, 0, len(columnsSet))
+		for column := range columnsSet {
+			columns = append(columns, column)
+		}
+		fmt.Println(columns)
+
+		// Creation de la table d'erreurs du nom de la regle
+		var adb_rules = aquabase.InitDB_Rules(cheminProjet)
+		if adb_rules == nil {
+			return 0, fmt.Errorf("can't connect InitDB_Rules database")
+		}
+		err := adb_rules.DropTable(detailsRegle.Nom)
+		if err != nil {
+			return 0, err
+		}
+		err = adb_rules.CreateTableIfNotExist(detailsRegle.Nom, columns)
+		if err != nil {
+			return 0, err
+		}
+
+		/* REFAIRE LE SELECT * POUR RETUURN UN DATAFRAME et creer un fichier AQUAFRAME*/
+
+		//adb_rules.SaveDf(result, detailsRegle.Nom)
+
 		return 2, nil
-	} else {
-		return 1, nil
 	}
+	return 1, nil
 }
 
 func emplacementRegles() string {
@@ -213,7 +242,7 @@ func ResultatSQL(cheminProjet string, cheminRegle string, nomRegle string) ([]ma
 	log.Println(detailsRegle.SQL)
 
 	// On exécute la requête SQL
-	var adb = aquabase.InitBDDExtraction(cheminProjet)
+	var adb = aquabase.InitDB_Extraction(cheminProjet)
 	result := adb.SelectFrom(detailsRegle.SQL)
 	fmt.Println(result)
 	return result, nil

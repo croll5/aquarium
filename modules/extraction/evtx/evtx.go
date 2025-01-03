@@ -184,7 +184,7 @@ func (e Evtx) extraireEvementsDansDossier(cheminProjet string, cheminTemp string
 }
 
 func interruptionExtracteur(cheminProjet string) error {
-	var bdd aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	bdd := aquabase.InitDB_Extraction(cheminProjet)
 	var err error = bdd.RemoveFromWhere("evtx", "1=1")
 	progressionChargement = -1
 	return err
@@ -272,15 +272,15 @@ func (e Evtx) PrerequisOK(cheminCollecte string) bool {
 }
 
 func (e Evtx) CreationTable(cheminProjet string) error {
-	var aquabase aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	err := aquabase.CreateTableIfNotExist("evtx", colonnesTableEvtx)
+	base := aquabase.InitDB_Extraction(cheminProjet)
+	err := base.CreateTableIfNotExist("evtx", colonnesTableEvtx)
 	return err
 }
 
 func (e Evtx) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
 	if progressionChargement == -1 && verifierTableVide {
 		// On véfifie que l'extracteur n'a pas déjà été chargé
-		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		base := aquabase.InitDB_Extraction(cheminProjet)
 		if base.EstTableVide("evtx") {
 			return -1
 		} else {

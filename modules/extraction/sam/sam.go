@@ -103,14 +103,14 @@ func (s Sam) Extraction(cheminProjet string) error {
 }
 
 func (s Sam) CreationTable(cheminProjet string) error {
-	var aqua aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	aqua := aquabase.InitDB_Extraction(cheminProjet)
 	aqua.CreateTableIfNotExist("sam", colonnesTableSam)
 	return nil
 }
 
 func (s Sam) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
 	if pourcentageChargement == -1 {
-		var bdd aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		bdd := aquabase.InitDB_Extraction(cheminProjet)
 		if !bdd.EstTableVide("sam") {
 			pourcentageChargement = 100
 		}
