@@ -84,6 +84,8 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 		}
 
 		/* REFAIRE LE SELECT * POUR RETUURN UN DATAFRAME et creer un fichier AQUAFRAME*/
+		df := adb.SelectFrom0(detailsRegle.SQL)
+		fmt.Println(df)
 
 		//adb_rules.SaveDf(result, detailsRegle.Nom)
 

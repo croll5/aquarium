@@ -1,6 +1,7 @@
 package aquabase
 
 import (
+	"aquarium/modules/aquaframe"
 	"aquarium/modules/aquaticket"
 	"database/sql"
 	"errors"
@@ -200,6 +201,7 @@ func (adb Aquabase) CreateTableIfNotExist(tableName string, tableColumns []strin
 	}
 	// CREATE TABLE IF NOT EXISTS
 	query = fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, ", tableName)
+	fmt.Println(query)
 	for i, col := range tableColumns {
 		query += fmt.Sprintf("%s TEXT", col)
 		if i < len(tableColumns)-1 {
@@ -579,4 +581,39 @@ func nettoyage(entree string) string {
 	entree = strings.ReplaceAll(entree, ">", "&gt;")
 	entree = strings.ReplaceAll(entree, "&", "&amp")
 	return entree
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------    SELECT V2.0     ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+
+func (adb Aquabase) SelectFrom0(sqlQuery string) *aquaframe.Aquaframe {
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
+		return nil
+	}
+	// SQL Request
+	//var df dataframe.DataFrame
+	var df *aquaframe.Aquaframe
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		rows, err := infosBdd.bdd.Query(sqlQuery)
+		if err != nil {
+			return errors.New("adb.WARNING - SelectFrom failed querying: " + err.Error())
+		}
+		defer rows.Close()
+		df = aquaframe.RowsToAquaframe(rows)
+		if df == nil {
+			return errors.New("adb.WARNING - SelectFrom failed create dataframe")
+		}
+		return nil
+	})
+	if err != nil {
+		fmt.Println("adb.WARNING - SelectFrom execution error: " + err.Error())
+		return nil
+	}
+	return df
 }
