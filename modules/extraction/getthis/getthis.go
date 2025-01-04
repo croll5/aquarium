@@ -258,9 +258,14 @@ func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, t
 
 	// Add a filePath column to save the GetThis filename
 
-	colvalueList := strings.Split(strings.Split(filname, "::")[0], "\\")
-	colvalue := filepath.Join(colvalueList[len(colvalueList)-2], colvalueList[len(colvalueList)-1])
-	colvalue = strings.Replace(colvalue, "\\", "/", -1)
+	colvalueList := strings.Split(strings.Split(filname, "::")[0], string(os.PathSeparator))
+	var colvalue string
+	if len(colvalueList) >= 2{
+		colvalue = filepath.Join(colvalueList[len(colvalueList)-2], colvalueList[len(colvalueList)-1])
+		colvalue = strings.Replace(colvalue, "\\", "/", -1)
+	} else{
+		colvalue = filname
+	}
 	df = DfAddColumn(df, colnameFileName, colvalue)
 	fmt.Println("Import GetThis to DB: " + colvalue)
 

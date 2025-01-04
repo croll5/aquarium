@@ -5,6 +5,7 @@ import (
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/getthis"
 	"aquarium/modules/extraction/navigateur"
+	"aquarium/modules/extraction/prefetch"
 	"aquarium/modules/extraction/sam"
 	"aquarium/modules/extraction/werr"
 	"errors"
@@ -34,6 +35,7 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"sam":        sam.Sam{},
 	"getthis":    getthis.Getthis{},
 	"divers":     divers.Divers{},
+	"prefetch":   prefetch.Prefetch{},
 }
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]InfosExtracteur, error) {

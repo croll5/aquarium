@@ -44,7 +44,7 @@ func CreationArborescence(chemin string) bool {
 	if err != nil || !estvide {
 		return false
 	}
-	os.MkdirAll(filepath.Join(chemin, "analyse"), os.ModeDir)
+	os.MkdirAll(filepath.Join(chemin, "analyse"), 0766)
 	fichier, err := os.Create(filepath.Join(chemin, "analyse.aqua"))
 	if err != nil {
 		log.Println(err)
@@ -54,7 +54,7 @@ func CreationArborescence(chemin string) bool {
 	// Création de la base de données qui contiendra la chronologie des évènements
 	extraction.CreationBaseAnalyse(chemin)
 	// Creation d'un dossier contenant les règles de detection de l'utilisateur
-	os.MkdirAll(filepath.Join(chemin, "regles_detection"), os.ModeDir)
+	os.MkdirAll(filepath.Join(chemin, "regles_detection"), 0766)
 	return true
 }
 
@@ -68,7 +68,7 @@ func CreationDossierModele(chemin string) error {
 		log.Println(err)
 		return errors.New("Le dossier " + chemin + " n'est pas vide.")
 	}
-	os.MkdirAll(filepath.Join(chemin, "analyse"), os.ModeDir)
+	os.MkdirAll(filepath.Join(chemin, "analyse"), 0766)
 	fichier, err := os.Create(filepath.Join(chemin, "modele.aqua"))
 	if err != nil {
 		log.Println(err)
