@@ -224,7 +224,7 @@ func (e Evtx) Extraction(cheminProjet string) error {
 	// }
 	var probleme error = nil
 	var cheminTemp string = filepath.Join(cheminProjet, "temp", "evtx")
-	err := os.MkdirAll(cheminTemp, os.ModeDir)
+	err := os.MkdirAll(cheminTemp, 0766)
 	if err != nil {
 		return err
 	}

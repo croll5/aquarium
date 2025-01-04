@@ -14,7 +14,52 @@
     <h1>Détection d'anomalies</h1>
     <div>
         <button class="bouton_sombre" onclick="afficher_regles(true)">🔔 Lancer toutes les règles 🔔</button>
-    </div><br>
+        <button class="button bouton_sombre" data-modal="popup-newRule">⚒️ Créer une nouvelle règle ⚒️</button>
+        <button class="button bouton_sombre" onclick="closeAllRules()">⬆️ Replier tout ⬆️</button>
+    </div>
+    <br>
     <div id="regles"></div>
+
+
+
+
+    <div id="popup-newRule" class="modal">
+        <div class="modal-content">
+            <div class="contact-form">
+                <form action="#" onsubmit="creation_regle()" class="new-rule-form">
+                    <h2 class="center">Nouvelle règle</h2>
+                    <div>
+                        <label for="nom">Nom:</label>
+                        <br><input class="input-area" type="text" id="nom" placeholder="Detection Alpha" required/>
+                        <br><label for="auteur">Auteur:</label>
+                        <br><input class="input-area" type="text" id="auteur" placeholder="Aqua Rium" required/>
+                        <br><label for="criticite">Criticité:</label> <output id="criticite_value"></output>
+                        <br><input class="input-area" type="range" id="criticite" min="0" max="5" step="1" value="1" required style="accent-color: rgb(194, 209, 108);"/>
+                        <br><label for="sql">SQL:</label>
+                        <br><input class="input-area" type="text" id="sql" placeholder="SELECT col1, col2 FROM table WHERE column='value'" required><br><br>
+                    </div>
+                    <label for="description">Description</label>
+                    <textarea class="input-area" id="description" rows="4" placeholder="..." required></textarea>
+                    <div class="center">
+                        <button class="bouton_sombre" type="reset" href="/">Effacer</button>
+                        <button class="bouton_sombre" type="submit" onclick="return validateSQL()" href="/">Créer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="popup-resultRule" class="modal">
+        <div class="modal-content">
+            <div class="contact-form">
+                <div class="new-rule-form">
+                    <h2 class="center">Resultat de la règle</h2>
+                    <div id="table_values" class="container mt-5"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 </body>
 </html>

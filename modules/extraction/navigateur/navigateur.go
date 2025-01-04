@@ -31,7 +31,7 @@ func (n Navigateur) Extraction(cheminProjet string) error {
 
 	// Dézipper le dossier Browsers_history.7z
 	path := filepath.Join(cheminProjet, "collecteORC", "Browsers", "Browsers_history.7z")
-	if err := os.Mkdir(filepath.Join(cheminProjet, "collecteORC", "Browsers", "History"), os.ModeDir); err != nil {
+	if err := os.Mkdir(filepath.Join(cheminProjet, "collecteORC", "Browsers", "History"), 0766); err != nil {
 		return err
 	}
 	destPath := filepath.Join(cheminProjet, "collecteORC", "Browsers", "History")

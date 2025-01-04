@@ -3,6 +3,7 @@ package detection
 import (
 	"aquarium/modules/aquabase"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -117,4 +118,25 @@ func DetailsRegleDetection(cheminProjet string, nomRegle string) (Regle, error) 
 	}
 	err = json.Unmarshal(donneesFichier, &donneesRegle)
 	return donneesRegle, err
+}
+
+func ResultatSQL(cheminProjet string, cheminRegle string, nomRegle string) ([]map[string]interface{}, error) {
+	// On charge la requete SQL associée à la règle
+	var detailsRegle regleSQL
+	donneesFichier, err := os.ReadFile(cheminRegle)
+	if err != nil {
+		log.Println("WARN | Le fichier de règle "+cheminRegle+" n'existe pas ou n'a pas pu être ouvert : ", err.Error())
+		return nil, err
+	}
+	err = json.Unmarshal(donneesFichier, &detailsRegle)
+	if err != nil {
+		return nil, err
+	}
+	log.Println(detailsRegle.SQL)
+
+	// On exécute la requête SQL
+	var adb = aquabase.InitBDDExtraction(cheminProjet)
+	result := adb.SelectFrom(detailsRegle.SQL)
+	fmt.Println(result)
+	return result, nil
 }

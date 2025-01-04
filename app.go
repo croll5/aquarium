@@ -11,8 +11,10 @@ import (
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -189,7 +191,7 @@ func (a *App) ValidationCreationModele(nomModele string, description string, sup
 }
 
 /***************************************************************************************/
-/************************* Extraction FUNCTIONS  PAGE **********************************/
+/************************* Extraction FUNCTIONS PAGE **********************************/
 /***************************************************************************************/
 
 func (a *App) ListeExtractionsPossibles() map[string]extraction.InfosExtracteur {
@@ -223,7 +225,7 @@ func (a *App) ProgressionExtraction(idExtracteur string) float32 {
 }
 
 /***************************************************************************************/
-/************************* Arborescence FUNCTIONS  PAGE ********************************/
+/************************* Arborescence FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
 func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.MetaDonnees {
@@ -283,7 +285,7 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 }
 
 /***************************************************************************************/
-/************************* Detection FUNCTIONS  PAGE ********************************/
+/************************* Detection FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
 func (a *App) ListeReglesDetection(lancerRegles bool) map[string]int {
@@ -320,6 +322,41 @@ func (a *App) ResultatRegleDetection(nomRegle string) int {
 			Title:   "Certaines règles contiennent des erreurs",
 			Message: "L'exécution de cette règle a renvoyé une erreur.\nNous vous conseillons de vérifier sa syntaxe.",
 		})
+	}
+	return resultat
+}
+
+func (a *App) CreationReglesDetection(json_rule string) bool {
+	chemin_regles := filepath.Join(chemin_projet, "regles_detection")
+	// Conversion de la chaîne JSON en une structure Go
+	var regle map[string]interface{}
+	if err := json.Unmarshal([]byte(json_rule), &regle); err != nil {
+		a.signalerErreur(err)
+	}
+	// Récupération du nom à partir du JSON
+	nom, ok := regle["nom"].(string)
+	if !ok {
+		a.signalerErreur(fmt.Errorf("Json without the variable: nom"))
+	}
+	// Conversion de la structure Go en JSON formaté
+	data, err := json.MarshalIndent(regle, "", "  ")
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	// Création du chemin complet du fichier avec le nom du JSON
+	chemin_complet := filepath.Join(chemin_regles, nom+".json")
+	// Écriture des données JSON dans un fichier
+	if err := os.WriteFile(chemin_complet, data, 0644); err != nil {
+		a.signalerErreur(err)
+	}
+	return true
+}
+
+func (a *App) ResultatsSQL(nomRegle string) []map[string]interface{} {
+	chemin_regles := filepath.Join(chemin_projet, "regles_detection", nomRegle+".json")
+	resultat, err := detection.ResultatSQL(chemin_projet, chemin_regles, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
 	}
 	return resultat
 }
