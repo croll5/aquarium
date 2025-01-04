@@ -353,23 +353,29 @@ func (adb Aquabase) GetAllTableNames() map[string]string {
  */
 func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interface{} {
 	// Open sqliteDB
+
+	query := fmt.Sprintf("SELECT * FROM %s LIMIT %d", table, limit)
+	// SQL Request
+
+	return adb.ResultatRequeteSQL(query)
+}
+
+func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} {
+	var results []map[string]interface{}
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return []map[string]interface{}{{"Error": "SelectAllFrom(): Can't connect to database"}}
+		return []map[string]interface{}{{"Erreur": "SelectAllFrom(): Can't connect to database"}}
 	}
-	// SQL Request
-	var results []map[string]interface{}
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
-		query := fmt.Sprintf("SELECT * FROM %s LIMIT %d", table, limit)
-		rows, err := infosBdd.bdd.Query(query)
+		rows, err := infosBdd.bdd.Query(requete)
 		if err != nil {
-			return errors.New("SelectAllFrom(): querying table data")
+			return errors.New("ResultatRequeteSQL(): querying table data")
 		}
 		defer rows.Close()
 		// Take columns
 		columns, err := rows.Columns()
 		if err != nil {
-			return errors.New("SelectAllFrom(): getting columns")
+			return errors.New("ResultatRequeteSQL(): getting columns")
 		}
 		// Create the dataframe
 		for rows.Next() {
@@ -379,7 +385,7 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 				columnPointers[i] = &columnValues[i]
 			}
 			if err := rows.Scan(columnPointers...); err != nil {
-				return errors.New("SelectAllFrom(): scanning row: " + table)
+				return errors.New("SelectAllFrom(): scanning row: " + err.Error())
 			}
 
 			rowMap := make(map[string]interface{})
@@ -389,12 +395,12 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 			results = append(results, rowMap)
 		}
 		if err := rows.Err(); err != nil {
-			return errors.New("SelectAllFrom(): during rows iteration: " + table)
+			return errors.New("SelectAllFrom(): during rows iteration: " + err.Error())
 		}
 		if len(results) == 0 {
-			return errors.New("no value in: " + table)
+			return errors.New("cette table ne contient aucune valeur")
 		}
-		return nil
+		return err
 	})
 	if err != nil {
 		return []map[string]interface{}{{"Error": err.Error()}}
@@ -449,14 +455,19 @@ func (adb Aquabase) SelectFrom(sqlQuery string) []map[string]interface{} {
 }
 
 func (adb Aquabase) EstTableVide(table string) bool {
+	estVide, _ := adb.EstResultatVide("SELECT * FROM " + table + " LIMIT 1")
+	return estVide
+}
+
+func (adb Aquabase) EstResultatVide(requete string) (bool, error) {
 	infosBdd, err := GetInfosBDD(adb.dbPath)
 	if err != nil {
 		log.Println("[ERROR] Problème dans l'ouverture de la base : ", err)
-		return true
+		return true, err
 	}
 	var contientDonnees bool
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
-		resultat, err := infosBdd.bdd.Query("SELECT * FROM " + table + " LIMIT 1")
+		resultat, err := infosBdd.bdd.Query(requete)
 		if err != nil {
 			log.Println("[ERROR] Problème dans la récupération des informations de la table : ", err)
 			return err
@@ -466,9 +477,9 @@ func (adb Aquabase) EstTableVide(table string) bool {
 		return nil
 	})
 	if err != nil {
-		return true
+		return true, err
 	}
-	return !contientDonnees
+	return !contientDonnees, nil
 }
 
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */
