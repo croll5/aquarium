@@ -11,6 +11,14 @@
     url("../assets/fonts/Open_dyslexic/OpenDyslexicMono-Regular.otf");
 }
 
+@font-face {
+    font-family: Comic SANS MS;
+    src: url("../assets/fonts/Comic/comic.ttf"),
+    url("../assets/fonts/Comic/comicbd.ttf"),
+    url("../assets/fonts/Comic/comici.ttf"),
+    url("../assets/fonts/Comic/comicz.ttf");
+}
+
 :root{
     /* Les variantes de bleu */
     --bleu-1 : #001D64;
