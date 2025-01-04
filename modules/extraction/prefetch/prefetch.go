@@ -138,6 +138,12 @@ func (pref Prefetch) CreationTable(cheminProjet string) error {
 }
 
 func (pref Prefetch) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+	if pourcentageChargement == -1 && verifierTableVide {
+		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		if !base.EstTableVide("prefetch") {
+			pourcentageChargement = 100
+		}
+	}
 	return pourcentageChargement
 }
 
