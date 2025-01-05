@@ -93,7 +93,7 @@ func (n Navigateur) PrerequisOK(cheminORC string) bool {
 
 func (n Navigateur) CreationTable(cheminProjet string) error {
 	base := aquabase.InitDB_Extraction(cheminProjet)
-	base.CreateTableIfNotExist1("navigateurs", colonnesTableNavigateurs)
+	base.CreateTableIfNotExist1("navigateurs", colonnesTableNavigateurs, true)
 	return nil
 }
 

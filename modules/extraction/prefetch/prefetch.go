@@ -59,7 +59,7 @@ func extraireInfosPrefetchDepuis7z(fichier *sevenzip.File, insertionPrefetch *aq
 }
 
 func annulerExtraction(cheminProjet string) error {
-	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	base := aquabase.InitDB_Extraction(cheminProjet)
 	err := base.RemoveFromWhere("prefetch", "1=1")
 	if err != nil {
 		return err
@@ -130,16 +130,16 @@ func (pref Prefetch) PrerequisOK(cheminCollecte string) bool {
 }
 
 func (pref Prefetch) CreationTable(cheminProjet string) error {
-	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	base.CreateTableIfNotExist("prefetch", colonnesTablePrefetch)
-	base.CreateTableIfNotExist("executionPrefetch", colonnesTableDernieresExecutionsPrefetch)
-	base.CreateTableIfNotExist("ressourcesPrefetch", colonnesTableFichierAccedesPrefetch)
+	base := aquabase.InitDB_Extraction(cheminProjet)
+	base.CreateTableIfNotExist1("prefetch", colonnesTablePrefetch, true)
+	base.CreateTableIfNotExist1("executionPrefetch", colonnesTableDernieresExecutionsPrefetch, true)
+	base.CreateTableIfNotExist1("ressourcesPrefetch", colonnesTableFichierAccedesPrefetch, true)
 	return nil
 }
 
 func (pref Prefetch) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
 	if pourcentageChargement == -1 && verifierTableVide {
-		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		base := aquabase.InitDB_Extraction(cheminProjet)
 		if !base.EstTableVide("prefetch") {
 			pourcentageChargement = 100
 		}

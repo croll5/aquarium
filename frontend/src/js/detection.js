@@ -64,8 +64,8 @@ function afficher_regles(lancer) {
             // Add element in the page
             conteneur.appendChild(detail_regle);
         });
+        update_summary()
     });
-    update_summary()
 }
 
 function update_summary() {
@@ -136,9 +136,9 @@ function informations_regle(id, nom_regle) {
                 regle.appendChild(boutonDel);
 
             }
+            update_summary()
         });
     }
-    update_summary()
 }
 
 
@@ -159,9 +159,7 @@ function lancer_regle(id, nom_regle) {
             bouton.onclick = () => afficher_resultat_regle(id, nom_regle);
         }
         update_summary()
-
     });
-    update_summary()
 }
 
 
@@ -218,8 +216,8 @@ function supprimer_regle(id, nom_regle) {
     parent.window.go.main.App.Delete_rule(nom_regle).then(_ => {
         document.getElementById("regles").innerHTML = "";
         afficher_regles(false);
+        update_summary()
     });
-    update_summary()
 }
 
 function modifier_regle_panel(id, nom_regle) {
@@ -231,8 +229,8 @@ function modifier_regle_panel(id, nom_regle) {
         document.getElementById("sql").value = resultat["sql"];
 
         document.getElementById("popup-newRule").style.display = "block";
+        update_summary()
     });
-    update_summary()
 }
 
 
@@ -286,8 +284,8 @@ function afficher_resultat_regle(id, nom_regle) {
 
         document.querySelector("#popup-resultRule .modal-content").style.width = "90%";
         document.getElementById("popup-resultRule").style.display = "block";
+        update_summary()
     });
-    update_summary()
 }
 
 
