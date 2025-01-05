@@ -39,9 +39,10 @@ function afficher_regles(lancer) {
     if (lancer) {
         conteneur.innerHTML = "";
     }
+    let listRegles;
     parent.window.go.main.App.ListeReglesDetection(lancer).then(resultat => {
-        const map_resultat = new Map(Object.entries(resultat));
-        map_resultat.forEach((values, regle) => {
+        listRegles = new Map(Object.entries(resultat));
+        listRegles.forEach((values, regle) => {
             // value for html balises
             const contenu_id = regle//.replace(" ", "");
             const contenu_state = values['state'];
@@ -63,10 +64,23 @@ function afficher_regles(lancer) {
             // Add element in the page
             conteneur.appendChild(detail_regle);
         });
-        document.getElementById("total").innerHTML = "Total:<br>"+map_resultat.size;
-        //document.getElementById("notExecuted").innerHTML = total-valided-detected;
-        //document.getElementById("valided").innerHTML = checkIn_regles.sql/regles(dring=0)
-        //document.getElementById("detected").innerHTML = checkIn_regles.sql/regles(dring=1)
+    });
+    update_summary()
+}
+
+function update_summary() {
+    let nbRules;
+    parent.window.go.main.App.ListeReglesDetection(false).then(resul => {
+        nbRules = new Map(Object.entries(resul)).size;
+    });
+    parent.window.go.main.App.StatutReglesDetection().then(resultat => {
+        console.log(resultat);
+        const errorCount = resultat.filter(item => item.isError === 1).length;
+        const nbElement = resultat.length;
+        document.getElementById("total").innerHTML = "Total:<br>"+nbRules;
+        document.getElementById("notExecuted").innerHTML = "Inconnu:<br>"+(nbRules-nbElement);
+        document.getElementById("valided").innerHTML = "Validation:<br>"+(nbElement-errorCount)
+        document.getElementById("detected").innerHTML = "Detection:<br>"+errorCount
     });
 }
 
@@ -124,6 +138,7 @@ function informations_regle(id, nom_regle) {
             }
         });
     }
+    update_summary()
 }
 
 
@@ -143,7 +158,10 @@ function lancer_regle(id, nom_regle) {
             bouton.innerText = "Afficher le résultat";
             bouton.onclick = () => afficher_resultat_regle(id, nom_regle);
         }
+        update_summary()
+
     });
+    update_summary()
 }
 
 
@@ -193,6 +211,7 @@ function creation_regle() {
     document.getElementById("popup-newRule").style.display = "none";
     document.getElementById("regles").innerHTML = "";
     afficher_regles(false);
+    update_summary()
 }
 
 function supprimer_regle(id, nom_regle) {
@@ -200,6 +219,7 @@ function supprimer_regle(id, nom_regle) {
         document.getElementById("regles").innerHTML = "";
         afficher_regles(false);
     });
+    update_summary()
 }
 
 function modifier_regle_panel(id, nom_regle) {
@@ -212,6 +232,7 @@ function modifier_regle_panel(id, nom_regle) {
 
         document.getElementById("popup-newRule").style.display = "block";
     });
+    update_summary()
 }
 
 
@@ -266,6 +287,7 @@ function afficher_resultat_regle(id, nom_regle) {
         document.querySelector("#popup-resultRule .modal-content").style.width = "90%";
         document.getElementById("popup-resultRule").style.display = "block";
     });
+    update_summary()
 }
 
 

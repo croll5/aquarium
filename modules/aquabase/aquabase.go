@@ -694,11 +694,13 @@ func nettoyage(entree string) string {
 /* ---------------------------------------------------------------------------------------------------- */
 
 func (adb Aquabase) SelectFrom0(sqlQuery string) *aquaframe.Aquaframe {
+	df_error := aquaframe.Aquaframe{dataframe.New(), nil}
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
+
 	if err != nil {
-		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
-		return nil
+		df_error.Error = errors.New("adb.WARNING - SelectFrom failed connexion: " + err.Error())
+		return &df_error
 	}
 	// SQL Request
 	//var df dataframe.DataFrame
@@ -716,8 +718,8 @@ func (adb Aquabase) SelectFrom0(sqlQuery string) *aquaframe.Aquaframe {
 		return nil
 	})
 	if err != nil {
-		fmt.Println("adb.WARNING - SelectFrom execution error: " + err.Error())
-		return nil
+		df_error.Error = errors.New("adb.WARNING - SelectFrom execution error: " + err.Error())
+		return &df_error
 	}
 	return df
 }

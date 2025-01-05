@@ -43,7 +43,7 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	ruleName := filepath.Base(cheminRegle)
+	ruleName := strings.Replace(filepath.Base(cheminRegle), ".json", "", -1)
 
 	// Execution la requête SQL
 	var adb = aquabase.InitDB_Extraction(cheminProjet)
@@ -73,7 +73,6 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	if isError {
 		id_frame := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
 		id_value := id_frame.Iloc(0, 0)
-		fmt.Println(id_value)
 
 		table_name := "error_" + id_value
 		err := adb_rules.DropTable(table_name)
@@ -228,25 +227,31 @@ func ResultatRegleDetection(cheminProjet string, nomRegle string) (int, error) {
 	return lancerRegle(cheminProjet, filepath.Join(path, nomRegle+".json"))
 }
 
-func ResultatSQL(cheminProjet string, cheminRegle string, nomRegle string) ([]map[string]interface{}, error) {
-	// On charge la requete SQL associée à la règle
-	var detailsRegle regleSQL
-	donneesFichier, err := os.ReadFile(cheminRegle)
-	if err != nil {
-		log.Println("WARN | Le fichier de règle "+cheminRegle+" n'existe pas ou n'a pas pu être ouvert : ", err.Error())
-		return nil, err
-	}
-	err = json.Unmarshal(donneesFichier, &detailsRegle)
-	if err != nil {
-		return nil, err
-	}
-	log.Println(detailsRegle.SQL)
+func ResultatSQL(cheminProjet string, ruleName string) ([]map[string]interface{}, error) {
+	adb_rules := aquabase.InitDB_Rules(cheminProjet)
+	id_frame := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
+	id_value := id_frame.Iloc(0, 0)
+	df := adb_rules.SelectFrom0("SELECT * FROM error_" + id_value)
+	return df.ToMap(), nil
+	/*
+		// On charge la requete SQL associée à la règle
+		var detailsRegle regleSQL
+		donneesFichier, err := os.ReadFile(cheminRegle)
+		if err != nil {
+			log.Println("WARN | Le fichier de règle "+cheminRegle+" n'existe pas ou n'a pas pu être ouvert : ", err.Error())
+			return nil, err
+		}
+		err = json.Unmarshal(donneesFichier, &detailsRegle)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(detailsRegle.SQL)
 
-	// On exécute la requête SQL
-	var adb = aquabase.InitDB_Extraction(cheminProjet)
-	result := adb.SelectFrom(detailsRegle.SQL)
-	fmt.Println(result)
-	return result, nil
+		// On exécute la requête SQL
+		var adb = aquabase.InitDB_Extraction(cheminProjet)
+		result := adb.SelectFrom(detailsRegle.SQL)
+		fmt.Println(result)
+		return result, nil*/
 }
 
 func SuppressionRegleDetection(cheminProjet string, nomRegle string) error {
@@ -265,4 +270,14 @@ func SuppressionRegleDetection(cheminProjet string, nomRegle string) error {
 	}
 	fmt.Println("Suppression de la regle: " + nomRegle)
 	return nil
+}
+
+func StatutReglesDetection(cheminProjet string) ([]map[string]interface{}, error) {
+	adb_rules := aquabase.InitDB_Rules(cheminProjet)
+	df := adb_rules.SelectFrom0("SELECT * FROM regles")
+	if df.Error != nil {
+		fmt.Println("Table 'regle' inexistante ou erreur")
+		return []map[string]interface{}{}, nil
+	}
+	return df.ToMap(), nil
 }

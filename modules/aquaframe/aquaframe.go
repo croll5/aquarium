@@ -9,6 +9,7 @@ import (
 
 type Aquaframe struct {
 	Table dataframe.DataFrame
+	Error error
 }
 
 // Implémentation de l'interface fmt.Stringer
@@ -107,4 +108,29 @@ func (adf Aquaframe) AddColumn(colname string, colvalues interface{}) {
 
 func (adf Aquaframe) Iloc(r int, c int) string {
 	return adf.Table.Elem(r, c).String()
+}
+
+func (adf Aquaframe) ToMap() []map[string]interface{} {
+	var result []map[string]interface{}
+
+	for i := 0; i < adf.Table.Nrow(); i++ {
+		row := make(map[string]interface{})
+		for _, colName := range adf.Table.Names() {
+			val := adf.Table.Col(colName).Elem(i)
+			switch val.Type() {
+			case series.Int:
+				row[colName], _ = val.Int()
+			case series.Float:
+				row[colName] = val.Float()
+			case series.String:
+				row[colName] = val.String()
+			case series.Bool:
+				row[colName], _ = val.Bool()
+			default:
+				row[colName] = val
+			}
+		}
+		result = append(result, row)
+	}
+	return result
 }

@@ -357,8 +357,15 @@ func (a *App) ResultatRegleDetection(nomRegle string) int {
 }
 
 func (a *App) ResultatsSQL(nomRegle string) []map[string]interface{} {
-	chemin_regles := filepath.Join(chemin_projet, "regles_detection", nomRegle+".json")
-	resultat, err := detection.ResultatSQL(chemin_projet, chemin_regles, nomRegle)
+	resultat, err := detection.ResultatSQL(chemin_projet, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
+func (a *App) StatutReglesDetection() []map[string]interface{} {
+	resultat, err := detection.StatutReglesDetection(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)
 	}
