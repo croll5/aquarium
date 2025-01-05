@@ -72,7 +72,7 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	// Renvoi 2 si le dataframe n'est pas vide sinon 1
 	if isError {
 		id_frame := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
-		id_value := id_frame.Iloc(0, 0)
+		id_value := id_frame.Strloc(0, 0)
 
 		table_name := "error_" + id_value
 		err := adb_rules.DropTable(table_name)
@@ -172,6 +172,19 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			} else if state == 0 {
 				reglesEnErreur = append(reglesEnErreur, rule)
 			}
+		} else {
+			// Cherche si la regle a deja été executé avant
+			adb_rules := aquabase.InitDB_Rules(cheminProjet)
+			query := fmt.Sprintf("SELECT isError FROM regles WHERE name=\"%s\"", rule)
+			df := adb_rules.SelectFrom0(query)
+			if df.Table.Nrow() > 0 {
+				value, _ := df.Intloc(0, 0)
+				if value == 1 {
+					state = 2
+				} else {
+					state = 1
+				}
+			}
 		}
 		listeRegles[rule] = map[string]int{
 			"isGlobal": isGlobal,
@@ -230,7 +243,7 @@ func ResultatRegleDetection(cheminProjet string, nomRegle string) (int, error) {
 func ResultatSQL(cheminProjet string, ruleName string) ([]map[string]interface{}, error) {
 	adb_rules := aquabase.InitDB_Rules(cheminProjet)
 	id_frame := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
-	id_value := id_frame.Iloc(0, 0)
+	id_value := id_frame.Strloc(0, 0)
 	df := adb_rules.SelectFrom0("SELECT * FROM error_" + id_value)
 	return df.ToMap(), nil
 	/*

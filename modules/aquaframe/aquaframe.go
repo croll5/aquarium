@@ -106,8 +106,12 @@ func (adf Aquaframe) AddColumn(colname string, colvalues interface{}) {
 	adf.Table = adf.Table.CBind(dataframe.New(newCol))
 }
 
-func (adf Aquaframe) Iloc(r int, c int) string {
+func (adf Aquaframe) Strloc(r int, c int) string {
 	return adf.Table.Elem(r, c).String()
+}
+
+func (adf Aquaframe) Intloc(r int, c int) (int, error) {
+	return adf.Table.Elem(r, c).Int()
 }
 
 func (adf Aquaframe) ToMap() []map[string]interface{} {

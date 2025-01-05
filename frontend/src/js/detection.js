@@ -69,18 +69,16 @@ function afficher_regles(lancer) {
 }
 
 function update_summary() {
-    let nbRules;
     parent.window.go.main.App.ListeReglesDetection(false).then(resul => {
-        nbRules = new Map(Object.entries(resul)).size;
-    });
-    parent.window.go.main.App.StatutReglesDetection().then(resultat => {
-        console.log(resultat);
-        const errorCount = resultat.filter(item => item.isError === 1).length;
-        const nbElement = resultat.length;
-        document.getElementById("total").innerHTML = "Total:<br>"+nbRules;
-        document.getElementById("notExecuted").innerHTML = "Inconnu:<br>"+(nbRules-nbElement);
-        document.getElementById("valided").innerHTML = "Validation:<br>"+(nbElement-errorCount)
-        document.getElementById("detected").innerHTML = "Detection:<br>"+errorCount
+        let nbRules = new Map(Object.entries(resul)).size;
+        parent.window.go.main.App.StatutReglesDetection().then(resultat => {
+            const errorCount = resultat.filter(item => item.isError === 1).length;
+            const nbElement = resultat.length;
+            document.getElementById("total").innerHTML = "Total:<br>"+nbRules;
+            document.getElementById("notExecuted").innerHTML = "Inconnu:<br>"+(nbRules-nbElement);
+            document.getElementById("valided").innerHTML = "Validation:<br>"+(nbElement-errorCount)
+            document.getElementById("detected").innerHTML = "Detection:<br>"+errorCount
+        });
     });
 }
 
