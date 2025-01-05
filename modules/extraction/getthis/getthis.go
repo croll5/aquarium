@@ -41,7 +41,7 @@ func (gt Getthis) Description() string {
 
 func (gt Getthis) CreationTable(cheminProjet string) error {
 	base := aquabase.InitDB_Extraction(cheminProjet)
-	base.CreateTableIfNotExist("getthis", columnSelection)
+	base.CreateTableIfNotExist1("getthis", columnSelection, true)
 	return nil
 }
 
@@ -276,7 +276,7 @@ func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, t
 	//columnSelection := df.Names() // For no columns filter
 
 	// Check the table exist
-	err := adb.CreateTableIfNotExist(tableName, df.Names())
+	err := adb.CreateTableIfNotExist1(tableName, df.Names(), true)
 	if err != nil {
 		return fmt.Errorf("ERROR: exportDfToDb(_) [createTableIfNotExist]: %w", err)
 	}

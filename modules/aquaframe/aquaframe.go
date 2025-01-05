@@ -8,12 +8,12 @@ import (
 )
 
 type Aquaframe struct {
-	table dataframe.DataFrame
+	Table dataframe.DataFrame
 }
 
 // Implémentation de l'interface fmt.Stringer
 func (adf Aquaframe) String() string {
-	return adf.table.String()
+	return adf.Table.String()
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -24,7 +24,7 @@ func (adf Aquaframe) String() string {
 
 func Df(dataframe dataframe.DataFrame) *Aquaframe {
 	adf := Aquaframe{}
-	adf.table = dataframe
+	adf.Table = dataframe
 	return &adf
 
 }
@@ -67,7 +67,7 @@ func RowsToAquaframe(rows *sql.Rows) *Aquaframe {
 	}
 	// Convert and return the dataframe
 	adf := Aquaframe{}
-	adf.table = dataframe.LoadRecords(records)
+	adf.Table = dataframe.LoadRecords(records)
 	return &adf
 }
 
@@ -80,7 +80,7 @@ func RowsToAquaframe(rows *sql.Rows) *Aquaframe {
 func (adf Aquaframe) Head(nFirstRows int) *Aquaframe {
 	// Return it
 	df := Aquaframe{}
-	df.table = adf.table.Subset([]int{0, nFirstRows})
+	df.Table = adf.Table.Subset([]int{0, nFirstRows})
 	return &df
 }
 
@@ -102,5 +102,9 @@ func (adf Aquaframe) AddColumn(colname string, colvalues interface{}) {
 		return
 	}
 	// Add the new column to the dataframe
-	adf.table = adf.table.CBind(dataframe.New(newCol))
+	adf.Table = adf.Table.CBind(dataframe.New(newCol))
+}
+
+func (adf Aquaframe) Iloc(r int, c int) string {
+	return adf.Table.Elem(r, c).String()
 }

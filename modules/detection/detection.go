@@ -32,7 +32,7 @@ type regleSQL struct {
 /* FONCTIONS LOCALES */
 
 func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
-	// On charge la requete SQL associée à la règle
+	// Recuperation de la requete SQL associée à la règle
 	var detailsRegle regleSQL
 	donneesFichier, err := os.ReadFile(cheminRegle)
 	if err != nil {
@@ -43,52 +43,51 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Println(detailsRegle.SQL)
+	ruleName := filepath.Base(cheminRegle)
 
-	// On exécute la requête SQL
+	// Execution la requête SQL
 	var adb = aquabase.InitDB_Extraction(cheminProjet)
-	result := adb.SelectFrom(detailsRegle.SQL)
-	//fmt.Println(result)
-	fmt.Println(len(result))
+	df := adb.SelectFrom0(detailsRegle.SQL)
+	isError := df.Table.Nrow() > 0
+
+	// Renseignement de la table sql des regles
+	adb_rules := aquabase.InitDB_Rules(cheminProjet)
+	tableName := "regles"
+	colName := []string{"name", "isError"}
+	tableColumns := map[string]string{
+		// "id" en autoincrement par defaut
+		"name":    "TEXT UNIQUE",
+		"isError": "INTEGER",
+	}
+	err = adb_rules.CreateTableIfNotExist2(tableName, tableColumns, true)
+	if err != nil {
+		return 0, err
+	}
+	err = adb_rules.InsertOrReplace(tableName, colName, []interface{}{ruleName, isError})
+	if err != nil {
+		return 0, err
+	}
+	//fmt.Println(adb_rules.SelectFrom0("SELECT * FROM regles"))
 
 	// Renvoi 2 si le dataframe n'est pas vide sinon 1
-	if len(result) > 0 {
+	if isError {
+		id_frame := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
+		id_value := id_frame.Iloc(0, 0)
+		fmt.Println(id_value)
 
-		// Recuperation des noms de colonnes
-		columnsSet := make(map[string]struct{})
-		// Parcourir tous les éléments du DataFrame
-		for _, row := range result {
-			for key := range row {
-				columnsSet[key] = struct{}{}
-			}
-		}
-		// Convertir la map en slice
-		columns := make([]string, 0, len(columnsSet))
-		for column := range columnsSet {
-			columns = append(columns, column)
-		}
-		fmt.Println(columns)
-
-		// Creation de la table d'erreurs du nom de la regle
-		var adb_rules = aquabase.InitDB_Rules(cheminProjet)
-		if adb_rules == nil {
-			return 0, fmt.Errorf("can't connect InitDB_Rules database")
-		}
-		err := adb_rules.DropTable(detailsRegle.Nom)
+		table_name := "error_" + id_value
+		err := adb_rules.DropTable(table_name)
 		if err != nil {
 			return 0, err
 		}
-		err = adb_rules.CreateTableIfNotExist(detailsRegle.Nom, columns)
+		err = adb_rules.CreateTableIfNotExist1(table_name, df.Table.Names(), false)
 		if err != nil {
 			return 0, err
 		}
-
-		/* REFAIRE LE SELECT * POUR RETUURN UN DATAFRAME et creer un fichier AQUAFRAME*/
-		df := adb.SelectFrom0(detailsRegle.SQL)
-		fmt.Println(df)
-
-		//adb_rules.SaveDf(result, detailsRegle.Nom)
-
+		err = adb_rules.SaveDf(df.Table, table_name)
+		if err != nil {
+			return 0, err
+		}
 		return 2, nil
 	}
 	return 1, nil

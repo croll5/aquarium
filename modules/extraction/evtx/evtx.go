@@ -273,7 +273,7 @@ func (e Evtx) PrerequisOK(cheminCollecte string) bool {
 
 func (e Evtx) CreationTable(cheminProjet string) error {
 	base := aquabase.InitDB_Extraction(cheminProjet)
-	err := base.CreateTableIfNotExist("evtx", colonnesTableEvtx)
+	err := base.CreateTableIfNotExist1("evtx", colonnesTableEvtx, true)
 	return err
 }
 

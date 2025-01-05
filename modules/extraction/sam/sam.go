@@ -104,7 +104,7 @@ func (s Sam) Extraction(cheminProjet string) error {
 
 func (s Sam) CreationTable(cheminProjet string) error {
 	aqua := aquabase.InitDB_Extraction(cheminProjet)
-	aqua.CreateTableIfNotExist("sam", colonnesTableSam)
+	aqua.CreateTableIfNotExist1("sam", colonnesTableSam, true)
 	return nil
 }
 
