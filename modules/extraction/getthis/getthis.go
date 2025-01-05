@@ -40,14 +40,14 @@ func (gt Getthis) Description() string {
 }
 
 func (gt Getthis) CreationTable(cheminProjet string) error {
-	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	base.CreateTableIfNotExist("getthis", columnSelection)
+	base := aquabase.InitDB_Extraction(cheminProjet)
+	base.CreateTableIfNotExist1("getthis", columnSelection, true)
 	return nil
 }
 
 func (gt Getthis) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
 	if pourcentageChargement == -1 {
-		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		base := aquabase.InitDB_Extraction(cheminProjet)
 		if !base.EstTableVide("getthis") {
 			pourcentageChargement = 100
 		}
@@ -254,7 +254,7 @@ func readCsvIn7zFile(zipPath string, localisationIn7zFile string, password strin
 }
 
 func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string) error {
-	adb := aquabase.InitBDDExtraction(cheminProjet)
+	adb := aquabase.InitDB_Extraction(cheminProjet)
 
 	// Add a filePath column to save the GetThis filename
 
@@ -281,7 +281,7 @@ func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, t
 	//columnSelection := df.Names() // For no columns filter
 
 	// Check the table exist
-	err := adb.CreateTableIfNotExist(tableName, df.Names())
+	err := adb.CreateTableIfNotExist1(tableName, df.Names(), true)
 	if err != nil {
 		return fmt.Errorf("ERROR: exportDfToDb(_) [createTableIfNotExist]: %w", err)
 	}
@@ -347,6 +347,6 @@ func DfAddColumn(df dataframe.DataFrame, colname string, value string) dataframe
 }
 
 func viderTableGetThis(cheminProjet string) error {
-	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+	base := aquabase.InitDB_Extraction(cheminProjet)
 	return base.RemoveFromWhere("getthis", "1=1")
 }

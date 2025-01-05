@@ -1,11 +1,13 @@
 package aquabase
 
 import (
+	"aquarium/modules/aquaframe"
 	"aquarium/modules/aquaticket"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -16,6 +18,7 @@ import (
  */
 type Aquabase struct {
 	dbPath string
+	dbName string
 }
 
 type RequeteInsertion struct {
@@ -88,24 +91,6 @@ func FermerToutesLesBDD() error {
 	return probleme
 }
 
-/*
-* constructeur de la class Aquabase
-  - @dbPath : path of the database
-  - @return : the Aquabase object
-  - Exemple : adb := aquabase.Init("C:\AquariumLab\analyse\extractions.db")
-*/
-func Init(dbPath string) Aquabase {
-	a := Aquabase{}
-	a.dbPath = dbPath
-	return a
-}
-
-func InitBDDExtraction(cheminProjet string) Aquabase {
-	a := Aquabase{}
-	a.dbPath = filepath.Join(cheminProjet, "analyse", "extractions.db")
-	return a
-}
-
 /** Create a connexion to the database.
  * After this functino: use defer db.Close() to close the connexion
  * @return : the Aquabase database connexion & an error if exist
@@ -115,22 +100,111 @@ func (adb Aquabase) Login() (infosBDD, error) {
 	return GetInfosBDD(adb.dbPath)
 }
 
-/* -------------------------- GESTION DES TABLES -------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------   INITIALISATION   ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
 
-/** Create a table in the database
- * @tableName : name of the new table
- * @tableColumns : columns of the new table
- * @return : an error if exist
- * Exemple:  CreateTableIfNotExist( "getthis", ["colA", "ColB"])
- */
-func (adb Aquabase) CreateTableIfNotExist(tableName string, tableColumns []string) error {
+/*
+constructeur de la class Aquabase
+  - @dbPath : path of the database
+  - @return : the Aquabase object pointers
+  - Exemple : adb := aquabase.Init("C:\AquariumLab\analyse\extractions.db")
+*/
+func Init(dbPath string) *Aquabase {
+	adb := Aquabase{}
+	adb.dbPath = dbPath
+	adb.dbName = filepath.Base(dbPath)
+	if !adb.createDatabaseIfNotExist() {
+		return nil
+	}
+	return &adb
+}
+
+/*
+constructeur de la class Aquabase avec une base de données personnalisée
+  - @projectPath : path of the project
+  - @return : the Aquabase object pointers
+  - Exemple : adb := aquabase.Init("C:\AquariumLab")
+*/
+func InitDB_Extraction(projectPath string) *Aquabase {
+	adb := Aquabase{}
+	adb.dbName = "extractions.db"
+	adb.dbPath = filepath.Join(projectPath, "analyse", adb.dbName)
+	if !adb.createDatabaseIfNotExist() {
+		return nil
+	}
+	return &adb
+}
+
+/*
+constructeur de la class Aquabase avec une base de données personnalisée
+  - @projectPath : path of the project
+  - @return : the Aquabase object pointers
+  - Exemple : adb := aquabase.Init("C:\AquariumLab")
+*/
+func InitDB_Rules(projectPath string) *Aquabase {
+	adb := Aquabase{}
+	adb.dbName = "regles.db"
+	adb.dbPath = filepath.Join(projectPath, "analyse", adb.dbName)
+	if !adb.createDatabaseIfNotExist() {
+		return nil
+	}
+	return &adb
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------       CREATE       ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+
+/*
+Creation du fichier de la base de données
+  - @return default: true. false if the file.db cannot be create
+*/
+func (adb Aquabase) createDatabaseIfNotExist() bool {
+	// Vérifie si le fichier existe déjà
+	if _, err := os.Stat(adb.dbPath); err == nil {
+		return true
+	}
+	abd_file, err := os.Create(adb.dbPath)
+	if err != nil {
+		return false
+		log.Println("adb.WARNING - can't create the database file: " + adb.dbPath)
+	}
+	defer abd_file.Close()
+	fmt.Println("Creation de la dbb: " + adb.dbPath)
+	return true
+}
+
+/*
+Create a table in the database
+  - @tableName : name of the new table
+  - @tableColumns : columns of the new table
+  - @return : an error if exist
+  - Exemple:  CreateTableIfNotExist1( "getthis", ["colA", "ColB"])
+*/
+func (adb Aquabase) CreateTableIfNotExist1(tableName string, tableColumns []string, index bool) error {
 	// Open or create the sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return fmt.Errorf("CreateTableIfNotExist(): %w", err)
+		return fmt.Errorf("CreateTableIfNotExist1(): %w", err)
+	}
+	// Check the table existance
+	var name string
+	query := fmt.Sprintf("SELECT name FROM sqlite_master WHERE type='table' AND name='%s';", tableName)
+	res := infosBdd.bdd.QueryRow(query).Scan(&name)
+	if res == nil {
+		return nil
 	}
 	// CREATE TABLE IF NOT EXISTS
-	query := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, ", tableName)
+	if index {
+		query = fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, ", tableName)
+	} else {
+		query = fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (", tableName)
+	}
 	for i, col := range tableColumns {
 		query += fmt.Sprintf("%s TEXT", col)
 		if i < len(tableColumns)-1 {
@@ -143,17 +217,82 @@ func (adb Aquabase) CreateTableIfNotExist(tableName string, tableColumns []strin
 		_, err := infosBdd.bdd.Exec(query)
 		return err
 	})
+	if err != nil {
+		fmt.Println("Error= " + err.Error())
+		return err
+	}
+	fmt.Println("Create table '" + tableName + "' in " + adb.dbName)
 	return err
 }
 
-/* -------------------------- SUPPRESSION DE VALEURS -------------------------- */
+func (adb Aquabase) CreateTableIfNotExist2(tableName string, tableColumns map[string]string, index bool) error {
+	// Open or create the sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		return fmt.Errorf("CreateTableIfNotExist(): %w", err)
+	}
+	// Check the table existence
+	var name string
+	query := fmt.Sprintf("SELECT name FROM sqlite_master WHERE type='table' AND name='%s';", tableName)
+	res := infosBdd.bdd.QueryRow(query).Scan(&name)
+	if res == nil {
+		return nil
+	}
+	// CREATE TABLE IF NOT EXISTS
+	if index {
+		query = fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY AUTOINCREMENT, ", tableName)
+	} else {
+		query = fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (", tableName)
+	}
+	for col, colType := range tableColumns {
+		query += fmt.Sprintf("%s %s", col, colType)
+		query += ", "
+	}
+	query = query[:len(query)-2] // Remove the last comma and space
+	query += ");"
+	// SQL code execution
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		_, err := infosBdd.bdd.Exec(query)
+		return err
+	})
+	if err != nil {
+		fmt.Println("Error= " + err.Error())
+		return err
+	}
+	fmt.Println("Create table '" + tableName + "' in " + adb.dbName)
+	return err
+}
 
-/** Delete values from a table with condition(s)
- * @tableName : name of the new table
- * @tableColumns : columns of the new table
- * @return : an error if exist
- * Exemple:  RemoveFromWhere( "getthis", ["colA", "ColB"])
- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------       DELETE       ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+
+/*
+Delete a table from the database
+  - @tableName : name of the new table
+*/
+func (adb Aquabase) DropTable(table string) error {
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		fmt.Println("adb.WARNING: DropTable failed: " + table)
+		return err
+	}
+	// Drop the table
+	queryDrop := fmt.Sprintf(`DROP TABLE IF EXISTS '%s'`, table)
+	infosBdd.bdd.Exec(queryDrop)
+	return nil
+}
+
+/*
+Delete values from a table with condition(s)
+  - @tableName : name of the new table
+  - @tableColumns : columns of the new table
+  - @return : an error if exist
+  - Exemple:  RemoveFromWhere( "getthis", ["colA", "ColB"])
+*/
 func (adb Aquabase) RemoveFromWhere(table string, where string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
@@ -172,14 +311,19 @@ func (adb Aquabase) RemoveFromWhere(table string, where string) error {
 	return nil
 }
 
-/* -------------------------- INSERTION DE VALEURS -------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------   INSERT/UPDATE    ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
 
-/** Insert into a table a dataframe
- * @df : the dataframe to save in the db
- * @tableName : the table were we save the data
- * @return : an error if exist
- * Exemple:  SaveDf(df, "getthis")
- */
+/*
+Insert into a table a dataframe
+  - @df : the dataframe to save in the db
+  - @tableName : the table were we save the data
+  - @return : an error if exist
+  - Exemple:  SaveDf(df, "getthis")
+*/
 func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
@@ -222,11 +366,69 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 	return err
 }
 
-/*
-		Fonction d’initialisation d’une requête d’insertion dans la base extraction
+func (adb Aquabase) InsertOrReplace(tableName string, columns []string, values []interface{}) error {
+	if len(columns) != len(values) {
+		return fmt.Errorf("le nombre de colonnes et de valeurs ne correspond pas")
+	}
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		return fmt.Errorf("InsertOrReplace(): %w", err)
+	}
+	// Start a transaction
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		tx, err := infosBdd.bdd.Begin()
+		if err != nil {
+			return fmt.Errorf("ERROR: exportDfToDB() [Can't start a transaction]: %w", err)
+		}
+		// Prepare the query insertion
+		query := fmt.Sprintf("INSERT OR REPLACE INTO %s (", tableName)
+		for i, col := range columns {
+			if i > 0 {
+				query += ", "
+			}
+			query += col
+		}
+		query += ") VALUES ("
+		for i := range values {
+			if i > 0 {
+				query += ", "
+			}
+			query += "?"
+		}
+		query += ") ON CONFLICT(name) DO UPDATE SET "
+		for i, col := range columns {
+			if col != "name" {
+				if i > 1 {
+					query += ", "
+				}
+				query += fmt.Sprintf("%s=excluded.%s", col, col)
+			}
+		}
+		stmt, err := tx.Prepare(query)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("ERROR: exportDfToDB() [Can't Prepare query]: %w", err)
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec(values...)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("ERROR: exportDfToDB() [Can't Execute query]: %w", err)
+		}
+		tx.Commit()
+		return nil
+	})
+	if err != nil {
+		fmt.Println("Erreur lors de l'insertion ou de la mise à jour:", err)
+	}
+	return err
+}
 
-	  - @param nomTable : le nom de la base dans laquelle il faut insérer les valeurs
-	  - @return : un objet de type RequeteInsertion
+/*
+Fonction d’initialisation d’une requête d’insertion dans la base extraction
+  - @param nomTable : le nom de la base dans laquelle il faut insérer les valeurs
+  - @return : un objet de type RequeteInsertion
 */
 func InitRequeteInsertionExtraction(nomTable string, colonnesTable []string) RequeteInsertion {
 	var requete RequeteInsertion = RequeteInsertion{}
@@ -287,7 +489,11 @@ func (requete *RequeteInsertion) Executer(cheminProjet string) error {
 	return err
 }
 
-/* -------------------------- LECTURE DE LA BASE -------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------       SELECT       ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
 
 /** Pragma request to obtains all the table name of the database
  * @return : dict of all table with the text "Columns: %d - Rows: %d"
@@ -490,4 +696,150 @@ func nettoyage(entree string) string {
 	entree = strings.ReplaceAll(entree, ">", "&gt;")
 	entree = strings.ReplaceAll(entree, "&", "&amp")
 	return entree
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------    SELECT V2.0     ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+
+func (adb Aquabase) SelectFrom0(sqlQuery string) *aquaframe.Aquaframe {
+	df_error := aquaframe.Aquaframe{dataframe.New(), nil}
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+
+	if err != nil {
+		df_error.Error = errors.New("adb.WARNING - SelectFrom failed connexion: " + err.Error())
+		return &df_error
+	}
+	// SQL Request
+	//var df dataframe.DataFrame
+	var df *aquaframe.Aquaframe
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		rows, err := infosBdd.bdd.Query(sqlQuery)
+		if err != nil {
+			return errors.New("adb.WARNING - SelectFrom failed querying: " + err.Error())
+		}
+		defer rows.Close()
+		df = aquaframe.RowsToAquaframe(rows)
+		if df == nil {
+			return errors.New("adb.WARNING - SelectFrom failed create dataframe")
+		}
+		return nil
+	})
+	if err != nil {
+		df_error.Error = errors.New("adb.WARNING - SelectFrom execution error: " + err.Error())
+		return &df_error
+	}
+	return df
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ----------------------------------------       PRAGMA       ---------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------------------------------- */
+
+func (adb Aquabase) PragmaTable(tableName string) error {
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
+		return nil
+	}
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		query := fmt.Sprintf("PRAGMA table_info(%s);", tableName)
+		rows, err := infosBdd.bdd.Query(query)
+		if err != nil {
+			return fmt.Errorf("Erreur lors de l'exécution de la requête PRAGMA: %w", err)
+		}
+		defer rows.Close()
+		found := false
+		for rows.Next() {
+			found = true
+			var cid int
+			var name, ctype string
+			var notnull, pk int
+			var dflt_value sql.NullString
+			err = rows.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
+			if err != nil {
+				return fmt.Errorf("Erreur lors de la lecture des résultats: %w", err)
+			}
+			fmt.Printf("cid: %d, name: %s, type: %s, notnull: %d, dflt_value: %v, pk: %d\n", cid, name, ctype, notnull, dflt_value, pk)
+		}
+		if !found {
+			fmt.Println("Aucun informations trouvé pour la table", tableName)
+		}
+		return err
+	})
+	return err
+}
+
+func (adb Aquabase) PragmaIndexList(tableName string) error {
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
+		return nil
+	}
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		query := fmt.Sprintf("PRAGMA index_list(%s);", tableName)
+		rows, err := infosBdd.bdd.Query(query)
+		if err != nil {
+			return fmt.Errorf("Erreur lors de l'exécution de la requête PRAGMA: %w", err)
+		}
+		defer rows.Close()
+		found := false
+		for rows.Next() {
+			found = true
+			var seq int
+			var name, origin string
+			var unique, partial int
+			err = rows.Scan(&seq, &name, &unique, &origin, &partial)
+			if err != nil {
+				return fmt.Errorf("Erreur lors de la lecture des résultats: %w", err)
+			}
+			fmt.Printf("seq: %d, name: %s, unique: %d, origin: %d, partial: %d\n", seq, name, unique, origin, partial)
+		}
+		if !found {
+			fmt.Println("Aucun index trouvé pour la table", tableName)
+		}
+		return err
+	})
+	return err
+}
+
+func (adb Aquabase) PragmaIndexInfo(indexName string) error {
+	// Open sqliteDB
+	infosBdd, err := adb.Login()
+	if err != nil {
+		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
+		return nil
+	}
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		query := fmt.Sprintf("PRAGMA index_info(%s);", indexName)
+		rows, err := infosBdd.bdd.Query(query)
+		if err != nil {
+			return fmt.Errorf("Erreur lors de l'exécution de la requête PRAGMA: %w", err)
+		}
+		defer rows.Close()
+
+		found := false
+		for rows.Next() {
+			found = true
+			var seqno, cid int
+			var name string
+			err = rows.Scan(&seqno, &cid, &name)
+			if err != nil {
+				return fmt.Errorf("Erreur lors de la lecture des résultats: %w", err)
+			}
+			fmt.Printf("seqno: %d, cid: %d, name: %s\n", seqno, cid, name)
+		}
+		if !found {
+			fmt.Println("Aucun informations trouvé pour l'index", indexName)
+		}
+		return err
+	})
+	return err
 }

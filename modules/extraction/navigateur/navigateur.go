@@ -92,14 +92,14 @@ func (n Navigateur) PrerequisOK(cheminORC string) bool {
 }
 
 func (n Navigateur) CreationTable(cheminProjet string) error {
-	var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
-	base.CreateTableIfNotExist("navigateurs", colonnesTableNavigateurs)
+	base := aquabase.InitDB_Extraction(cheminProjet)
+	base.CreateTableIfNotExist1("navigateurs", colonnesTableNavigateurs)
 	return nil
 }
 
 func (n Navigateur) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
 	if pourcentageChargement == -1 {
-		var base aquabase.Aquabase = aquabase.InitBDDExtraction(cheminProjet)
+		base := aquabase.InitDB_Extraction(cheminProjet)
 		if !base.EstTableVide("navigateurs") {
 			pourcentageChargement = 100
 		}

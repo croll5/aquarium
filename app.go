@@ -24,7 +24,6 @@ import (
 )
 
 var chemin_projet string
-var chemin_bdd string
 
 // App struct
 type App struct {
@@ -104,7 +103,6 @@ func (a *App) OuvrirAnalyseExistante() bool {
 		return false
 	}
 	chemin_projet = filepath.Dir(fichier)
-	chemin_bdd = filepath.Join(chemin_projet, "analyse", "extractions.db")
 	return true
 }
 
@@ -116,7 +114,6 @@ func (a *App) CreationDossierNouveauModele() string {
 		return ""
 	}
 	chemin_projet = projet
-	chemin_bdd = filepath.Join(chemin_projet, "analyse", "extractions.db")
 	if gestionprojet.CreationDossierModele(chemin_projet) != nil {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
@@ -139,7 +136,6 @@ func (a *App) CreationNouveauProjet() string {
 		return ""
 	}
 	chemin_projet = projet
-	chemin_bdd = filepath.Join(chemin_projet, "analyse", "extractions.db")
 	if !gestionprojet.CreationArborescence(chemin_projet) {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
@@ -240,13 +236,13 @@ func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.Me
 /************************* DB_INFO PAGE ************************************************/
 /***************************************************************************************/
 func (a *App) Get_db_info() map[string]string {
-	adb := aquabase.Init(chemin_bdd)
+	adb := aquabase.InitDB_Extraction(chemin_projet)
 	return adb.GetAllTableNames()
 }
 
 func (a *App) Get_header_table(tableName string, limitJS string) []map[string]interface{} {
 	limit, _ := strconv.Atoi(limitJS)
-	adb := aquabase.Init(chemin_bdd)
+	adb := aquabase.InitDB_Extraction(chemin_projet)
 	return adb.SelectAllFrom(tableName, limit)
 }
 
@@ -288,7 +284,7 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 /************************* Detection FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
-func (a *App) ListeReglesDetection(lancerRegles bool) map[string]int {
+func (a *App) ListeReglesDetection(lancerRegles bool) map[string]map[string]int {
 	regles, reglesEnErreur, err := detection.ListeReglesDetection(chemin_projet, lancerRegles)
 	if err != nil {
 		a.signalerErreur(err)
@@ -309,21 +305,6 @@ func (a *App) InfosRegleDetection(nomRegle string) detection.Regle {
 		a.signalerErreur(err)
 	}
 	return regles
-}
-
-func (a *App) ResultatRegleDetection(nomRegle string) int {
-	resultat, err := detection.ResultatRegleDetection(chemin_projet, nomRegle)
-	if err != nil {
-		a.signalerErreur(err)
-	}
-	if resultat == 0 {
-		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-			Type:    runtime.InfoDialog,
-			Title:   "Certaines règles contiennent des erreurs",
-			Message: "L'exécution de cette règle a renvoyé une erreur.\nNous vous conseillons de vérifier sa syntaxe.",
-		})
-	}
-	return resultat
 }
 
 func (a *App) CreationReglesDetection(json_rule string) bool {
@@ -352,9 +333,39 @@ func (a *App) CreationReglesDetection(json_rule string) bool {
 	return true
 }
 
+func (a *App) Delete_rule(nomRegle string) {
+	err := detection.SuppressionRegleDetection(chemin_projet, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+}
+
+func (a *App) ResultatRegleDetection(nomRegle string) int {
+	resultat, err := detection.ResultatRegleDetection(chemin_projet, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	if resultat == 0 {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "Certaines règles contiennent des erreurs",
+			Message: "L'exécution de cette règle a renvoyé une erreur.\nNous vous conseillons de vérifier sa syntaxe.",
+		})
+	}
+
+	return resultat
+}
+
 func (a *App) ResultatsSQL(nomRegle string) []map[string]interface{} {
-	chemin_regles := filepath.Join(chemin_projet, "regles_detection", nomRegle+".json")
-	resultat, err := detection.ResultatSQL(chemin_projet, chemin_regles, nomRegle)
+	resultat, err := detection.ResultatSQL(chemin_projet, nomRegle)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
+func (a *App) StatutReglesDetection() []map[string]interface{} {
+	resultat, err := detection.StatutReglesDetection(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)
 	}
