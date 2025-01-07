@@ -105,7 +105,7 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 		if strings.HasPrefix(trimmed, "[Boot Session") {
 			parts := strings.Split(trimmed, " ")
 			if len(parts) >= 3 {
-				sessionTime, err := time.Parse(dateFormat, parts[len(parts)-2]+" "+strings.TrimSuffix(parts[len(parts)-1], "]"))
+				sessionTime, err := time.ParseInLocation(dateFormat, parts[len(parts)-2]+" "+strings.TrimSuffix(parts[len(parts)-1], "]"), time.Local)
 				if err != nil {
 					log.Printf("Erreur de parsing de l'horodatage global : %v", err)
 					continue
@@ -129,7 +129,7 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 		if strings.HasPrefix(trimmed, ">>>  Section start") {
 			parts := strings.Split(trimmed, " ")
 			if len(parts) >= 4 {
-				startTime, err := time.Parse(dateFormat, parts[4]+" "+parts[5])
+				startTime, err := time.ParseInLocation(dateFormat, parts[4]+" "+parts[5], time.Local)
 				if err != nil {
 					log.Printf("Erreur de parsing de la StartSession : %v", err)
 					continue
@@ -145,7 +145,7 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 		if strings.HasPrefix(trimmed, "<<<  Section end") {
 			parts := strings.Split(trimmed, " ")
 			if len(parts) >= 4 {
-				endTime, err := time.Parse(dateFormat, parts[4]+" "+parts[5])
+				endTime, err := time.ParseInLocation(dateFormat, parts[4]+" "+parts[5], time.Local)
 				if err != nil {
 					log.Printf("Erreur de parsing de la EndSession : %v", err)
 					continue
@@ -252,5 +252,5 @@ func (d Divers) DetailsEvenement(idEvt int) string {
 }
 
 func (d Divers) SQLChronologie() string {
-	return ""
+	return "SELECT id, \"divers\", \"divers\", source, startSessionTime, \"Début de l’opération : \" || typeOperation FROM divers UNION SELECT id, \"divers\", \"divers\", source, endSessionTime, \"Fin de l'opération : \" || typeOperation || \", avec le statut : \" || exitStatut  FROM divers"
 }
