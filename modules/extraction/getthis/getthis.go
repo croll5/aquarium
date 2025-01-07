@@ -352,5 +352,5 @@ func viderTableGetThis(cheminProjet string) error {
 }
 
 func (gt Getthis) SQLChronologie() string {
-	return ""
+	return "SELECT id, \"getthis\", \"creation\", extracteur, CreationDate, \"Création du fichier \" || FullName || \" (empreinte MD5 : \" || MD5 || \")\" FROM getthis UNION SELECT id, \"getthis\", \"modification\", extracteur, LastModificationDate, \"Dernière modification du fichier \" || FullName || \" (empreinte MD5 : \" || MD5 || \")\" FROM getthis  UNION SELECT id, \"getthis\", \"acces\", extracteur, LastAccessDate, \"Dernier accès au fichier \" || FullName || \" (empreinte MD5 : \" || MD5 || \")\" FROM getthis"
 }

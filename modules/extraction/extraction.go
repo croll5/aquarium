@@ -42,6 +42,7 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 }
 
 var colonnesTableChronologie map[string]string = map[string]string{"idEvt": "INT", "extracteur": "TEXT", "nomTable": "TEXT", "source": "TEXT", "horodatage": "DATETIME", "message": "TEXT"}
+var colonnesSimmplesChronologie []string = []string{"idEvt", "extracteur", "nomTable", "source", "horodatage", "message"}
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]InfosExtracteur, error) {
 	// On itère sur tous les extracteurs
@@ -100,7 +101,7 @@ func ExtraireTableChronologie(cheminProjet string) error {
 		}
 	}
 	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	err := base.RemplirTableDepuisRequetes("chronologie", listeRequetesChronologie, true, "horodatage")
+	err := base.RemplirTableDepuisRequetes("chronologie", colonnesSimmplesChronologie, listeRequetesChronologie, true, "horodatage")
 	log.Println(err)
 	return nil
 }

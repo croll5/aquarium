@@ -490,7 +490,7 @@ func (requete *RequeteInsertion) Executer(cheminProjet string) error {
 	return err
 }
 
-func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, requetes []string, viderTableAvant bool, ordonnerParColonne string) error {
+func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, colonnesTables []string, requetes []string, viderTableAvant bool, ordonnerParColonne string) error {
 	// On commence par vider la table si besoin
 
 	if viderTableAvant {
@@ -500,7 +500,7 @@ func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, requetes []st
 		}
 	}
 	var requeteInsertion string = strings.Join(requetes, " UNION ")
-	requeteInsertion = "INSERT INTO " + nomTable + " " + requeteInsertion + " ORDER BY " + ordonnerParColonne
+	requeteInsertion = "INSERT INTO " + nomTable + " (" + strings.Join(colonnesTables, ", ") + ") " + requeteInsertion + " ORDER BY " + ordonnerParColonne
 	log.Println("[INFO] - Exécution de la requête ", requeteInsertion)
 	infosBDD, err := abase.Login()
 	if err != nil {
