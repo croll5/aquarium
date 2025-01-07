@@ -590,6 +590,13 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 	return adb.ResultatRequeteSQL(query)
 }
 
+func (adb *Aquabase) RecupererValeursTable(nomTable string, colonnes []string, debut int, taille int) []map[string]interface{} {
+	var stringColonnes string = strings.Join(colonnes, ", ")
+	var requete string = fmt.Sprintf("SELECT %s FROM %s LIMIT %d OFFSET %d", stringColonnes, nomTable, taille, debut)
+	log.Println("Exécution de la requête ", requete)
+	return adb.ResultatRequeteSQL(requete)
+}
+
 func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} {
 	var results []map[string]interface{}
 	infosBdd, err := adb.Login()

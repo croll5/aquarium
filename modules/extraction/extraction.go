@@ -105,3 +105,8 @@ func ExtraireTableChronologie(cheminProjet string) error {
 	log.Println(err)
 	return nil
 }
+
+func ValeursTableChronologie(cheminProjet string, debut int, taille int) []map[string]interface{} {
+	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+	return abase.RecupererValeursTable("chronologie", colonnesSimmplesChronologie, debut, taille)
+}

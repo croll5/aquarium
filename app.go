@@ -380,3 +380,11 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 	}
 	return resultat
 }
+
+/***************************************************************************************/
+/************************* Chronologie FUNCTIONS PAGE ********************************/
+/***************************************************************************************/
+
+func (app *App) ValeursTableChronologie(debut int, taille int) []map[string]interface{} {
+	return extraction.ValeursTableChronologie(chemin_projet, debut, taille)
+}

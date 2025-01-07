@@ -128,3 +128,38 @@ button.onglet:hover{
     background-color: var(--bleu-3);
     color: white;
 }
+
+table th, td{
+    padding: 7px;
+}
+
+table{
+    border-collapse: collapse;
+}
+
+/* Bords arrondis à l'extérieur des tableaux*/
+th:first-of-type {
+    border-top-left-radius: 7px;
+  }
+th:last-of-type {
+    border-top-right-radius: 7px;
+}
+tr:last-of-type td:first-of-type {
+    border-bottom-left-radius: 7px;
+}
+tr:last-of-type td:last-of-type {
+    border-bottom-right-radius: 7px;
+}
+
+table th{
+    background-color: var(--or-1);
+    color: white;
+}
+
+table tr:nth-child(even){
+    background-color: var(--or-6);
+}
+
+table tr{
+    background-color: var(--or-5);
+}
