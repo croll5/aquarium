@@ -1,7 +1,7 @@
 package divers
 
 import (
-	"aquarium/modules/extraction/utilitaires"
+	"aquarium/modules/aquabase"
 	"bytes"
 	"io"
 	"log"
@@ -12,6 +12,8 @@ import (
 
 	"github.com/bodgit/sevenzip"
 )
+
+var colonnesTableDivers []string = []string{"horodatage", "source", "typeOperation", "startSessionTime", "endSessionTime", "exitStatut", "results"}
 
 // Evenement représente les informations extraites d'un événement dans un log.
 type Evenement struct {
@@ -151,21 +153,18 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 	}
 
 	// Enregistrement des événements dans la base de données
+	var requeteInsertion aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("divers", colonnesTableDivers)
+	var err error
 	for _, evt := range evenements {
-		if err := utilitaires.AjoutDiversEvenementDansBDD(
-			cheminProjet,
-			evt.Horodatage,
-			nomFichier,
-			evt.TypeOperation,
-			evt.StartSession,
-			evt.EndSession,
-			evt.ExitStatus,
-			evt.Results,
-		); err != nil {
-			log.Printf("Erreur lors de l'ajout dans la base de données: %v", err)
+		err = requeteInsertion.AjouterDansRequete(evt.Horodatage, nomFichier, evt.TypeOperation, evt.StartSession, evt.EndSession, evt.ExitStatus, evt.Results)
+		if err != nil {
+			return err
 		}
 	}
-
+	err = requeteInsertion.Executer(cheminProjet)
+	if err != nil {
+		return err
+	}
 	log.Println("Extraction et enregistrement des événements terminés.")
 	return nil
 }
@@ -203,7 +202,9 @@ func (d Divers) PrerequisOK(cheminORC string) bool {
 }
 
 func (d Divers) CreationTable(cheminProjet string) error {
-	return nil
+	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+	err := abase.CreateTableIfNotExist1("divers", colonnesTableDivers, true)
+	return err
 }
 
 func (d Divers) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
