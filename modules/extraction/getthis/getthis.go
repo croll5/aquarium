@@ -260,10 +260,10 @@ func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, t
 
 	colvalueList := strings.Split(strings.Split(filname, "::")[0], string(os.PathSeparator))
 	var colvalue string
-	if len(colvalueList) >= 2{
+	if len(colvalueList) >= 2 {
 		colvalue = filepath.Join(colvalueList[len(colvalueList)-2], colvalueList[len(colvalueList)-1])
 		colvalue = strings.Replace(colvalue, "\\", "/", -1)
-	} else{
+	} else {
 		colvalue = filname
 	}
 	df = DfAddColumn(df, colnameFileName, colvalue)
@@ -349,4 +349,8 @@ func DfAddColumn(df dataframe.DataFrame, colname string, value string) dataframe
 func viderTableGetThis(cheminProjet string) error {
 	base := aquabase.InitDB_Extraction(cheminProjet)
 	return base.RemoveFromWhere("getthis", "1=1")
+}
+
+func (gt Getthis) SQLChronologie() string {
+	return ""
 }

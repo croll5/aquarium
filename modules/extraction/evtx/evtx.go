@@ -306,3 +306,7 @@ func (e Evtx) Annuler() bool {
 func (e Evtx) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
+
+func (e Evtx) SQLChronologie() string {
+	return "SELECT id, \"evtx\", \"evtx\", source, horodatage, \"eventID : \" || eventID || \", providerName : \" || providerName || \", paramètres : \" || message FROM evtx"
+}

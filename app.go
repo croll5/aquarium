@@ -220,6 +220,15 @@ func (a *App) ProgressionExtraction(idExtracteur string) float32 {
 	return extraction.ProgressionExtraction(chemin_projet, idExtracteur)
 }
 
+func (a *App) ExtractionChronologie() bool {
+	err := extraction.ExtraireTableChronologie(chemin_projet)
+	if err != nil {
+		a.signalerErreur(err)
+		return false
+	}
+	return true
+}
+
 /***************************************************************************************/
 /************************* Arborescence FUNCTIONS PAGE ********************************/
 /***************************************************************************************/

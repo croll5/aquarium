@@ -161,3 +161,7 @@ func (pref Prefetch) Annuler() bool {
 func (pref Prefetch) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
+
+func (pref Prefetch) SQLChronologie() string {
+	return ""
+}

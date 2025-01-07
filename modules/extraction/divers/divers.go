@@ -217,3 +217,7 @@ func (d Divers) Annuler() bool {
 func (d Divers) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
+
+func (d Divers) SQLChronologie() string {
+	return ""
+}

@@ -45,7 +45,7 @@ body{
     font-family: Comic Sans Ms, serif;
 }
 
-.bouton_clair, .bouton_sombre{
+.bouton_clair, .bouton_sombre, .bouton_mi_tons{
     font-family: inherit;
     padding: 10px;
     border-radius: 5px;
@@ -114,4 +114,17 @@ button.onglet:hover{
 .bouton_invisible:hover{
     cursor: pointer;
     font-weight: bolder;
+}
+
+.bouton_mi_tons{
+    background-color: var(--bleu-5);
+    border: solid;
+    border-color: var(--bleu-3);
+    border-width: 1px;
+}
+
+.bouton_mi_tons:hover{
+    cursor: pointer;
+    background-color: var(--bleu-3);
+    color: white;
 }

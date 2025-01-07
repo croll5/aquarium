@@ -144,3 +144,7 @@ func (s Sam) PrerequisOK(cheminCollecte string) bool {
 func (s Sam) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
+
+func (s Sam) SQLChronologie() string {
+	return "SELECT id, \"sam\", \"sam\", source, horodatage, \"opération \" || operation || \" effecutée sur le compte \" || nomCompte || \" (idCompte : \" || idCompte || \")\" FROM sam"
+}

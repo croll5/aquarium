@@ -32,3 +32,7 @@ func (w Werr) Annuler() bool {
 func (w Werr) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
+
+func (w Werr) SQLChronologie() string {
+	return ""
+}

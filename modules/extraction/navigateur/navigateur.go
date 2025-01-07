@@ -116,6 +116,10 @@ func (n Navigateur) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
 
+func (n Navigateur) SQLChronologie() string {
+	return ""
+}
+
 func openDataFiles(filePath string, requete string, requeteInsertion *aquabase.RequeteInsertion) {
 
 	db, err := sql.Open("sqlite", filePath)

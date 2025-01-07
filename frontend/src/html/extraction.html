@@ -6,11 +6,18 @@
     <title>Document</title>
     <link rel="stylesheet" href="../templates/bibliotheque.css">
     <link rel="stylesheet" href="../templates/commun_clair.css">
+    <link rel="stylesheet" href="../css/extraction.css">
     <script src="../js/extraction.js" async></script>
     <script src="../templates/bibliotheque.js" async></script>
 </head>
 <body>
     <h1>Choix des éléments à extraire</h1>
+    <div id="patience_chronologie">
+        <p>L'extraction de la chronologie est en cours. Pour vous permettre de patienter, nous vous offrons un document scientifique sur le langage des orques. 🐬</p>
+        <iframe id="document_patientez" title="le langage des orques" src="../assets/documents/MONTAUBAN_Albane_Memoire_M2.pdf"></iframe>
+    </div>
+
     <div id="possibilites_extractions"></div>
+    <button class="bouton_mi_tons" onclick="extraire_chronologie()" id="bouton_ext_chrono">Créer ou mettre à jour la chronologie des évènements</button>
 </body>
 </html>

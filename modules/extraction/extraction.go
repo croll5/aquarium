@@ -1,6 +1,7 @@
 package extraction
 
 import (
+	"aquarium/modules/aquabase"
 	"aquarium/modules/extraction/divers"
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/getthis"
@@ -9,6 +10,7 @@ import (
 	"aquarium/modules/extraction/sam"
 	"aquarium/modules/extraction/werr"
 	"errors"
+	"log"
 	"path/filepath"
 	"time"
 )
@@ -21,6 +23,7 @@ type Extracteur interface {
 	PourcentageChargement(string, bool) float32
 	Annuler() bool
 	DetailsEvenement(int) string
+	SQLChronologie() string
 }
 
 type InfosExtracteur struct {
@@ -37,6 +40,8 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"divers":     divers.Divers{},
 	"prefetch":   prefetch.Prefetch{},
 }
+
+var colonnesTableChronologie map[string]string = map[string]string{"idEvt": "INT", "extracteur": "TEXT", "nomTable": "TEXT", "source": "TEXT", "horodatage": "DATETIME", "message": "TEXT"}
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]InfosExtracteur, error) {
 	// On itère sur tous les extracteurs
@@ -63,6 +68,8 @@ func CreationBaseAnalyse(cheminProjet string) {
 	for _, extracteur := range liste_extracteurs {
 		extracteur.CreationTable(cheminProjet)
 	}
+	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	base.CreateTableIfNotExist2("chronologie", colonnesTableChronologie, false)
 }
 
 func ProgressionExtraction(cheminProjet string, idExtracteur string) float32 {
@@ -83,4 +90,17 @@ func AnnulerExtraction(idExtracteur string) bool {
 
 func DetailsEvenement(idExtracteur string, idEvenement int) string {
 	return liste_extracteurs[idExtracteur].DetailsEvenement(idEvenement)
+}
+
+func ExtraireTableChronologie(cheminProjet string) error {
+	var listeRequetesChronologie []string = []string{}
+	for _, extracteur := range liste_extracteurs {
+		if extracteur.SQLChronologie() != "" {
+			listeRequetesChronologie = append(listeRequetesChronologie, extracteur.SQLChronologie())
+		}
+	}
+	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+	err := base.RemplirTableDepuisRequetes("chronologie", listeRequetesChronologie, true, "horodatage")
+	log.Println(err)
+	return nil
 }

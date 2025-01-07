@@ -256,6 +256,7 @@ func (adb Aquabase) CreateTableIfNotExist2(tableName string, tableColumns map[st
 		return err
 	})
 	if err != nil {
+		log.Println("[ERR] - Problème dans l'exécution de la requête", query)
 		fmt.Println("Error= " + err.Error())
 		return err
 	}
@@ -484,6 +485,29 @@ func (requete *RequeteInsertion) Executer(cheminProjet string) error {
 		}
 		// Commit the transaction
 		err = tx.Commit()
+		return err
+	})
+	return err
+}
+
+func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, requetes []string, viderTableAvant bool, ordonnerParColonne string) error {
+	// On commence par vider la table si besoin
+
+	if viderTableAvant {
+		err := abase.RemoveFromWhere(nomTable, "1=1")
+		if err != nil {
+			return err
+		}
+	}
+	var requeteInsertion string = strings.Join(requetes, " UNION ")
+	requeteInsertion = "INSERT INTO " + nomTable + " " + requeteInsertion + " ORDER BY " + ordonnerParColonne
+	log.Println("[INFO] - Exécution de la requête ", requeteInsertion)
+	infosBDD, err := abase.Login()
+	if err != nil {
+		return err
+	}
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		_, err := infosBDD.bdd.Exec(requeteInsertion)
 		return err
 	})
 	return err
