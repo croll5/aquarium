@@ -14,6 +14,10 @@ import (
 )
 
 var colonnesTableDivers []string = []string{"horodatage", "source", "typeOperation", "startSessionTime", "endSessionTime", "exitStatut", "results"}
+var pourcentageChargement float32 = -1
+
+var annulationDemandee bool = false
+var annulationReussie bool = false
 
 // Evenement représente les informations extraites d'un événement dans un log.
 type Evenement struct {
@@ -38,7 +42,10 @@ func (d Divers) Extraction(cheminProjet string) error {
 	}
 	defer archive.Close()
 
-	for _, file := range archive.File {
+	for numFichier, file := range archive.File {
+		if annulationDemandee {
+			return annulerExtraction(cheminProjet)
+		}
 		if !strings.HasSuffix(file.Name, "/") && filepath.Base(filepath.Dir(file.Name)) == "divers" {
 			log.Printf("Traitement du fichier : %s", file.Name)
 
@@ -60,10 +67,22 @@ func (d Divers) Extraction(cheminProjet string) error {
 				log.Printf("Erreur lors de l'extraction et du reformattage pour le fichier %s: %v", file.Name, err)
 			}
 		}
+		pourcentageChargement = float32(numFichier*100) / float32(len(archive.File))
 	}
 
-	log.Println("Extraction terminée.")
+	log.Println("Extraction divers terminée.")
+	pourcentageChargement = 101
 	return nil
+}
+
+func annulerExtraction(cheminProjet string) error {
+	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	err := base.RemoveFromWhere("divers", "1=1")
+	if err == nil {
+		pourcentageChargement = -1
+		annulationReussie = true
+	}
+	return err
 }
 
 // extraireEtReformater extrait les informations pertinentes d'un fichier log.
@@ -208,11 +227,24 @@ func (d Divers) CreationTable(cheminProjet string) error {
 }
 
 func (d Divers) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
-	return -1
+	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	if pourcentageChargement == -1 && verifierTableVide {
+		if !abase.EstTableVide("divers") {
+			pourcentageChargement = 100
+		}
+	}
+	return pourcentageChargement
 }
 
 func (d Divers) Annuler() bool {
-	return true
+	if !annulationDemandee {
+		annulationDemandee = true
+		annulationReussie = false
+	}
+	if annulationReussie {
+		annulationDemandee = false
+	}
+	return annulationReussie
 }
 
 func (d Divers) DetailsEvenement(idEvt int) string {
