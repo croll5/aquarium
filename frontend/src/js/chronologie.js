@@ -1,6 +1,7 @@
 let position_dans_table = 0
 let requete = "SELECT extracteur, horodatage, message, source FROM chronologie";
 let taille_requete = 0;
+let filtres = new Map();
 
 affichage_table(true);
 
@@ -28,7 +29,7 @@ function affichage_table(majTaille){
     parent.window.go.main.App.ResultatRequeteSQLExtraction(requete, position_dans_table, 5).then(resultat =>{
     document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
     emplacement_resultat.innerHTML = "";
-        creer_tableau_depuis_dico(resultat, emplacement_resultat, true);
+        creer_tableau_depuis_dico(resultat, emplacement_resultat, true, filtres);
         if (majTaille){
             parent.window.go.main.App.TailleRequeteSQLExtraction(requete).then(nbLignes =>{
                 console.log(nbLignes);
@@ -56,6 +57,7 @@ function tourner_page(extremes, difference){
 
 function appliquer_filtre(colonne){
     let valeur_filtre = document.getElementById("filtre_" + colonne).textContent;
+    filtres.set(colonne, valeur_filtre)
     if(requete.includes("WHERE")){
         let demi_requetes = requete.split("WHERE");
         let conditions = demi_requetes[1].split("AND");
