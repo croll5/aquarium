@@ -163,3 +163,18 @@ table tr:nth-child(even){
 table tr{
     background-color: var(--or-5);
 }
+
+.contenuDetails{
+    padding: 15px;
+    margin: 15px;
+    border: 1px dashed var(--bleu-2);
+    border-radius: 10px;
+    }
+
+select{
+    background-color: var(--or-5);
+    padding: 9px;
+    border-radius: 5px;
+    border-width: 2px;
+    border-color: var(--or-1);
+}

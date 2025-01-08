@@ -741,6 +741,31 @@ func (adb *Aquabase) TailleRequeteSQL(requete string) int {
 	return nbLignes
 }
 
+func (adb *Aquabase) GetListeTablesDansBDD() []string {
+	var requete string = "SELECT name FROM sqlite_master WHERE type='table'"
+	infosBDD, err := adb.Login()
+	if err != nil {
+		return []string{"ERREUR : " + err.Error()}
+	}
+	var listeTables []string
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		resultat, err := infosBDD.bdd.Query(requete)
+		if err != nil {
+			return err
+		}
+		for resultat.Next() {
+			var nomTable string
+			resultat.Scan(&nomTable)
+			listeTables = append(listeTables, nomTable)
+		}
+		return nil
+	})
+	if err != nil {
+		return []string{"ERREUR : " + err.Error()}
+	}
+	return listeTables
+}
+
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */
 
 func nettoyage(entree string) string {

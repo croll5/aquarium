@@ -397,6 +397,11 @@ func (app *App) ResultatRequeteSQLExtraction(requete string, debut int, taille i
 }
 
 func (app *App) TailleRequeteSQLExtraction(requete string) int {
-	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
+	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(chemin_projet)
 	return base.TailleRequeteSQL(requete)
+}
+
+func (app *App) GetListeTablesExtraction() []string {
+	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(chemin_projet)
+	return base.GetListeTablesDansBDD()
 }
