@@ -25,6 +25,8 @@ function police_dyslexie(){
     document.body.style.fontFamily = "Open Dyslexic";
 }
 
+
+// TODO : ajouter un paramètre "colonnes_a_afficher"
 function creer_tableau_depuis_dico(dico, divOuMettreTableau){
     // Créer un tableau Bootstrap
     let table = document.createElement('table');

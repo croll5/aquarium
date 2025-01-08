@@ -719,6 +719,28 @@ func (adb Aquabase) EstResultatVide(requete string) (bool, error) {
 	return !contientDonnees, nil
 }
 
+func (adb *Aquabase) TailleRequeteSQL(requete string) int {
+	var requeteTotal string = fmt.Sprintf("SELECT COUNT(*) FROM (%s)", requete)
+	infosBDD, err := adb.Login()
+	if err != nil {
+		return 0
+	}
+	var nbLignes = 0
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		lignes, err := infosBDD.bdd.Query(requeteTotal)
+		if err != nil {
+			return err
+		}
+		defer lignes.Close()
+		lignes.Next()
+		return lignes.Scan(&nbLignes)
+	})
+	if err != nil {
+		return 0
+	}
+	return nbLignes
+}
+
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */
 
 func nettoyage(entree string) string {

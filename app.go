@@ -388,3 +388,15 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 func (app *App) ValeursTableChronologie(debut int, taille int) []map[string]interface{} {
 	return extraction.ValeursTableChronologie(chemin_projet, debut, taille)
 }
+
+func (app *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
+	requete = fmt.Sprintf("%s LIMIT %d OFFSET %d", requete, taille, debut)
+	log.Println("[INFO] - Execution depuis JS de la requete ", requete)
+	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
+	return base.ResultatRequeteSQL(requete)
+}
+
+func (app *App) TailleRequeteSQLExtraction(requete string) int {
+	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
+	return base.TailleRequeteSQL(requete)
+}

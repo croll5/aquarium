@@ -6,11 +6,23 @@
     <title>Document</title>
     <link rel="stylesheet" href="../templates/bibliotheque.css">
     <link rel="stylesheet" href="../templates/commun_clair.css">
+    <link rel="stylesheet" href="../css/chronologie.css">
     <script src="../templates/bibliotheque.js" async></script>
     <script src="../js/chronologie.js" async></script>
 </head>
 <body>
     <h1>Chonologie des évènements</h1>
+    <div id="endroit_pour_scroller">
+        <p id="tres_grand_paragraphe"></p>
+    </div>
+    
     <div id="emplacement_table"></div>
+    <div id="pagination">
+        <button class="bouton_sombre" onclick="tourner_page(-1, 0)">&lt;&lt;</button>
+        <button class="bouton_sombre" onclick="tourner_page(0, -5)">&lt;</button>
+        <p id="indicateur_page">1-5</p>
+        <button class="bouton_sombre" onclick="tourner_page(0, 5)">&gt;</button>
+        <button class="bouton_sombre" onclick="tourner_page(1, 0)">&gt;&gt;</button>
+    </div>
 </body>
 </html>
