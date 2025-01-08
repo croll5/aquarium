@@ -28,7 +28,7 @@ function affichage_table(majTaille){
     parent.window.go.main.App.ResultatRequeteSQLExtraction(requete, position_dans_table, 5).then(resultat =>{
     document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
     emplacement_resultat.innerHTML = "";
-        creer_tableau_depuis_dico(resultat, emplacement_resultat);
+        creer_tableau_depuis_dico(resultat, emplacement_resultat, true);
         if (majTaille){
             parent.window.go.main.App.TailleRequeteSQLExtraction(requete).then(nbLignes =>{
                 console.log(nbLignes);
@@ -54,20 +54,36 @@ function tourner_page(extremes, difference){
     affichage_table(false);
 }
 
-let estEnTrainDeScroller = false
-let divPOurScroller = document.getElementById("endroit_pour_scroller")
-divPOurScroller.addEventListener("scroll", (event) => {
-    if (!estEnTrainDeScroller){
-        estEnTrainDeScroller = true
-        if(divPOurScroller.scrollTop > 10000){
-            tourner_page(0, 1);
-        }else if(divPOurScroller.scrollTop < 10000){
-            tourner_page(0,-1);
+function appliquer_filtre(colonne){
+    let valeur_filtre = document.getElementById("filtre_" + colonne).textContent;
+    if(requete.includes("WHERE")){
+        let demi_requetes = requete.split("WHERE");
+        let conditions = demi_requetes[1].split("AND");
+        for(let i = 0; i < conditions.length; i++){
+            if (conditions[i].includes(colonne)){
+                conditions.splice(i, 1);
+            }
         }
-        divPOurScroller.scrollTop = 10000;
-        setTimeout(() => estEnTrainDeScroller = false, 500)
+        conditions.push(colonne + " LIKE \"%" + valeur_filtre + "%\"")
+        requete = demi_requetes[0] + " WHERE " + conditions.join(" AND ");
+    }else{
+        requete += " WHERE " + colonne + " LIKE \"%" + valeur_filtre + "%\""; 
     }
-});
+    position_dans_table = 0;
+    affichage_table(true);
+}
+
+document.getElementById("emplacement_table").focus()
+document.onkeydown = function (e) {
+    switch (e.code){
+        case "ArrowDown":
+            tourner_page(0, 1);
+            break;
+        case "ArrowUp":
+            tourner_page(0, -1);
+            break;
+    }
+};
 
 function nouvelle_recherche_sql(){
     requete = document.getElementById("requete_sql").value;
