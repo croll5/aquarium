@@ -34,3 +34,22 @@
 #emplacement_table{
     min-height: 75vh;
 }
+
+#changement_requete{
+    z-index: 2;
+}
+
+.contenuDetails{
+    display: flex;
+    flex-direction:row;
+    gap: 25px;
+}
+
+#requete_sql{
+    width: 60vw;
+    padding: 11px;
+}
+
+#zone_recherche_sql{
+    display: none;
+}

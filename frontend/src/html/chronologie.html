@@ -12,10 +12,25 @@
 </head>
 <body>
     <h1>Chonologie des évènements</h1>
+    <details id="changement_requete">
+        <summary>Visualisation d'une autre table</summary>
+        <div class="contenuDetails">
+            <div>
+                <button class="bouton_sombre" onclick="changer_type_recherche()">↕</button>
+            </div>
+            <div id="zone_recherche_sql">
+                <input type="text" name="requete" id="requete_sql" class="code" placeholder="Entrez une requête SQL" autocomplete="off">
+                <button class="bouton_sombre" onclick="nouvelle_recherche_sql()">Rechercher</button>
+            </div>
+            <div id="zone_recherche_click_bouton">
+                <select name="choix_table" id="choix_table"></select>
+                <button class="bouton_sombre" onclick="nouvelle_recherche_click_bouton()">Afficher</button>
+            </div>
+        </div>
+    </details>
     <div id="endroit_pour_scroller">
         <p id="tres_grand_paragraphe"></p>
     </div>
-    
     <div id="emplacement_table"></div>
     <div id="pagination">
         <button class="bouton_sombre" onclick="tourner_page(-1, 0)">&lt;&lt;</button>

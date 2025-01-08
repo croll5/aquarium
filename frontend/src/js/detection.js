@@ -57,7 +57,7 @@ function afficher_regles(lancer) {
             // html block
             const detail_regle = document.createElement('details');
             detail_regle.innerHTML = `
-                    <div id="${contenu_id}" class="contenuRegle" resultat="${contenu_state}"></div>
+                    <div id="${contenu_id}" class="contenuDetails" resultat="${contenu_state}"></div>
                     <summary>${regle}<strong class="etatRegle">${detail_smiley}</strong></summary>
                 `;
             detail_regle.onclick = () => informations_regle(contenu_id, regle);
