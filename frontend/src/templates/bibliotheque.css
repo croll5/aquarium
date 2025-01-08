@@ -72,12 +72,18 @@ body{
     color: var(--or-5);
 }
 
-.input_clair{
+.input_clair .input_massif{
     background-color: var(--or-5);
     padding: 10px;
     border-radius: 5px;
     border: none;
     font-family: inherit;
+}
+
+.input_massif{
+    background-color: var(--or-6);
+    border: 1px solid var(--or-1);
+    border-style: dashed;
 }
 
 button.onglet{
@@ -134,7 +140,7 @@ table th, td{
 }
 
 table{
-    border-collapse: collapse;
+    border-spacing: 0;
 }
 
 /* Bords arrondis à l'extérieur des tableaux*/
@@ -157,11 +163,11 @@ table th{
 }
 
 table tr:nth-child(even){
-    background-color: var(--or-6);
+    background-color: var(--or-5);
 }
 
 table tr{
-    background-color: var(--or-5);
+    background-color: var(--or-6);
 }
 
 .contenuDetails{

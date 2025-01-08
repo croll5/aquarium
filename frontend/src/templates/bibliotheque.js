@@ -47,13 +47,18 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
+    
+
+    // Créer le corps du tableau
+    let tbody = document.createElement('tbody');
+
     // Créer une partie "filtres"
     if (afficherFiltres){
         let ligneFiltres = document.createElement('tr');
         for (let key in firstRow) {
             let td = document.createElement('td');
             td.contentEditable = true;
-            td.className = "code";
+            td.className = "input_massif";
             td.placeholder = "filtrer...";
             td.id = "filtre_" + key;
             if(filtres.has(key)){
@@ -62,11 +67,10 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
             td.onblur = () => appliquer_filtre(key);
             ligneFiltres.appendChild(td);
         }
-        table.appendChild(ligneFiltres);
+        tbody.appendChild(ligneFiltres);
     }
 
-    // Créer le corps du tableau
-    let tbody = document.createElement('tbody');
+    // Remplir le reste du tableau 
     for (let [idRow, valueRows] of Object.entries(dico)) {
         let tr = document.createElement('tr');
         for (let [key, value] of Object.entries(valueRows)) {
