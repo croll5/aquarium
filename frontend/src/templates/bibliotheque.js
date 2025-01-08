@@ -53,6 +53,8 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
         for (let key in firstRow) {
             let td = document.createElement('td');
             td.contentEditable = true;
+            td.className = "code";
+            td.placeholder = "filtrer...";
             td.id = "filtre_" + key;
             if(filtres.has(key)){
                 td.textContent = filtres.get(key);

@@ -72,6 +72,9 @@ function tourner_page(extremes, difference){
 
 function appliquer_filtre(colonne){
     let valeur_filtre = document.getElementById("filtre_" + colonne).textContent;
+    if((valeur_filtre == "" && !filtres.has(colonne)) || (filtres.has(colonne) && filtres.get(colonne) == valeur_filtre)){
+        return;
+    }
     filtres.set(colonne, valeur_filtre)
     if(requete.includes("WHERE")){
         let demi_requetes = requete.split("WHERE");
@@ -104,6 +107,7 @@ document.onkeydown = function (e) {
 };
 
 function nouvelle_recherche_sql(){
+    filtres.clear();
     requete = document.getElementById("requete_sql").value;
     position_dans_table = 0;
     position_debut_recuperation = 0;
@@ -112,6 +116,7 @@ function nouvelle_recherche_sql(){
 }
 
 function nouvelle_recherche_click_bouton(){
+    filtres.clear();
     let selecteurTable = document.getElementById("choix_table");
     requete = "SELECT * FROM " + selecteurTable.value;
     position_dans_table = 0;
