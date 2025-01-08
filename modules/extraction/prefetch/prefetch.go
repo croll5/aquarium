@@ -21,7 +21,7 @@ var pourcentageChargement float32 = -1
 var annulationDemandee bool = false
 var annulationReussie bool = false
 
-var colonnesTablePrefetch []string = []string{"executable", "fileSize", "hash", "runCount", "version"}
+var colonnesTablePrefetch []string = []string{"executable", "fileSize", "hash", "runCount", "version", "source"}
 var colonnesTableFichierAccedesPrefetch []string = []string{"idFichier", "fileAccessed"}
 var colonnesTableDernieresExecutionsPrefetch []string = []string{"idFichier", "dateExecution"}
 
@@ -46,7 +46,7 @@ func extraireInfosPrefetchDepuis7z(fichier *sevenzip.File, insertionPrefetch *aq
 		return err
 	}
 	// On ajoute les informations sur le fichier dans la base de données
-	insertionPrefetch.AjouterDansRequete(infosPrechargement.Executable, infosPrechargement.FileSize, infosPrechargement.Hash, infosPrechargement.RunCount, infosPrechargement.Version, numFichier)
+	insertionPrefetch.AjouterDansRequete(infosPrechargement.Executable, infosPrechargement.FileSize, infosPrechargement.Hash, infosPrechargement.RunCount, infosPrechargement.Version, fichier.Name, numFichier)
 	// On ajoute les dates d'execution dans la table des executions
 	for _, execution := range infosPrechargement.LastRunTimes {
 		insertionExecutionPrefetch.AjouterDansRequete(numFichier, execution.Local())
@@ -160,4 +160,8 @@ func (pref Prefetch) Annuler() bool {
 
 func (pref Prefetch) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
+}
+
+func (pref Prefetch) SQLChronologie() string {
+	return "SELECT executionPrefetch.id, \"prefetch\", \"executionPrefetch\", prefetch.source, executionPrefetch.dateExecution, \"Exécution du programme \" || prefetch.executable || \" (version : \" || prefetch.version || \", taille : \" || prefetch.fileSize || \", empreinte : \" || prefetch.hash || \"), qui a été exécuté au total \" || prefetch.runCount || \" fois.\" FROM executionPrefetch INNER JOIN prefetch ON executionPrefetch.idFichier = prefetch.id"
 }

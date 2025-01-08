@@ -15,7 +15,7 @@ import (
 )
 
 var pourcentageChargement float32 = -1
-var colonnesTableNavigateurs []string = []string{"horodatage", "url", "title", "domain_name", "visit_count"}
+var colonnesTableNavigateurs []string = []string{"horodatage", "source", "url", "title", "domain_name", "visit_count"}
 
 const (
 	req_Firefox = "SELECT url, title, rev_host, datetime(last_visit_date / 1000000, 'unixepoch'), visit_count FROM moz_places;"
@@ -116,6 +116,10 @@ func (n Navigateur) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
 }
 
+func (n Navigateur) SQLChronologie() string {
+	return "SELECT id, \"navigateurs\", \"navigateurs\", source, horodatage, \"L'utilisateur a visité la page « \" || title || \" » à l'URL : \" ||  url || \". Nombre total de visites : \" || visit_count FROM navigateurs WHERE NOT horodatage = \"0001-01-01 01:00:00 +0100 CET\""
+}
+
 func openDataFiles(filePath string, requete string, requeteInsertion *aquabase.RequeteInsertion) {
 
 	db, err := sql.Open("sqlite", filePath)
@@ -140,7 +144,7 @@ func openDataFiles(filePath string, requete string, requeteInsertion *aquabase.R
 		}
 
 		log.ConvertStringToTime()
-		requeteInsertion.AjouterDansRequete(log.Time_string, log.Url, log.Title, log.Domain_name, log.Visit_count)
+		requeteInsertion.AjouterDansRequete(log.Time_date.Local(), filePath, log.Url, log.Title, log.Domain_name, log.Visit_count)
 
 	}
 }

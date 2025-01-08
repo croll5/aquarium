@@ -245,39 +245,7 @@ function afficher_resultat_regle(id, nom_regle) {
         scrollContainer.style.maxHeight = '450px'
         scrollContainer.style.overflow = 'auto';
 
-        // Créer un tableau Bootstrap
-        let table = document.createElement('table');
-        table.className = 'table table-striped table-bordered';
-        table.style.fontSize = 'smaller'; // Réduire la taille du texte
-
-        // Créer l'en-tête du tableau
-        let thead = document.createElement('thead');
-        let headerRow = document.createElement('tr');
-
-        // Assumer que le premier objet dans résultat contient les colonnes
-        let firstRow = Object.values(resultat)[0];
-        for (let key in firstRow) {
-            let th = document.createElement('th');
-            th.textContent = key;
-            headerRow.appendChild(th);
-        }
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        // Créer le corps du tableau
-        let tbody = document.createElement('tbody');
-        for (let [idRow, valueRows] of Object.entries(resultat)) {
-            let tr = document.createElement('tr');
-            for (let [key, value] of Object.entries(valueRows)) {
-                let td = document.createElement('td');
-                td.textContent = value;
-                tr.appendChild(td);
-            }
-            tbody.appendChild(tr);
-        }
-        table.appendChild(tbody);
-
-        scrollContainer.appendChild(table);
+        creer_tableau_depuis_dico(resultat, scrollContainer)
         div_db_infos.appendChild(scrollContainer);
 
         document.querySelector("#popup-resultRule .modal-content").style.width = "90%";

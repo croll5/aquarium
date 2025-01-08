@@ -1,0 +1,36 @@
+#indicateur_page{
+    display: inline;
+}
+
+#pagination button{
+    padding-top : 3px;
+    padding-bottom: 3px;
+}
+
+#pagination{
+    text-align: center;
+}
+
+#endroit_pour_scroller{
+    
+    position: absolute;
+    top: 0vh;
+    left: 0;
+    height: 60vh;
+    width: 99vw;
+    overflow: scroll;
+}
+
+#endroit_pour_scroller::-webkit-scrollbar { 
+    display:none;
+}
+
+#tres_grand_paragraphe{
+    width: 100vw;
+    height: 50000vh;
+    background-color: #fff0;
+}
+
+#emplacement_table{
+    min-height: 75vh;
+}

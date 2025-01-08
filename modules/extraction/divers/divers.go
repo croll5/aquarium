@@ -1,7 +1,7 @@
 package divers
 
 import (
-	"aquarium/modules/extraction/utilitaires"
+	"aquarium/modules/aquabase"
 	"bytes"
 	"io"
 	"log"
@@ -12,6 +12,12 @@ import (
 
 	"github.com/bodgit/sevenzip"
 )
+
+var colonnesTableDivers []string = []string{"horodatage", "source", "typeOperation", "startSessionTime", "endSessionTime", "exitStatut", "results"}
+var pourcentageChargement float32 = -1
+
+var annulationDemandee bool = false
+var annulationReussie bool = false
 
 // Evenement représente les informations extraites d'un événement dans un log.
 type Evenement struct {
@@ -36,7 +42,10 @@ func (d Divers) Extraction(cheminProjet string) error {
 	}
 	defer archive.Close()
 
-	for _, file := range archive.File {
+	for numFichier, file := range archive.File {
+		if annulationDemandee {
+			return annulerExtraction(cheminProjet)
+		}
 		if !strings.HasSuffix(file.Name, "/") && filepath.Base(filepath.Dir(file.Name)) == "divers" {
 			log.Printf("Traitement du fichier : %s", file.Name)
 
@@ -58,10 +67,22 @@ func (d Divers) Extraction(cheminProjet string) error {
 				log.Printf("Erreur lors de l'extraction et du reformattage pour le fichier %s: %v", file.Name, err)
 			}
 		}
+		pourcentageChargement = float32(numFichier*100) / float32(len(archive.File))
 	}
 
-	log.Println("Extraction terminée.")
+	log.Println("Extraction divers terminée.")
+	pourcentageChargement = 101
 	return nil
+}
+
+func annulerExtraction(cheminProjet string) error {
+	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	err := base.RemoveFromWhere("divers", "1=1")
+	if err == nil {
+		pourcentageChargement = -1
+		annulationReussie = true
+	}
+	return err
 }
 
 // extraireEtReformater extrait les informations pertinentes d'un fichier log.
@@ -84,7 +105,7 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 		if strings.HasPrefix(trimmed, "[Boot Session") {
 			parts := strings.Split(trimmed, " ")
 			if len(parts) >= 3 {
-				sessionTime, err := time.Parse(dateFormat, parts[len(parts)-2]+" "+strings.TrimSuffix(parts[len(parts)-1], "]"))
+				sessionTime, err := time.ParseInLocation(dateFormat, parts[len(parts)-2]+" "+strings.TrimSuffix(parts[len(parts)-1], "]"), time.Local)
 				if err != nil {
 					log.Printf("Erreur de parsing de l'horodatage global : %v", err)
 					continue
@@ -108,7 +129,7 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 		if strings.HasPrefix(trimmed, ">>>  Section start") {
 			parts := strings.Split(trimmed, " ")
 			if len(parts) >= 4 {
-				startTime, err := time.Parse(dateFormat, parts[4]+" "+parts[5])
+				startTime, err := time.ParseInLocation(dateFormat, parts[4]+" "+parts[5], time.Local)
 				if err != nil {
 					log.Printf("Erreur de parsing de la StartSession : %v", err)
 					continue
@@ -124,7 +145,7 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 		if strings.HasPrefix(trimmed, "<<<  Section end") {
 			parts := strings.Split(trimmed, " ")
 			if len(parts) >= 4 {
-				endTime, err := time.Parse(dateFormat, parts[4]+" "+parts[5])
+				endTime, err := time.ParseInLocation(dateFormat, parts[4]+" "+parts[5], time.Local)
 				if err != nil {
 					log.Printf("Erreur de parsing de la EndSession : %v", err)
 					continue
@@ -151,21 +172,18 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 	}
 
 	// Enregistrement des événements dans la base de données
+	var requeteInsertion aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("divers", colonnesTableDivers)
+	var err error
 	for _, evt := range evenements {
-		if err := utilitaires.AjoutDiversEvenementDansBDD(
-			cheminProjet,
-			evt.Horodatage,
-			nomFichier,
-			evt.TypeOperation,
-			evt.StartSession,
-			evt.EndSession,
-			evt.ExitStatus,
-			evt.Results,
-		); err != nil {
-			log.Printf("Erreur lors de l'ajout dans la base de données: %v", err)
+		err = requeteInsertion.AjouterDansRequete(evt.Horodatage, nomFichier, evt.TypeOperation, evt.StartSession, evt.EndSession, evt.ExitStatus, evt.Results)
+		if err != nil {
+			return err
 		}
 	}
-
+	err = requeteInsertion.Executer(cheminProjet)
+	if err != nil {
+		return err
+	}
 	log.Println("Extraction et enregistrement des événements terminés.")
 	return nil
 }
@@ -203,17 +221,36 @@ func (d Divers) PrerequisOK(cheminORC string) bool {
 }
 
 func (d Divers) CreationTable(cheminProjet string) error {
-	return nil
+	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+	err := abase.CreateTableIfNotExist1("divers", colonnesTableDivers, true)
+	return err
 }
 
 func (d Divers) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
-	return -1
+	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	if pourcentageChargement == -1 && verifierTableVide {
+		if !abase.EstTableVide("divers") {
+			pourcentageChargement = 100
+		}
+	}
+	return pourcentageChargement
 }
 
 func (d Divers) Annuler() bool {
-	return true
+	if !annulationDemandee {
+		annulationDemandee = true
+		annulationReussie = false
+	}
+	if annulationReussie {
+		annulationDemandee = false
+	}
+	return annulationReussie
 }
 
 func (d Divers) DetailsEvenement(idEvt int) string {
 	return "Pas d'informations supplémentaires"
+}
+
+func (d Divers) SQLChronologie() string {
+	return "SELECT id, \"divers\", \"divers\", source, startSessionTime, \"Début de l’opération : \" || typeOperation FROM divers UNION SELECT id, \"divers\", \"divers\", source, endSessionTime, \"Fin de l'opération : \" || typeOperation || \", avec le statut : \" || exitStatut  FROM divers"
 }

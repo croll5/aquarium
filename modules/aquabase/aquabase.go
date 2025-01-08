@@ -256,6 +256,7 @@ func (adb Aquabase) CreateTableIfNotExist2(tableName string, tableColumns map[st
 		return err
 	})
 	if err != nil {
+		log.Println("[ERR] - Problème dans l'exécution de la requête", query)
 		fmt.Println("Error= " + err.Error())
 		return err
 	}
@@ -489,6 +490,29 @@ func (requete *RequeteInsertion) Executer(cheminProjet string) error {
 	return err
 }
 
+func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, colonnesTables []string, requetes []string, viderTableAvant bool, ordonnerParColonne string) error {
+	// On commence par vider la table si besoin
+
+	if viderTableAvant {
+		err := abase.RemoveFromWhere(nomTable, "1=1")
+		if err != nil {
+			return err
+		}
+	}
+	var requeteInsertion string = strings.Join(requetes, " UNION ")
+	requeteInsertion = "INSERT INTO " + nomTable + " (" + strings.Join(colonnesTables, ", ") + ") " + requeteInsertion + " ORDER BY " + ordonnerParColonne
+	log.Println("[INFO] - Exécution de la requête ", requeteInsertion)
+	infosBDD, err := abase.Login()
+	if err != nil {
+		return err
+	}
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		_, err := infosBDD.bdd.Exec(requeteInsertion)
+		return err
+	})
+	return err
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------------- */
 /* ----------------------------------------       SELECT       ---------------------------------------- */
@@ -564,6 +588,13 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 	// SQL Request
 
 	return adb.ResultatRequeteSQL(query)
+}
+
+func (adb *Aquabase) RecupererValeursTable(nomTable string, colonnes []string, debut int, taille int) []map[string]interface{} {
+	var stringColonnes string = strings.Join(colonnes, ", ")
+	var requete string = fmt.Sprintf("SELECT %s FROM %s LIMIT %d OFFSET %d", stringColonnes, nomTable, taille, debut)
+	log.Println("Exécution de la requête ", requete)
+	return adb.ResultatRequeteSQL(requete)
 }
 
 func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} {
@@ -686,6 +717,28 @@ func (adb Aquabase) EstResultatVide(requete string) (bool, error) {
 		return true, err
 	}
 	return !contientDonnees, nil
+}
+
+func (adb *Aquabase) TailleRequeteSQL(requete string) int {
+	var requeteTotal string = fmt.Sprintf("SELECT COUNT(*) FROM (%s)", requete)
+	infosBDD, err := adb.Login()
+	if err != nil {
+		return 0
+	}
+	var nbLignes = 0
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		lignes, err := infosBDD.bdd.Query(requeteTotal)
+		if err != nil {
+			return err
+		}
+		defer lignes.Close()
+		lignes.Next()
+		return lignes.Scan(&nbLignes)
+	})
+	if err != nil {
+		return 0
+	}
+	return nbLignes
 }
 
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */

@@ -220,6 +220,15 @@ func (a *App) ProgressionExtraction(idExtracteur string) float32 {
 	return extraction.ProgressionExtraction(chemin_projet, idExtracteur)
 }
 
+func (a *App) ExtractionChronologie() bool {
+	err := extraction.ExtraireTableChronologie(chemin_projet)
+	if err != nil {
+		a.signalerErreur(err)
+		return false
+	}
+	return true
+}
+
 /***************************************************************************************/
 /************************* Arborescence FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
@@ -370,4 +379,24 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 		a.signalerErreur(err)
 	}
 	return resultat
+}
+
+/***************************************************************************************/
+/************************* Chronologie FUNCTIONS PAGE ********************************/
+/***************************************************************************************/
+
+func (app *App) ValeursTableChronologie(debut int, taille int) []map[string]interface{} {
+	return extraction.ValeursTableChronologie(chemin_projet, debut, taille)
+}
+
+func (app *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
+	requete = fmt.Sprintf("%s LIMIT %d OFFSET %d", requete, taille, debut)
+	log.Println("[INFO] - Execution depuis JS de la requete ", requete)
+	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
+	return base.ResultatRequeteSQL(requete)
+}
+
+func (app *App) TailleRequeteSQLExtraction(requete string) int {
+	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
+	return base.TailleRequeteSQL(requete)
 }

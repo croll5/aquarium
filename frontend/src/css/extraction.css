@@ -1,0 +1,8 @@
+#patience_chronologie{
+    display: none;
+}
+
+#patience_chronologie iframe{
+    width: 90vw;
+    height: 70vh;
+}
