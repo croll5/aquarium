@@ -636,11 +636,29 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 		if err := rows.Err(); err != nil {
 			return errors.New("SelectAllFrom(): during rows iteration: " + err.Error())
 		}
-		if len(results) == 0 {
-			return errors.New("cette table ne contient aucune valeur")
-		}
 		return err
 	})
+
+	if len(results) == 0 {
+		var partiesRequete []string = strings.Split(strings.TrimPrefix(requete, "SELECT"), "FROM")
+		var texteColonnes string = strings.ReplaceAll(partiesRequete[0], " ", "")
+		ligne := make(map[string]interface{})
+		if texteColonnes == "*" {
+			if len(partiesRequete) >= 2 {
+				var nomTable string = strings.Split(strings.TrimSpace(partiesRequete[1]), " ")[0]
+				colonnesTable := adb.SelectAllFrom(nomTable, 1)
+				for cles := range colonnesTable[0] {
+					ligne[cles] = ""
+				}
+			}
+		} else {
+			colonnes := strings.Split(texteColonnes, ",")
+			for _, colonne := range colonnes {
+				ligne[colonne] = ""
+			}
+		}
+		results = append(results, ligne)
+	}
 	if err != nil {
 		return []map[string]interface{}{{"Error": err.Error()}}
 	}
