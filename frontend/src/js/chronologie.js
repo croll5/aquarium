@@ -3,6 +3,7 @@ let position_debut_recuperation = 0;
 let requete = "SELECT extracteur, horodatage, message, source FROM chronologie";
 let taille_requete = 0;
 let filtres = new Map();
+let order_by = "riendutout";
 let tableRecuperee = new Object();
 
 affichage_table(true);
@@ -39,7 +40,7 @@ function affichage_table(majTaille){
             document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
             emplacement_resultat.innerHTML = "";
             console.log(resultat);
-            creer_tableau_depuis_dico(resultat.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, filtres);
+            creer_tableau_depuis_dico(resultat.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, filtres, order_by);
             if (majTaille){
                 parent.window.go.main.App.TailleRequeteSQLExtraction(requete).then(nbLignes =>{
                     console.log(nbLignes);
@@ -52,7 +53,7 @@ function affichage_table(majTaille){
         emplacement_resultat.innerHTML = "";
         console.log(position_dans_table - position_debut_recuperation);
         document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
-        creer_tableau_depuis_dico(tableRecuperee.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, filtres);
+        creer_tableau_depuis_dico(tableRecuperee.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, filtres, order_by);
     }
 }
 
@@ -78,19 +79,39 @@ function appliquer_filtre(colonne){
     filtres.set(colonne, valeur_filtre)
     if(requete.includes("WHERE")){
         let demi_requetes = requete.split("WHERE");
-        let conditions = demi_requetes[1].split("AND");
+        let filtrage_order_by = demi_requetes[1].split("ORDER")
+        let conditions = filtrage_order_by[0].split("AND");
         for(let i = 0; i < conditions.length; i++){
             if (conditions[i].includes(colonne)){
                 conditions.splice(i, 1);
             }
         }
-        conditions.push(colonne + " LIKE \"%" + valeur_filtre + "%\"")
-        requete = demi_requetes[0] + " WHERE " + conditions.join(" AND ");
+        if (valeur_filtre != ""){
+            conditions.push(colonne + " LIKE \"%" + valeur_filtre + "%\"")
+        }
+        if (conditions.length > 0 ){
+            requete = demi_requetes[0] + " WHERE " + conditions.join(" AND ");
+        }else{
+            requete = demi_requetes[0];
+        }
+        if (filtrage_order_by.length > 1){
+            requete += " ORDER" + filtrage_order_by[1];
+        }
+    }else if (requete.includes("ORDER")){
+        let demi_requetes = requete.split("ORDER");
+        requete = demi_requetes[0] + "WHERE " + colonne + " LIKE \"%" + valeur_filtre + "%\" ORDER" + demi_requetes[1]
     }else{
         requete += " WHERE " + colonne + " LIKE \"%" + valeur_filtre + "%\""; 
     }
     position_dans_table = 0;
     position_debut_recuperation = 0;
+    affichage_table(true);
+}
+
+function trier_par(colonne){
+    order_by = colonne;
+    requete = requete.split(" ORDER")[0];
+    requete += " ORDER BY " + colonne;
     affichage_table(true);
 }
 

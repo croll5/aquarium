@@ -27,7 +27,7 @@ function police_dyslexie(){
 
 
 // TODO : ajouter un paramètre "colonnes_a_afficher"
-function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, filtres){
+function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, filtres, order_by){
     // Créer un tableau Bootstrap
     let table = document.createElement('table');
     table.className = 'table table-striped table-bordered';
@@ -42,6 +42,10 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
     for (let key in firstRow) {
         let th = document.createElement('th');
         th.textContent = key;
+        if (key == order_by){
+            th.textContent ="⬇️"+ key + "⬇️";
+        }
+        th.onclick = () => trier_par(key);
         headerRow.appendChild(th);
     }
     thead.appendChild(headerRow);
