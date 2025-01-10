@@ -25,6 +25,7 @@ type RequeteInsertion struct {
 	nomTable      string
 	colonnesTable []string
 	valeurs       [][]interface{}
+	bdd           *Aquabase
 }
 
 type infosBDD struct {
@@ -431,11 +432,12 @@ Fonction d’initialisation d’une requête d’insertion dans la base extracti
   - @param nomTable : le nom de la base dans laquelle il faut insérer les valeurs
   - @return : un objet de type RequeteInsertion
 */
-func InitRequeteInsertionExtraction(nomTable string, colonnesTable []string) RequeteInsertion {
+func (abd *Aquabase) InitRequeteInsertionExtraction(nomTable string, colonnesTable []string) RequeteInsertion {
 	var requete RequeteInsertion = RequeteInsertion{}
 	requete.nomTable = nomTable
 	requete.colonnesTable = colonnesTable
 	requete.valeurs = make([][]interface{}, 0)
+	requete.bdd = abd
 	return requete
 }
 
@@ -448,12 +450,12 @@ func (requete *RequeteInsertion) AjouterDansRequete(valeurs ...any) error {
 	return nil
 }
 
-func (requete *RequeteInsertion) Executer(cheminProjet string) error {
+func (requete *RequeteInsertion) Executer() error {
 	if len(requete.valeurs) == 0 {
 		log.Println("Il n’y avait aucun évènement !")
 		return nil
 	}
-	infosBdd, err := GetInfosBaseExtraction(cheminProjet)
+	infosBdd, err := requete.bdd.Login()
 	if err != nil {
 		return err
 	}

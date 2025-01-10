@@ -38,7 +38,8 @@ func (n Navigateur) Extraction(cheminProjet string) error {
 	extractArchive(path, destPath)
 
 	//Init tab logs
-	var requeteInsersion aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("navigateurs", colonnesTableNavigateurs)
+	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	var requeteInsersion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("navigateurs", colonnesTableNavigateurs)
 
 	//List of files
 
@@ -74,7 +75,7 @@ func (n Navigateur) Extraction(cheminProjet string) error {
 		}
 	}
 
-	err = requeteInsersion.Executer(cheminProjet)
+	err = requeteInsersion.Executer()
 	if err != nil {
 		pourcentageChargement = -1
 		return err

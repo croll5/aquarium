@@ -72,7 +72,7 @@ body{
     color: var(--or-5);
 }
 
-.input_clair .input_massif{
+.input_clair{
     background-color: var(--or-5);
     padding: 10px;
     border-radius: 5px;

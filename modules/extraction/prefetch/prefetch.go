@@ -75,9 +75,10 @@ func annulerExtraction(cheminProjet string) error {
 /* FONCTIONS REQUISES PAR LE MODULE EXTRACTEUR */
 
 func (pref Prefetch) Extraction(cheminProjet string) error {
-	var insertionPrefetch aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("prefetch", append(colonnesTablePrefetch, "id"))
-	var insertionExecutionPrefetch aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("executionPrefetch", colonnesTableDernieresExecutionsPrefetch)
-	var insertionRessourcesPrefetch aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("ressourcesPrefetch", colonnesTableFichierAccedesPrefetch)
+	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	var insertionPrefetch aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("prefetch", append(colonnesTablePrefetch, "id"))
+	var insertionExecutionPrefetch aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("executionPrefetch", colonnesTableDernieresExecutionsPrefetch)
+	var insertionRessourcesPrefetch aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("ressourcesPrefetch", colonnesTableFichierAccedesPrefetch)
 	var numFichier = 0
 	dossierArtefact, err := sevenzip.OpenReader(filepath.Join(cheminProjet, "CollecteORC", "General", "Artefacts.7z"))
 	if err == nil {
@@ -97,9 +98,9 @@ func (pref Prefetch) Extraction(cheminProjet string) error {
 		}
 		dossierArtefact.Close()
 	}
-	insertionPrefetch.Executer(cheminProjet)
-	insertionExecutionPrefetch.Executer(cheminProjet)
-	insertionRessourcesPrefetch.Executer(cheminProjet)
+	insertionPrefetch.Executer()
+	insertionExecutionPrefetch.Executer()
+	insertionRessourcesPrefetch.Executer()
 	pourcentageChargement = 101
 	return nil
 }

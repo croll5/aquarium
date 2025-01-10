@@ -91,11 +91,12 @@ func (s Sam) Extraction(cheminProjet string) error {
 		}
 		deuxiemeEssai := registre.OpenKey("SAM/Domains/Account/Users")
 		enfants = deuxiemeEssai.Subkeys()
-		var requete aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("sam", colonnesTableSam)
+		var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+		var requete aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("sam", colonnesTableSam)
 		for _, compte := range enfants {
 			traiterInfosCompte(compte, &dejaFait, nomsDesComptes[compte.Name()], fichierSAM.Name, &requete)
 		}
-		requete.Executer(cheminProjet)
+		requete.Executer()
 		pourcentageChargement = float32(numFichier) * 100 / float32(len(r.File))
 	}
 	pourcentageChargement = 101
