@@ -81,7 +81,7 @@ body{
 }
 
 .input_massif{
-    background-color: var(--or-6);
+    background-color: var(--or-5);
     border: 1px solid var(--or-1);
     border-style: dashed;
 }
@@ -183,4 +183,9 @@ select{
     border-radius: 5px;
     border-width: 2px;
     border-color: var(--or-1);
+}
+
+select.filtre{
+    padding: 3px;
+    margin: 0px;
 }
