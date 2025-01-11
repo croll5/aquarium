@@ -130,7 +130,8 @@ func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *seve
 	// On récupère la liste des évènements
 	listeEvenements := fichierEvtx.FastEvents()
 	var probleme error = nil
-	var requeteInsertionEvtx aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("Evtx", colonnesTableEvtx)
+	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+	var requeteInsertionEvtx aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("Evtx", colonnesTableEvtx)
 	for evenement := range listeEvenements {
 		// On ajoute chaque évènement à la requete
 		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource)
@@ -139,7 +140,7 @@ func (e Evtx) extraireEvenementsDepuisFichier(cheminProjet string, fichier *seve
 		}
 	}
 	// On exécute la requete
-	err = requeteInsertionEvtx.Executer(cheminProjet)
+	err = requeteInsertionEvtx.Executer()
 	// Si l'on n'a pas pu l'exécuter, on renvoie une erreur
 	if err != nil {
 		log.Println("ERROR - extraireEvenementDepuisFichier : ", err)

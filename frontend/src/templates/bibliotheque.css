@@ -80,6 +80,12 @@ body{
     font-family: inherit;
 }
 
+.input_massif{
+    background-color: var(--or-5);
+    border: 1px solid var(--or-1);
+    border-style: dashed;
+}
+
 button.onglet{
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
@@ -134,7 +140,7 @@ table th, td{
 }
 
 table{
-    border-collapse: collapse;
+    border-spacing: 0;
 }
 
 /* Bords arrondis à l'extérieur des tableaux*/
@@ -157,11 +163,11 @@ table th{
 }
 
 table tr:nth-child(even){
-    background-color: var(--or-6);
+    background-color: var(--or-5);
 }
 
 table tr{
-    background-color: var(--or-5);
+    background-color: var(--or-6);
 }
 
 .contenuDetails{
@@ -177,4 +183,9 @@ select{
     border-radius: 5px;
     border-width: 2px;
     border-color: var(--or-1);
+}
+
+select.filtre{
+    padding: 3px;
+    margin: 0px;
 }

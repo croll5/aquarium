@@ -3,6 +3,7 @@ package gestionprojet
 import (
 	"aquarium/modules/extraction"
 	"aquarium/modules/extraction/utilitaires"
+	"aquarium/modules/rapport"
 	"encoding/json"
 	"errors"
 	"io"
@@ -38,23 +39,27 @@ func IsDirEmpty(name string) (bool, error) {
   - Fonction qui crée l'arborescence de base de l'analyse
     @chemin : le chemin dans lequel on veut créer le projet
 */
-func CreationArborescence(chemin string) bool {
+func CreationArborescence(chemin *string) bool {
 	// Création d'un fichier .aqua contenant les infos essentielles du projet
-	estvide, err := IsDirEmpty(chemin)
+	estvide, err := IsDirEmpty(*chemin)
 	if err != nil || !estvide {
-		return false
+		*chemin = filepath.Join(*chemin, time.Now().Format("20060102150405")+" - analyse aquarium")
+		log.Println(*chemin)
 	}
-	os.MkdirAll(filepath.Join(chemin, "analyse"), 0766)
-	fichier, err := os.Create(filepath.Join(chemin, "analyse.aqua"))
+	os.MkdirAll(filepath.Join(*chemin, "analyse"), 0766)
+	fichier, err := os.Create(filepath.Join(*chemin, "analyse.aqua"))
 	if err != nil {
 		log.Println(err)
 		return false
 	}
 	defer fichier.Close()
 	// Création de la base de données qui contiendra la chronologie des évènements
-	extraction.CreationBaseAnalyse(chemin)
+	extraction.CreationBaseAnalyse(*chemin)
+	// Création de la table des informations spécifiques au rapport
+	var rprt rapport.Rapport = *rapport.InitRapport(*chemin)
+	rprt.CreerTables()
 	// Creation d'un dossier contenant les règles de detection de l'utilisateur
-	os.MkdirAll(filepath.Join(chemin, "regles_detection"), 0766)
+	os.MkdirAll(filepath.Join(*chemin, "regles_detection"), 0766)
 	return true
 }
 

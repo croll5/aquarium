@@ -136,7 +136,7 @@ func (a *App) CreationNouveauProjet() string {
 		return ""
 	}
 	chemin_projet = projet
-	if !gestionprojet.CreationArborescence(chemin_projet) {
+	if !gestionprojet.CreationArborescence(&chemin_projet) {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 			Type:    runtime.ErrorDialog,
 			Title:   "Problème dans la création de l'analyse",

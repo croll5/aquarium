@@ -172,7 +172,8 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 	}
 
 	// Enregistrement des événements dans la base de données
-	var requeteInsertion aquabase.RequeteInsertion = aquabase.InitRequeteInsertionExtraction("divers", colonnesTableDivers)
+	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("divers", colonnesTableDivers)
 	var err error
 	for _, evt := range evenements {
 		err = requeteInsertion.AjouterDansRequete(evt.Horodatage, nomFichier, evt.TypeOperation, evt.StartSession, evt.EndSession, evt.ExitStatus, evt.Results)
@@ -180,7 +181,7 @@ func (d Divers) extraireEtReformater(contenu string, nomFichier string, cheminPr
 			return err
 		}
 	}
-	err = requeteInsertion.Executer(cheminProjet)
+	err = requeteInsertion.Executer()
 	if err != nil {
 		return err
 	}

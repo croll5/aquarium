@@ -25,6 +25,7 @@ type RequeteInsertion struct {
 	nomTable      string
 	colonnesTable []string
 	valeurs       [][]interface{}
+	bdd           *Aquabase
 }
 
 type infosBDD struct {
@@ -431,11 +432,12 @@ Fonction d’initialisation d’une requête d’insertion dans la base extracti
   - @param nomTable : le nom de la base dans laquelle il faut insérer les valeurs
   - @return : un objet de type RequeteInsertion
 */
-func InitRequeteInsertionExtraction(nomTable string, colonnesTable []string) RequeteInsertion {
+func (abd *Aquabase) InitRequeteInsertionExtraction(nomTable string, colonnesTable []string) RequeteInsertion {
 	var requete RequeteInsertion = RequeteInsertion{}
 	requete.nomTable = nomTable
 	requete.colonnesTable = colonnesTable
 	requete.valeurs = make([][]interface{}, 0)
+	requete.bdd = abd
 	return requete
 }
 
@@ -448,12 +450,12 @@ func (requete *RequeteInsertion) AjouterDansRequete(valeurs ...any) error {
 	return nil
 }
 
-func (requete *RequeteInsertion) Executer(cheminProjet string) error {
+func (requete *RequeteInsertion) Executer() error {
 	if len(requete.valeurs) == 0 {
 		log.Println("Il n’y avait aucun évènement !")
 		return nil
 	}
-	infosBdd, err := GetInfosBaseExtraction(cheminProjet)
+	infosBdd, err := requete.bdd.Login()
 	if err != nil {
 		return err
 	}
@@ -634,11 +636,29 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 		if err := rows.Err(); err != nil {
 			return errors.New("SelectAllFrom(): during rows iteration: " + err.Error())
 		}
-		if len(results) == 0 {
-			return errors.New("cette table ne contient aucune valeur")
-		}
 		return err
 	})
+
+	if len(results) == 0 {
+		var partiesRequete []string = strings.Split(strings.TrimPrefix(requete, "SELECT"), "FROM")
+		var texteColonnes string = strings.ReplaceAll(partiesRequete[0], " ", "")
+		ligne := make(map[string]interface{})
+		if texteColonnes == "*" {
+			if len(partiesRequete) >= 2 {
+				var nomTable string = strings.Split(strings.TrimSpace(partiesRequete[1]), " ")[0]
+				colonnesTable := adb.SelectAllFrom(nomTable, 1)
+				for cles := range colonnesTable[0] {
+					ligne[cles] = ""
+				}
+			}
+		} else {
+			colonnes := strings.Split(texteColonnes, ",")
+			for _, colonne := range colonnes {
+				ligne[colonne] = ""
+			}
+		}
+		results = append(results, ligne)
+	}
 	if err != nil {
 		return []map[string]interface{}{{"Error": err.Error()}}
 	}
