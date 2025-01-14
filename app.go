@@ -10,6 +10,7 @@ import (
 	"aquarium/modules/detection"
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
+	"aquarium/modules/rapport"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -404,4 +405,52 @@ func (app *App) TailleRequeteSQLExtraction(requete string) int {
 func (app *App) GetListeTablesExtraction() []string {
 	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(chemin_projet)
 	return base.GetListeTablesDansBDD()
+}
+
+/***************************************************************************************/
+/************************* Rapport FUNCTIONS PAGE ********************************/
+/***************************************************************************************/
+
+func (app *App) AjouterPisteDansRapport(titre string, description string) {
+	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
+	err := rprt.AjouterPiste(titre, description)
+	if err != nil {
+		app.signalerErreur(err)
+	} else {
+		runtime.MessageDialog(app.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "Piste ajoutée avec succès",
+			Message: "La piste « " + titre + " » a correctement été ajoutée !",
+		})
+	}
+}
+
+func (app *App) AjouterEtapeDansRapport(requeteSQL string, lignesAEnregistrer []map[string]interface{}, idPiste string, commentaire string) {
+	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
+	err := rprt.AjouterEtape(idPiste, commentaire, requeteSQL, lignesAEnregistrer)
+	if err != nil {
+		app.signalerErreur(err)
+	} else {
+		runtime.MessageDialog(app.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "Piste ajoutée avec succès",
+			Message: "La table a été correctement enregistrée dans votre rapport !",
+		})
+	}
+}
+
+func (app *App) ListePistesRapport() []map[string]interface{} {
+	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
+	return rprt.GetPistes()
+}
+
+func (app *App) ListeEtapesRapport(idPiste int) []rapport.EtapeAnalyse {
+	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
+	return rprt.GetEtapesPiste(idPiste)
+}
+
+func (app *App) DonneesTableRapport(nomTable string) []map[string]interface{} {
+	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
+	log.Println(nomTable)
+	return rprt.GetDonnesTableSauvegardee(nomTable)
 }

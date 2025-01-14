@@ -14,7 +14,7 @@
     <h1>Chonologie des évènements</h1>
     <details id="changement_requete">
         <summary>Visualisation d'une autre table</summary>
-        <div class="contenuDetails">
+        <div class="contenuDetails toutEnUn">
             <div>
                 <button class="bouton_sombre" onclick="changer_type_recherche()">↕</button>
             </div>
@@ -36,5 +36,21 @@
         <button class="bouton_sombre" onclick="tourner_page(0, 5)">&gt;</button>
         <button class="bouton_sombre" onclick="tourner_page(1, 0)">&gt;&gt;</button>
     </div>
+    <details id="enregistrement_table">
+        <summary>Enregistrement des lignes sélectionnées</summary>
+        <div class="contenuDetails">
+            <div class="champ">
+                <label for="choix_piste">Piste d'analyse</label><br>
+                <select name="" id="choix_piste"></select>
+            </div>
+            <div class="champ">
+                <label for="commentaire_analyste">Commentaire sur les lignes sélectionnées</label><br>
+                <textarea name="commentaire" id="commentaire_analyste" class="input_clair"></textarea>
+            </div>
+            <div class="champ">
+                <button class="bouton_sombre" onclick="enregistrer_table_dans_rapport()">Enregistrer</button>
+            </div>
+        </div>
+    </details>
 </body>
 </html>

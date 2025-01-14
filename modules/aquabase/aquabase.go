@@ -515,6 +515,32 @@ func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, colonnesTable
 	return err
 }
 
+/*func (abase *Aquabase) EnregistrerTableDepuisMap(requeteSQL string, numLignes []map[string]string, nomTableDest string) error {
+	// On commence par créer la table résultat
+	var requeteCreation string = fmt.Sprintf("CREATE TABLE %s AS SELECT *, 'numLigne' FROM (%s) WHERE 1=0;", nomTableDest, requeteSQL)
+	log.Println("[INFO] - Exécution de la requête ", requeteCreation)
+	infosBDD, err := abase.Login()
+	if err != nil {
+		return err
+	}
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		_, err := infosBDD.bdd.Exec(requeteCreation)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	// On ajoute ensuite les valeurs dans la table
+	var numerosLignes string = strings.Trim(strings.Replace(fmt.Sprint(numLignes), " ", ",", -1), "[]")
+	var requeteInsertionValeurs string = fmt.Sprintf("WITH TableNumerotee AS ( SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS Numero FROM (%s) ) INSERT INTO %s SELECT * FROM TableNumerotee WHERE Numero IN (%s);", requeteSQL, nomTableDest, numerosLignes)
+	log.Println("[INFO] - Exécution de la requête ", requeteInsertionValeurs)
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		_, err := infosBDD.bdd.Exec(requeteInsertionValeurs)
+		return err
+	})
+	return err
+}*/
+
 /* ---------------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------------- */
 /* ----------------------------------------       SELECT       ---------------------------------------- */

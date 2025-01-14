@@ -39,7 +39,7 @@
     z-index: 2;
 }
 
-.contenuDetails{
+.toutEnUn{
     display: flex;
     flex-direction:row;
     gap: 25px;

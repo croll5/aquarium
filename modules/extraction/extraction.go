@@ -70,7 +70,7 @@ func CreationBaseAnalyse(cheminProjet string) {
 		extracteur.CreationTable(cheminProjet)
 	}
 	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
-	base.CreateTableIfNotExist2("chronologie", colonnesTableChronologie, false)
+	base.CreateTableIfNotExist2("chronologie", colonnesTableChronologie, true)
 }
 
 func ProgressionExtraction(cheminProjet string, idExtracteur string) float32 {
