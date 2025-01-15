@@ -28,6 +28,9 @@ function afficher_pistes(){
 function afficher_etapes_piste(div_piste, idLigne){
     parent.window.go.main.App.ListeEtapesRapport(idLigne).then(async resultat =>{
         for(let etape of resultat){
+            if(etape["RequeteSQL"] == ""){
+                continue;
+            }
             // On affiche une introduction à la requete SQL
             let introRequeteSQL = document.createElement("p");
             introRequeteSQL.textContent = "Requête SQL :";
@@ -66,7 +69,14 @@ function nouvelle_piste(){
     })
 }
 
-function exporter_rapport(){
-    window.print();
+function exporter_rapport() {
+    let details = document.getElementsByTagName("details");
+    for(let piste of details){
+        piste.setAttribute("open", true);
+    }
+    document.body.style.cursor = "wait";
+    setTimeout(function(){
+        window.print();
+        document.body.style.cursor = "default";
+    }, 5000);
 }
-

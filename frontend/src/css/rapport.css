@@ -33,4 +33,9 @@ table th, table td {
     details[open] > summary {
         list-style-type: '';
     }
+
+    td{
+        border: solid;
+        border-width: 1px;
+    }
 }
