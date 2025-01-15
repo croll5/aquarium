@@ -1,0 +1,41 @@
+summary{
+    font-size: 17pt;
+    font-weight: bold;
+}
+
+tr{
+    width: 100vw;
+}
+
+/* On s'assure que les tables ne dépassent pas de la page*/
+table {
+    border-spacing: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+table th, table td {
+    word-wrap: break-word;
+}
+
+@media print{
+    #ajout_piste{
+        display: none;
+    }
+    button{
+        display: none;
+    }
+
+    details > summary {
+        list-style-type: '';
+    }
+    
+    details[open] > summary {
+        list-style-type: '';
+    }
+
+    td{
+        border: solid;
+        border-width: 1px;
+    }
+}

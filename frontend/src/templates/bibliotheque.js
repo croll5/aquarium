@@ -27,7 +27,7 @@ function police_dyslexie(){
 
 
 // TODO : ajouter un paramètre "colonnes_a_afficher"
-function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, filtres, consignes_filtres, order_by){
+function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, filtres, consignes_filtres, order_by, offset, lignes_selectionnees){
     // Créer un tableau Bootstrap
     let table = document.createElement('table');
     table.className = 'table table-striped table-bordered';
@@ -107,10 +107,25 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
     for (let [idRow, valueRows] of Object.entries(dico)) {
         let tr = document.createElement('tr');
         for (let [key, value] of Object.entries(valueRows)) {
-            let td = document.createElement('td');
-            td.textContent = value;
-            tr.appendChild(td);
+                let td = document.createElement('td');
+                td.textContent = value;
+                tr.appendChild(td);
         }
+        // Ajouter une case à cocher pour enregistrer la table
+        if (lignes_selectionnees != undefined){
+            let tdCasacocher =  document.createElement("td");
+            let casacocher = document.createElement("input");
+            casacocher.type = "checkbox";
+            let idEvenement = Number(idRow) + offset;
+            casacocher.id = "casacocher_" + (idEvenement)
+            if(lignes_selectionnees?.includes(idEvenement)){
+                casacocher.checked = true;
+            }
+            casacocher.onchange = () => enregistrement_id(idEvenement);
+            tdCasacocher.appendChild(casacocher);
+            tr.appendChild(tdCasacocher);
+        }
+        // Ajouter la ligne au tableau
         tbody.appendChild(tr);
     }
     table.appendChild(tbody);

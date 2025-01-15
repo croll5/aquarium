@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../templates/bibliotheque.css">
+    <link rel="stylesheet" href="../templates/commun_clair.css">
+    <link rel="stylesheet" href="../css/rapport.css">
+    <script src="../templates/bibliotheque.js" async></script>
+    <script src="../js/rapport.js" async></script>
+</head>
+<body>
+    <h1>Rapport d'investigation</h1>
+    <div id="liste_pistes"></div>
+    <div class="contenuDetails" id="ajout_piste">
+        <h3>Ajouter une piste d'investigation</h3>
+        <div class="champ">
+            <label for="titre_nvelle_piste">Titre</label><br>
+            <input type="text" placeholder="Titre de la piste" class="input_massif" id="titre_nvelle_piste">
+        </div>
+        <div class="champ">
+            <label for="description_nvelle_piste">Description</label><br>
+            <textarea name="" id="description_nvelle_piste" class="input_massif"></textarea>
+        </div>
+        <div class="champ">
+            <button onclick="nouvelle_piste()" class="bouton_sombre">Ajouter</button>
+        </div>
+    </div>
+    
+    <button class="bouton_sombre" onclick="exporter_rapport()">Exporter le rapport</button>
+</body>
+</html>

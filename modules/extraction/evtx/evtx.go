@@ -40,16 +40,6 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aq
 		nbErreurs++
 		provider = "NaN"
 	}
-	// else {
-	// 	resultat, err := requeteMessagesEvtx.Query(provider, evenement.EventID())
-	// 	if err != nil {
-	// 		// log.Println("Problème dans l'exécution de la requête SQL de récupération du message windows", err)
-	// 		return err
-	// 	}
-	// 	defer resultat.Close()
-	// 	resultat.Next()
-	// 	resultat.Scan(&message)
-	// }
 
 	// Completion du message avec les informations de l'evenement
 	chemin = evtx.GoEvtxPath{"Event", "EventData"}

@@ -1,11 +1,13 @@
 let position_dans_table = 0;
 let position_debut_recuperation = 0;
-let requete = "SELECT extracteur, horodatage, message, source FROM chronologie";
+let requete = "SELECT id, extracteur, horodatage, message, source FROM chronologie";
 let taille_requete = 0;
 let valeurs_filtres = new Map();
 let consignes_filtres = new Map();
 let order_by = "riendutout";
 let tableRecuperee = new Object();
+let liste_id_a_enregistrer = Array(0);
+let evenements_a_enregistrer = new Map();
 
 affichage_table(true);
 
@@ -29,6 +31,10 @@ divChangementRequete.addEventListener("toggle", (event) => {
   
 
 function affichage_table(majTaille){
+    if(majTaille){
+        liste_id_a_enregistrer = Array(0);
+        evenements_a_enregistrer.clear();
+    }
     let emplacement_resultat = document.getElementById("emplacement_table");
     if(majTaille || position_dans_table > position_debut_recuperation + 995 || position_dans_table < position_debut_recuperation){
         if(position_dans_table > position_debut_recuperation + 995 || position_dans_table < position_debut_recuperation){
@@ -41,7 +47,7 @@ function affichage_table(majTaille){
             document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
             emplacement_resultat.innerHTML = "";
             console.log(resultat);
-            creer_tableau_depuis_dico(resultat.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, valeurs_filtres, consignes_filtres, order_by);
+            creer_tableau_depuis_dico(resultat.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, valeurs_filtres, consignes_filtres, order_by, position_dans_table, liste_id_a_enregistrer);
             if (majTaille){
                 parent.window.go.main.App.TailleRequeteSQLExtraction(requete).then(nbLignes =>{
                     console.log(nbLignes);
@@ -52,9 +58,8 @@ function affichage_table(majTaille){
         })
     }else{
         emplacement_resultat.innerHTML = "";
-        console.log(position_dans_table - position_debut_recuperation);
         document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
-        creer_tableau_depuis_dico(tableRecuperee.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, valeurs_filtres, consignes_filtres, order_by);
+        creer_tableau_depuis_dico(tableRecuperee.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, valeurs_filtres, consignes_filtres, order_by, position_dans_table, liste_id_a_enregistrer);
     }
 }
 
@@ -148,6 +153,19 @@ function trier_par(colonne){
     }
 }
 
+function enregistrement_id(id){
+    for (let i = 0; i < liste_id_a_enregistrer.length; i++){
+        if(liste_id_a_enregistrer[i] == id){
+            liste_id_a_enregistrer.splice(i, 1);
+            evenements_a_enregistrer.delete(id)
+        }
+    }
+    if(document.getElementById("casacocher_" + id).checked){
+        liste_id_a_enregistrer.push(id);
+        evenements_a_enregistrer.set(id, tableRecuperee[id-position_debut_recuperation])
+    }
+}
+
 document.getElementById("emplacement_table").focus()
 document.onkeydown = function (e) {
     switch (e.code){
@@ -195,4 +213,39 @@ function changer_type_recherche(){
         sql.style.display = "inline";
         click_bouton.style.display = "none";
     }
+}
+
+/* FONCTIONS D'ENREGISTREMENT DANS LE RAPPORT */
+
+let divEnregistrementTable = document.getElementById("enregistrement_table");
+divEnregistrementTable.addEventListener("toggle", (event) => {
+    if (divEnregistrementTable.open) {
+        let selecteurPiste = document.getElementById("choix_piste");
+        selecteurPiste.innerHTML = "";
+        parent.window.go.main.App.ListePistesRapport().then(resultat => {
+            for (let ligne of resultat) {
+                let nom_piste = document.createElement("option");
+                nom_piste.textContent = ligne["titre"];
+                nom_piste.value = ligne["id"];
+                selecteurPiste.appendChild(nom_piste)
+            }
+        });
+    }
+  });
+
+function enregistrer_table_dans_rapport(){
+    if(liste_id_a_enregistrer.length == 0){
+        alert("Vous devez sélectionner des lignes à enregistrer 🧐");
+        return
+    }
+    let idPiste = document.getElementById("choix_piste").value;
+    let commentaire = document.getElementById("commentaire_analyste").value;
+    if(commentaire == ""){
+        alert("Vous devez ajouter un commentaire sur ces évènements 🤓");
+        return
+    }
+    let tableau_a_enregistrer = Array.from(evenements_a_enregistrer, ([_, valeur]) => valeur)
+    parent.window.go.main.App.AjouterEtapeDansRapport(requete, tableau_a_enregistrer, idPiste, commentaire);
+    document.getElementById("enregistrement_table").removeAttribute("open");
+    document.getElementById("commentaire_analyste").value = "";
 }

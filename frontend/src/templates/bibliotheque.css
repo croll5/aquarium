@@ -72,7 +72,7 @@ body{
     color: var(--or-5);
 }
 
-.input_clair{
+.input_clair, .input_massif{
     background-color: var(--or-5);
     padding: 10px;
     border-radius: 5px;
@@ -84,6 +84,11 @@ body{
     background-color: var(--or-5);
     border: 1px solid var(--or-1);
     border-style: dashed;
+}
+
+div.champ{
+    padding: 10px;
+    text-align: left;
 }
 
 button.onglet{
@@ -141,6 +146,7 @@ table th, td{
 
 table{
     border-spacing: 0;
+    width: 100vw;
 }
 
 /* Bords arrondis à l'extérieur des tableaux*/
@@ -188,4 +194,10 @@ select{
 select.filtre{
     padding: 3px;
     margin: 0px;
+}
+
+input[type="checkbox"] {
+    height: 20px;
+    width: 20px;
+    accent-color: var(--or-3);
 }
