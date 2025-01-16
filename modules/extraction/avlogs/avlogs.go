@@ -90,12 +90,12 @@ func parseLogLine(line string) (timestamp string, errorMsg string) {
 }
 
 func (a AvLogs) PrerequisOK(projectLink string) bool {
-	dossierSAM, err := os.ReadDir(filepath.Join(projectLink, "TextLogs"))
+	dossierAV, err := os.ReadDir(filepath.Join(projectLink, "TextLogs"))
 	if err != nil {
 		return false
 	}
-	for _, fichier := range dossierSAM {
-		if fichier.Name() == "SAM.7z" {
+	for _, fichier := range dossierAV {
+		if fichier.Name() == "TextLogs.7z" {
 			return true
 		}
 	}
