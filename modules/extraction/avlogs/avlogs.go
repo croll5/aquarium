@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,9 +20,6 @@ var colonnesTableAVLog []string = []string{"timestamp", "eventType", "severity",
 
 type AvLog struct{}
 
-func (a AvLog) Parse(projectLink string) {
-
-}
 func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requete *aquabase.RequeteInsertion) {
 	fields := strings.Split(line, ",") // Assuming CSV format
 	if len(fields) < 4 {
@@ -99,20 +95,6 @@ func (av AvLog) PourcentageChargement(cheminProjet string, verifierTableVide boo
 		}
 	}
 	return pourcentageChargement
-}
-
-func parseLogLine(line string) (timestamp string, errorMsg string) {
-	// Exemple de regex pour extraire l'horodatage et le message d'erreur
-	regex := regexp.MustCompile(`\[(.*?)\]\sERROR:\s(.*)`)
-	matches := regex.FindStringSubmatch(line)
-
-	if len(matches) == 3 {
-		timestamp = matches[1]
-		errorMsg = matches[2]
-		return timestamp, errorMsg
-	}
-
-	return "", ""
 }
 
 func (av AvLog) Annuler() bool {
