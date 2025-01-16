@@ -9,16 +9,20 @@ import (
 	"regexp"
 )
 
-type AvLogs struct{}
+var pourcentageChargement float32 = -1
 
-func (a AvLogs) Parse(projectLink string) {
+var colonnesTableAVLog []string = []string{"timestamp", "eventType", "severity", "description", "source"}
+
+type AvLog struct{}
+
+func (a AvLog) Parse(projectLink string) {
 
 }
 
-func (a AvLogs) Description() string {
+func (a AvLog) Description() string {
 	return "Parsage des journaux d'antivirus dans le fichier avlogs"
 }
-func (a AvLogs) Extraction(logDir string) error {
+func (a AvLog) Extraction(logDir string) error {
 
 	// Parcourir les fichiers du répertoire
 	err := filepath.Walk(logDir, func(path string, info os.FileInfo, err error) error {
@@ -89,15 +93,24 @@ func parseLogLine(line string) (timestamp string, errorMsg string) {
 	return "", ""
 }
 
-func (a AvLogs) PrerequisOK(projectLink string) bool {
-	dossierAV, err := os.ReadDir(filepath.Join(projectLink, "TextLogs"))
+func (a AvLog) PrerequisOK(projectLink string) bool {
+	logDir := filepath.Join(projectLink, "logs")
+	files, err := os.ReadDir(logDir)
 	if err != nil {
 		return false
 	}
-	for _, fichier := range dossierAV {
-		if fichier.Name() == "TextLogs.7z" {
+	for _, file := range files {
+		if file.Name() == "av_log.xz" {
 			return true
 		}
 	}
 	return false
+}
+
+func (a AvLog) DetailsEvenement(idEvt int) string {
+	return "Aucune information supplémentaire n'est disponible"
+}
+
+func (a AvLog) SQLChronologie() string {
+	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (Severity: \" || severity || \"), Description: \" || description FROM av_log"
 }
