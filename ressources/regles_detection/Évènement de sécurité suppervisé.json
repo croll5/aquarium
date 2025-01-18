@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 1,
+  "description": "Un modèle d’événement de sécurité supervisé s’est produit.",
+  "nom": "Évènement de sécurité suppervisé",
+  "sql": "SELECT * FROM evtx WHERE eventID=4618"
+}

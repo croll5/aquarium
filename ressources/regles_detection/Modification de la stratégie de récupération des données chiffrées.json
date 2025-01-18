@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 2,
+  "description": "La stratégie de récupération de données chiffrée a été modifiée.\n",
+  "nom": "Modification de la stratégie de récupération des données chiffrées",
+  "sql": "SELECT * FROM evtx WHERE eventID=4714"
+}

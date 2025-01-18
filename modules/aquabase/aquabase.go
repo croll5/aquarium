@@ -685,6 +685,9 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 		}
 		results = append(results, ligne)
 	}
+	if len(results) == 0 {
+		return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}
+	}
 	if err != nil {
 		return []map[string]interface{}{{"Error": err.Error()}}
 	}

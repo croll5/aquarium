@@ -79,7 +79,7 @@ func ProgressionExtraction(cheminProjet string, idExtracteur string) float32 {
 
 func AnnulerExtraction(idExtracteur string) bool {
 	ticker := time.NewTicker(500 * time.Millisecond)
-	for _ = range ticker.C {
+	for range ticker.C {
 		if liste_extracteurs[idExtracteur].Annuler() {
 			ticker.Stop()
 			return true

@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 5,
+  "description": "Détection d’une attaque par relecture. Il peut s’agir d’un faux positif inoffensif en raison d’une mauvaise configuration.",
+  "nom": "Potentielle attaque par relecture",
+  "sql": "SELECT * FROM evtx WHERE eventID=4649"
+}

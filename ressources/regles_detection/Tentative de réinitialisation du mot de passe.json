@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 2,
+  "description": "Une tentative de réinitialisation du mot de passe d’un compte a été effectuée.\n",
+  "nom": "Tentative de réinitialisation du mot de passe",
+  "sql": "SELECT * FROM evtx WHERE eventID=4724"
+}

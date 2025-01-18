@@ -74,19 +74,15 @@ func (a *App) signalerErreur(erreur error) {
 	})
 }
 
-/****************************************************************************/
-/************************* TEST FUNCTIONS **********************************/
-/****************************************************************************/
-
-// BlancPageFunction returns a greeting for the given name
-func (a *App) BlancPageFunction(text string) string {
-	return fmt.Sprintf("Hello %s, It's free1 time!", text)
-}
-
 /***************************************************************************************/
 /************************* INDEX FUNCTIONS **********************************/
 /***************************************************************************************/
 
+/*
+	Cette fonction permet l'ouverture d'une analyse aquarium, à partir d'un fichier .aqua
+
+@return : vrai si et seulement si l'analyse a été correctement ouverte
+*/
 func (a *App) OuvrirAnalyseExistante() bool {
 	fichier, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title:   "Ouvrir une analyse existante",
@@ -107,6 +103,11 @@ func (a *App) OuvrirAnalyseExistante() bool {
 	return true
 }
 
+/*
+	Fonction permettant de choisir le dossier dans lequel enregistrer un nouveau modèle
+
+@return : le dossier d'enregistrement du modèle
+*/
 func (a *App) CreationDossierNouveauModele() string {
 	// Partie création du squelette de l'analyse
 	projet, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
@@ -129,6 +130,11 @@ func (a *App) CreationDossierNouveauModele() string {
 /************************* NOUVELLE ANALYSE FUNCTIONS **********************************/
 /***************************************************************************************/
 
+/*
+	Fonction permettant la création d'un nouveau projet
+
+@return : le chemin vers le nouveau projet
+*/
 func (a *App) CreationNouveauProjet() string {
 	// Partie création du squelette de l'analyse
 	projet, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
@@ -147,7 +153,11 @@ func (a *App) CreationNouveauProjet() string {
 	return chemin_projet
 }
 
-// Greet returns a greeting for the given name
+/*
+	Fonction permettant l'ajout d'archives ORC dans un projet en cours de création
+
+@return : le chemin des archives ORC choisies
+*/
 func (a *App) AjoutORCNouveauProjet() string {
 	// Partie récupération et début de traitement de l'ORC
 	orcs, err := runtime.OpenMultipleFilesDialog(a.ctx, runtime.OpenDialogOptions{
@@ -167,6 +177,11 @@ func (a *App) AjoutORCNouveauProjet() string {
 	return filepath.Dir(orcs[0])
 }
 
+/*
+	Fonction permettant de valider la création d'une nouvelle analyse
+
+@return : vrai si et seulement la validation a fonctionné
+*/
 func (a *App) ValidationCreationProjet(nomAnalyste string, description string) bool {
 	err := gestionprojet.EcritureFichierAqua(nomAnalyste, description, time.Now(), time.Time{}, chemin_projet)
 	if err != nil {
@@ -177,6 +192,11 @@ func (a *App) ValidationCreationProjet(nomAnalyste string, description string) b
 	return true
 }
 
+/*
+	Fonction permettant de valider la création d'un nouveau modèle
+
+@return : vrai si et seulement la validation a fonctionné
+*/
 func (a *App) ValidationCreationModele(nomModele string, description string, supprimerOrc bool) bool {
 	err := gestionprojet.EcritureFichierModeleAqua(nomModele, description, time.Now(), chemin_projet)
 	if err != nil {
@@ -191,6 +211,8 @@ func (a *App) ValidationCreationModele(nomModele string, description string, sup
 /************************* Extraction FUNCTIONS PAGE **********************************/
 /***************************************************************************************/
 
+/* Fonction renvoyant la liste des éléments pouvant être extraits de l'ORC
+ */
 func (a *App) ListeExtractionsPossibles() map[string]extraction.InfosExtracteur {
 	resultat, err := extraction.ListeExtracteursHtml(chemin_projet)
 	if err != nil {
@@ -199,6 +221,12 @@ func (a *App) ListeExtractionsPossibles() map[string]extraction.InfosExtracteur 
 	return resultat
 }
 
+/*
+	Fonction de permettant de lancer une extraction
+
+@param module : le nom du module à utiliser pour l'extraction
+@param description : la description du module à extraire
+*/
 func (a *App) ExtraireElements(module string, description string) {
 	err := extraction.Extraction(module, chemin_projet)
 	if err != nil {
@@ -213,14 +241,21 @@ func (a *App) ExtraireElements(module string, description string) {
 	}
 }
 
+/*
+	Fontion permettant d'annuler une extraction en cours
+
+@return : vrai si et seulement si l'annulation a bien fonctionné
+*/
 func (a *App) AnnulerExtraction(module string) bool {
 	return extraction.AnnulerExtraction(module)
 }
 
+/* Fonction permettant de connaitre le pourcentage de progression d'une extraction*/
 func (a *App) ProgressionExtraction(idExtracteur string) float32 {
 	return extraction.ProgressionExtraction(chemin_projet, idExtracteur)
 }
 
+/* Fonction permettant de lancer l'extraction de la table chronologie */
 func (a *App) ExtractionChronologie() bool {
 	err := extraction.ExtraireTableChronologie(chemin_projet)
 	if err != nil {
@@ -234,6 +269,12 @@ func (a *App) ExtractionChronologie() bool {
 /************************* Arborescence FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
+/*
+	Fonction qui renvoie les enfants d'un élément dans l'arborescence de la machine analysée
+
+@param cheminDossier : le chemin du dossier duquel on veut connaître les enfants
+@return : la liste des enfants
+*/
 func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.MetaDonnees {
 	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier)
 	if err != nil {
@@ -241,24 +282,6 @@ func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.Me
 	}
 	return res
 }
-
-/***************************************************************************************/
-/************************* DB_INFO PAGE ************************************************/
-/***************************************************************************************/
-func (a *App) Get_db_info() map[string]string {
-	adb := aquabase.InitDB_Extraction(chemin_projet)
-	return adb.GetAllTableNames()
-}
-
-func (a *App) Get_header_table(tableName string, limitJS string) []map[string]interface{} {
-	limit, _ := strconv.Atoi(limitJS)
-	adb := aquabase.InitDB_Extraction(chemin_projet)
-	return adb.SelectAllFrom(tableName, limit)
-}
-
-/***************************************************************************************/
-/************************* ??? ********************************/
-/***************************************************************************************/
 
 func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 	var cheminModele = ""
@@ -291,9 +314,25 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 }
 
 /***************************************************************************************/
+/************************* DB_INFO PAGE ************************************************/
+/***************************************************************************************/
+func (a *App) Get_db_info() map[string]string {
+	adb := aquabase.InitDB_Extraction(chemin_projet)
+	return adb.GetAllTableNames()
+}
+
+func (a *App) Get_header_table(tableName string, limitJS string) []map[string]interface{} {
+	limit, _ := strconv.Atoi(limitJS)
+	adb := aquabase.InitDB_Extraction(chemin_projet)
+	return adb.SelectAllFrom(tableName, limit)
+}
+
+/***************************************************************************************/
 /************************* Detection FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
+/* Fonction permettant d'obtenir une liste des règles de détection
+ */
 func (a *App) ListeReglesDetection(lancerRegles bool) map[string]map[string]int {
 	regles, reglesEnErreur, err := detection.ListeReglesDetection(chemin_projet, lancerRegles)
 	if err != nil {

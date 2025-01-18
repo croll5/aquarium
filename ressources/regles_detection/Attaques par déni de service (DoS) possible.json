@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 2,
+  "description": "Attaques par déni de service (DoS) possible.",
+  "nom": "Attaques par déni de service (DoS) possible",
+  "sql": "SELECT * FROM evtx WHERE eventID=550"
+}
