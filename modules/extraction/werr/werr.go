@@ -85,16 +85,16 @@ func analyserWER(contenu []byte) (time.Time, string, string, string) {
 		if valeurs[0] == stringEventTime {
 			val := valeurs[1]
 			horodatage = FileTimeVersGo(val)
-			log.Println("coucou")
+			log.Println(horodatage)
 
 		}
 		if valeurs[0] == stringAppPath {
 			nomApp = valeurs[1]
-			log.Println("coucou")
+			log.Println(nomApp)
 		}
 		if valeurs[0] == stringEventType {
 			typeDevent = valeurs[1]
-			log.Println("coucou")
+			log.Println(typeDevent)
 		}
 
 	}
@@ -111,14 +111,18 @@ func utf16LEToUtf8(s string) string {
 }
 
 func FileTimeVersGo(dateString string) time.Time {
-	date, err := strconv.Atoi(dateString)
+	// Nettoyer la chaîne pour supprimer les caractères de contrôle
+	cleanedDate := strings.TrimSpace(dateString)
+
+	date, err := strconv.ParseInt(cleanedDate, 10, 64)
 	if err != nil {
+		log.Printf("Erreur de conversion de l'horodatage : %s, erreur : %v\n", cleanedDate, err)
 		return time.Time{}
 	}
-	var difference = int64(date) / 10000000
-	var complement = int64(date) % 10000000
+	var difference = date / 10000000
+	var complement = date % 10000000
 	var referentiel = time.Date(1601, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
-	return time.Unix(referentiel+difference, complement)
+	return time.Unix(referentiel+difference, int64(complement*100))
 }
 
 func (w Werr) PrerequisOK(cheminORC string) bool {
