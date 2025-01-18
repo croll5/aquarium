@@ -69,31 +69,45 @@ func analyserWER(contenu []byte) (time.Time, string, string, string) {
 	texte := string(contenu)
 
 	// Extraire l'horodatage (recherche d'une ligne contenant "ReportTime")
-	var textSpliter []string = strings.Split(texte, "\n")
+	var textSpliter []string = strings.Split(utf16LEToUtf8(texte), "\n")
 	var typeDerreur string = "NaN"
 
 	var horodatage time.Time
 	var nomApp string = "NaN"
 	var typeDevent string = "NaN"
 
+	var stringEventTime string = "EventTime"
+	var stringAppPath string = "AppPath"
+	var stringEventType string = "EventType"
+
 	for _, ligne := range textSpliter {
-		if strings.Contains(ligne, "EventTime") {
-			val := strings.TrimPrefix(ligne, "EventTime=")
+		valeurs := strings.Split(ligne, "=")
+		if valeurs[0] == stringEventTime {
+			val := valeurs[1]
 			horodatage = FileTimeVersGo(val)
 			log.Println("coucou")
 
 		}
-		if strings.Contains(ligne, "AppPath") {
-			nomApp = strings.TrimPrefix(ligne, "AppPath=")
+		if valeurs[0] == stringAppPath {
+			nomApp = valeurs[1]
 			log.Println("coucou")
 		}
-		if strings.HasPrefix(ligne, "EventType=") {
-			typeDevent = strings.TrimPrefix(ligne, "EventType=")
+		if valeurs[0] == stringEventType {
+			typeDevent = valeurs[1]
 			log.Println("coucou")
 		}
 
 	}
 	return horodatage, nomApp, typeDevent, typeDerreur
+}
+func utf16LEToUtf8(s string) string {
+	initial := []byte(s)
+	runes := []rune{}
+	for i := 0; i < len(initial)-1; i += 2 {
+		char := uint16(initial[i]) | uint16(initial[i+1])<<8
+		runes = append(runes, rune(char))
+	}
+	return string(runes)
 }
 
 func FileTimeVersGo(dateString string) time.Time {
