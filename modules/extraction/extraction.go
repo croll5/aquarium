@@ -3,6 +3,7 @@ package extraction
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/extraction/divers"
+	"aquarium/modules/extraction/avlogs"
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/getthis"
 	"aquarium/modules/extraction/navigateur"
@@ -32,6 +33,7 @@ type InfosExtracteur struct {
 }
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
+	"avs":        avlogs.AvLogs{},
 	"evtx":       evtx.Evtx{},
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},
