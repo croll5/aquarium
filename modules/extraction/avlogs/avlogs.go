@@ -18,7 +18,7 @@ var pourcentageChargement float32 = -1
 
 var colonnesTableAVLog []string = []string{"timestamp", "eventType", "severity", "description", "source"}
 
-type AvLog struct{}
+type AvLogs struct{}
 
 func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requete *aquabase.RequeteInsertion) {
 	fields := strings.Split(line, ",") // Assuming CSV format
@@ -42,10 +42,11 @@ func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requ
 	(*dejaFait)[line] = true
 }
 
-func (a AvLog) Description() string {
+func (a AvLogs) Description() string {
 	return "Parsage des journaux d'antivirus dans le fichier avlogs"
 }
-func (a AvLog) Extraction(cheminProjet string) error {
+
+func (a AvLogs) Extraction(cheminProjet string) error {
 
 	// Parcourir les fichiers du répertoire
 	pourcentageChargement = 0
@@ -61,9 +62,9 @@ func (a AvLog) Extraction(cheminProjet string) error {
 		return fmt.Errorf("failed to decompress log file: %w", err)
 	}
 
-	var dejaFait map[string]bool = map[string]bool{}
-	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
-	var requete aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("av_log", colonnesTableAVLog)
+	var dejaFait = map[string]bool{}
+	var abase = *aquabase.InitDB_Extraction(cheminProjet)
+	var requete = abase.InitRequeteInsertionExtraction("av_log", colonnesTableAVLog)
 
 	var buffer bytes.Buffer
 	if _, err := io.Copy(&buffer, xzReader); err != nil {
@@ -81,13 +82,13 @@ func (a AvLog) Extraction(cheminProjet string) error {
 	return nil
 }
 
-func (av AvLog) CreationTable(cheminProjet string) error {
+func (av AvLogs) CreationTable(cheminProjet string) error {
 	aqua := aquabase.InitDB_Extraction(cheminProjet)
 	aqua.CreateTableIfNotExist1("av_log", colonnesTableAVLog, true)
 	return nil
 }
 
-func (av AvLog) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+func (av AvLogs) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
 	if pourcentageChargement == -1 {
 		bdd := aquabase.InitDB_Extraction(cheminProjet)
 		if !bdd.EstTableVide("av_log") {
@@ -97,11 +98,11 @@ func (av AvLog) PourcentageChargement(cheminProjet string, verifierTableVide boo
 	return pourcentageChargement
 }
 
-func (av AvLog) Annuler() bool {
+func (av AvLogs) Annuler() bool {
 	return pourcentageChargement >= 100
 }
 
-func (a AvLog) PrerequisOK(projectLink string) bool {
+func (a AvLogs) PrerequisOK(projectLink string) bool {
 	logDir := filepath.Join(projectLink, "logs")
 	files, err := os.ReadDir(logDir)
 	if err != nil {
@@ -115,10 +116,10 @@ func (a AvLog) PrerequisOK(projectLink string) bool {
 	return false
 }
 
-func (a AvLog) DetailsEvenement(idEvt int) string {
+func (a AvLogs) DetailsEvenement(idEvt int) string {
 	return "Aucune information supplémentaire n'est disponible"
 }
 
-func (a AvLog) SQLChronologie() string {
+func (a AvLogs) SQLChronologie() string {
 	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (Severity: \" || severity || \"), Description: \" || description FROM av_log"
 }

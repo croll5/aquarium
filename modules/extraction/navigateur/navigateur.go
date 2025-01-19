@@ -137,15 +137,15 @@ func openDataFiles(filePath string, requete string, requeteInsertion *aquabase.R
 	}
 
 	for data.Next() {
-		var log Log
-		data.Scan(&log.Url, &log.Title, &log.Domain_name, &log.Time_string, &log.Visit_count)
+		var logObf Log
+		data.Scan(&logObf.Url, &logObf.Title, &logObf.Domain_name, &logObf.Time_string, &logObf.Visit_count)
 
-		if len(log.Domain_name) > 0 && log.Domain_name != "NONE" {
-			log.Reverse_domain()
+		if len(logObf.Domain_name) > 0 && logObf.Domain_name != "NONE" {
+			logObf.Reverse_domain()
 		}
 
-		log.ConvertStringToTime()
-		requeteInsertion.AjouterDansRequete(log.Time_date.Local(), filePath, log.Url, log.Title, log.Domain_name, log.Visit_count)
+		logObf.ConvertStringToTime()
+		requeteInsertion.AjouterDansRequete(logObf.Time_date.Local(), filePath, logObf.Url, logObf.Title, logObf.Domain_name, logObf.Visit_count)
 
 	}
 }
