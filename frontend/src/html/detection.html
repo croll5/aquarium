@@ -13,10 +13,10 @@
 <body>
     <h1>Détection d'anomalies</h1>
     <div class="center" style="margin-bottom: 1rem;">
-        <button class="bouton_sombre" id="total" >Total:<br>0</button>
-        <button class="bouton_sombre" id="notExecuted">Non executé:<br>0</button>
-        <button class="bouton_sombre" id="valided">Validé:<br>0</button>
-        <button class="bouton_sombre" id="detected">Détécté:<br>0</button>
+        <button class="bouton_sombre" onclick="afficher_regles(false)" id="total" >Total:<br>0</button>
+        <button class="bouton_sombre" onclick="afficher_regles(false, 'notExecuted')" id="notExecuted">Non executé:<br>0</button>
+        <button class="bouton_sombre" onclick="afficher_regles(false, 'valided')" id="valided">Validé:<br>0</button>
+        <button class="bouton_sombre" onclick="afficher_regles(false, 'detected')" id="detected">Détécté:<br>0</button>
     </div>
     <div class="center">
         <button class="bouton_sombre" onclick="afficher_regles(true)">🔔 Lancer toutes les règles 🔔</button>
@@ -37,13 +37,14 @@
                     <h2 class="center">Nouvelle règle</h2>
                     <div>
                         <label for="nom">Nom:</label>
-                        <br><input class="input-area" type="text" id="nom" placeholder="Detection Alpha" required/>
+                        <br><input type="text" class="input-area"  id="nom" placeholder="Detection Alpha" required/>
                         <br><label for="auteur">Auteur:</label>
-                        <br><input class="input-area" type="text" id="auteur" placeholder="Aqua Rium" required/>
+                        <br><input type="text" class="input-area"  id="auteur" placeholder="Aqua Rium" required/>
                         <br><label for="criticite">Criticité:</label> <output id="criticite_value"></output>
-                        <br><input class="input-area" type="range" id="criticite" min="0" max="5" step="1" value="1" required style="accent-color: rgb(194, 209, 108);"/>
+                        <br><input type="range" class="input-area"  id="criticite" min="0" max="5" step="1" value="1" required style="accent-color: rgb(194, 209, 108);"/>
                         <br><label for="sql">SQL:</label>
-                        <br><input class="input-area" type="text" id="sql" placeholder="SELECT col1, col2 FROM table WHERE column='value'" required><br><br>
+                        <br><input type="text" class="input-area"  id="sql" placeholder="SELECT col1, col2 FROM table WHERE column='value'" required><br><br>
+                        <input type="hidden" id="nameBeforeModification" value=""/>
                     </div>
                     <label for="description">Description</label>
                     <textarea class="input-area" id="description" rows="4" placeholder="..." required></textarea>

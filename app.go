@@ -12,10 +12,8 @@ import (
 	"aquarium/modules/gestionprojet"
 	"aquarium/modules/rapport"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -318,26 +316,8 @@ func (a *App) InfosRegleDetection(nomRegle string) detection.Regle {
 }
 
 func (a *App) CreationReglesDetection(json_rule string) bool {
-	chemin_regles := filepath.Join(chemin_projet, "regles_detection")
-	// Conversion de la chaîne JSON en une structure Go
-	var regle map[string]interface{}
-	if err := json.Unmarshal([]byte(json_rule), &regle); err != nil {
-		a.signalerErreur(err)
-	}
-	// Récupération du nom à partir du JSON
-	nom, ok := regle["nom"].(string)
-	if !ok {
-		a.signalerErreur(fmt.Errorf("Json without the variable: nom"))
-	}
-	// Conversion de la structure Go en JSON formaté
-	data, err := json.MarshalIndent(regle, "", "  ")
+	err := detection.NewDetectionRule(chemin_projet, json_rule)
 	if err != nil {
-		a.signalerErreur(err)
-	}
-	// Création du chemin complet du fichier avec le nom du JSON
-	chemin_complet := filepath.Join(chemin_regles, nom+".json")
-	// Écriture des données JSON dans un fichier
-	if err := os.WriteFile(chemin_complet, data, 0644); err != nil {
 		a.signalerErreur(err)
 	}
 	return true
@@ -383,7 +363,7 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 }
 
 /***************************************************************************************/
-/************************* Chronologie FUNCTIONS PAGE ********************************/
+/*************************** Chronologie FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
 func (app *App) ValeursTableChronologie(debut int, taille int) []map[string]interface{} {
@@ -408,7 +388,7 @@ func (app *App) GetListeTablesExtraction() []string {
 }
 
 /***************************************************************************************/
-/************************* Rapport FUNCTIONS PAGE ********************************/
+/******************************* Rapport FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
 func (app *App) AjouterPisteDansRapport(titre string, description string) {

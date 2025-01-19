@@ -46,13 +46,16 @@ func (w Werr) Extraction(cheminProjet string) error {
 		horodatage, nomApp, typeDevent, typeDerreur := analyserWER(tampon.Bytes())
 
 		//implémentation dans la base de donnée
-		var requeteInsertion = aquabase.InitRequeteInsertionExtraction("wer", colonnesTableWer)
+		adb := aquabase.InitDB_Extraction(cheminProjet)
+		tableName := "wer"
+		err = adb.CreateTableIfNotExist1(tableName, colonnesTableWer, true)
+		var requeteInsertion = adb.InitRequeteInsertionExtraction(tableName, colonnesTableWer)
 		err = requeteInsertion.AjouterDansRequete(horodatage, fichierWER.Name, nomApp, typeDevent, typeDerreur)
 
 		if err != nil {
 			return fmt.Errorf("erreur lors l'ajout des valeurs WER dans la base de donnée - phase 1: %v", err)
 		}
-		err = requeteInsertion.Executer(cheminProjet)
+		err = requeteInsertion.Executer()
 
 		if err != nil {
 			return fmt.Errorf("erreur lors l'ajout des valeurs WER dans la base de donnée - phase 2: %v", err)
