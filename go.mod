@@ -4,6 +4,8 @@ go 1.23.1
 
 require (
 	github.com/bodgit/sevenzip v1.5.2
+	github.com/go-gota/gota v0.12.0
+	github.com/ulikunitz/xz v0.5.12
 	github.com/wailsapp/wails/v2 v2.9.2
 	modernc.org/sqlite v1.33.1
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
@@ -40,7 +42,6 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/tkrajina/go-reflector v0.5.6 // indirect
-	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/wailsapp/go-webview2 v1.0.16 // indirect
@@ -51,6 +52,7 @@ require (
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
+	gonum.org/v1/gonum v0.9.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240107210532-573471604cb6 // indirect
 	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect

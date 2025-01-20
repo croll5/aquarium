@@ -102,17 +102,13 @@ func (av AvLog) Annuler() bool {
 }
 
 func (a AvLog) PrerequisOK(projectLink string) bool {
-	logDir := filepath.Join(projectLink, "logs")
-	files, err := os.ReadDir(logDir)
+	logDir := filepath.Join(projectLink, "General", "TextLogs.7z")
+
+	_, err := os.Stat(logDir)
 	if err != nil {
 		return false
 	}
-	for _, file := range files {
-		if file.Name() == "av_log.xz" {
-			return true
-		}
-	}
-	return false
+	return true
 }
 
 func (a AvLog) DetailsEvenement(idEvt int) string {
