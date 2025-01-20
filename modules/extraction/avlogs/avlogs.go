@@ -3,7 +3,7 @@ package avlogs
 import (
 	"bytes"
 	"fmt"
-	"github.com/ulikunitz/xz"
+	"github.com/bodgit/sevenzip"
 	"io"
 	"log"
 	"os"
@@ -49,25 +49,27 @@ func (a AvLog) Extraction(cheminProjet string) error {
 
 	// Parcourir les fichiers du répertoire
 	pourcentageChargement = 0
-	logFilePath := filepath.Join(cheminProjet, "collecteAV", "logs", "av_log.xz")
-	r, err := os.Open(logFilePath)
+	logFilePath := filepath.Join(cheminProjet, "collecteORC", "General", "TextLogs.7z")
+	r, err := sevenzip.OpenReader(logFilePath)
 	if err != nil {
 		return err
 	}
 	defer r.Close()
-
-	xzReader, err := xz.NewReader(r)
-	if err != nil {
-		return fmt.Errorf("failed to decompress log file: %w", err)
-	}
 
 	var dejaFait map[string]bool = map[string]bool{}
 	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
 	var requete aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("av_log", colonnesTableAVLog)
 
 	var buffer bytes.Buffer
-	if _, err := io.Copy(&buffer, xzReader); err != nil {
-		return fmt.Errorf("failed to read log file: %w", err)
+	for _, fileAV := range r.File {
+		ra, err := fileAV.Open()
+		if err != nil {
+			return fmt.Errorf("failed to decompress log file: %w", err)
+		}
+		defer ra.Close()
+		if _, err := io.Copy(&buffer, ra); err != nil {
+			return fmt.Errorf("failed to read log file: %w", err)
+		}
 	}
 
 	lines := strings.Split(buffer.String(), "\n")
