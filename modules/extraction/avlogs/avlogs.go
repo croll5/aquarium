@@ -3,13 +3,14 @@ package avlogs
 import (
 	"bytes"
 	"fmt"
-	"github.com/bodgit/sevenzip"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/bodgit/sevenzip"
 
 	"aquarium/modules/aquabase"
 )
