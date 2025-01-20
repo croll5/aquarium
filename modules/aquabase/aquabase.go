@@ -28,12 +28,12 @@ type RequeteInsertion struct {
 	bdd           *Aquabase
 }
 
-type infosBDD struct {
+type InfosBDD struct {
 	bdd     *sql.DB
 	tickets *aquaticket.Distributeur
 }
 
-var basesDeDonnees map[string]infosBDD = map[string]infosBDD{}
+var basesDeDonnees map[string]InfosBDD = map[string]InfosBDD{}
 
 /* -------------------------- GESTION DE LA BASE DE DONNÉES -------------------------- */
 
@@ -44,15 +44,15 @@ var basesDeDonnees map[string]infosBDD = map[string]infosBDD{}
 
 Remarque : si la base est déjà ouverte, le programme revoie juste un pointeur vers celle-ci
 */
-func GetInfosBDD(chemin string) (infosBDD, error) {
+func GetInfosBDD(chemin string) (InfosBDD, error) {
 	if _, ok := basesDeDonnees[chemin]; ok {
 		return basesDeDonnees[chemin], nil
 	}
 	bdd, err := sql.Open("sqlite", chemin)
 	distributeur := aquaticket.NouveauDistributeur()
-	basesDeDonnees[chemin] = infosBDD{bdd: bdd, tickets: &distributeur}
+	basesDeDonnees[chemin] = InfosBDD{bdd: bdd, tickets: &distributeur}
 	if err != nil {
-		return infosBDD{}, err
+		return InfosBDD{}, err
 	}
 	return basesDeDonnees[chemin], nil
 }
@@ -63,7 +63,7 @@ func GetInfosBDD(chemin string) (infosBDD, error) {
 	  - @param cheminProjet : le chemin du dossier d’analyse
 	  - @return : un pointeur vers la base ouverte, et s’il y a lieu une erreur
 */
-func GetInfosBaseExtraction(cheminProjet string) (infosBDD, error) {
+func GetInfosBaseExtraction(cheminProjet string) (InfosBDD, error) {
 	return GetInfosBDD(filepath.Join(cheminProjet, "analyse", "extractions.db"))
 }
 
@@ -97,7 +97,7 @@ func FermerToutesLesBDD() error {
  * @return : the Aquabase database connexion & an error if exist
  * Exemple : db, err := adb.Login()
  */
-func (adb Aquabase) Login() (infosBDD, error) {
+func (adb Aquabase) Login() (InfosBDD, error) {
 	return GetInfosBDD(adb.dbPath)
 }
 
@@ -172,8 +172,8 @@ func (adb Aquabase) createDatabaseIfNotExist() bool {
 	}
 	abd_file, err := os.Create(adb.dbPath)
 	if err != nil {
-		return false
 		log.Println("adb.WARNING - can't create the database file: " + adb.dbPath)
+		return false
 	}
 	defer abd_file.Close()
 	fmt.Println("Creation de la dbb: " + adb.dbPath)
@@ -839,7 +839,7 @@ func nettoyage(entree string) string {
 /* ---------------------------------------------------------------------------------------------------- */
 
 func (adb Aquabase) SelectFrom0(sqlQuery string) *aquaframe.Aquaframe {
-	df_error := aquaframe.Aquaframe{dataframe.New(), nil}
+	df_error := aquaframe.Aquaframe{Table: dataframe.New()}
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 
@@ -932,9 +932,9 @@ func (adb Aquabase) PragmaIndexList(tableName string) error {
 			var unique, partial int
 			err = rows.Scan(&seq, &name, &unique, &origin, &partial)
 			if err != nil {
-				return fmt.Errorf("Erreur lors de la lecture des résultats: %w", err)
+				return fmt.Errorf("erreur lors de la lecture des résultats: %w", err)
 			}
-			fmt.Printf("seq: %d, name: %s, unique: %d, origin: %d, partial: %d\n", seq, name, unique, origin, partial)
+			fmt.Printf("seq: %d, name: %s, unique: %d, origin: %s, partial: %d\n", seq, name, unique, origin, partial)
 		}
 		if !found {
 			fmt.Println("Aucun index trouvé pour la table", tableName)

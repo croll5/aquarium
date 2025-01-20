@@ -34,14 +34,13 @@ window.onload = function() {
  * Recuperation de l'ensemble des regles de detection au format json au chargement de la page
  * @param {boolean} lancer - Si True alors execute la requete SQL de chaque regle
  */
-function afficher_regles(lancer) {
+function afficher_regles(lancer, filtres=null) {
     const conteneur = document.getElementById("regles");
-    if (lancer) {
-        conteneur.innerHTML = "";
-    }
+    conteneur.innerHTML = "";
     let listRegles;
     parent.window.go.main.App.ListeReglesDetection(lancer).then(resultat => {
         listRegles = new Map(Object.entries(resultat));
+        console.log(listRegles);
         listRegles.forEach((values, regle) => {
             // value for html balises
             const contenu_id = regle//.replace(" ", "");
@@ -64,11 +63,11 @@ function afficher_regles(lancer) {
             // Add element in the page
             conteneur.appendChild(detail_regle);
         });
-        update_summary()
+        update_summary(filtres)
     });
 }
 
-function update_summary() {
+function update_summary(filtres=null) {
     parent.window.go.main.App.ListeReglesDetection(false).then(resul => {
         let nbRules = new Map(Object.entries(resul)).size;
         parent.window.go.main.App.StatutReglesDetection().then(resultat => {
@@ -78,6 +77,23 @@ function update_summary() {
             document.getElementById("notExecuted").innerHTML = "Inconnu:<br>"+(nbRules-nbElement);
             document.getElementById("valided").innerHTML = "Validation:<br>"+(nbElement-errorCount)
             document.getElementById("detected").innerHTML = "Detection:<br>"+errorCount
+
+            // Apply filters if exist
+            if (filtres) {
+                const conteneur_regles = document.getElementById("regles");
+                const regles = conteneur_regles.querySelectorAll('details > div');
+                regles.forEach(regle => {
+                    const regleName = regle.id;
+                    const regleResult = resultat.find(r => r.name === regleName);
+                    if (!(
+                        (regleResult === undefined && filtres === "notExecuted") ||
+                        (regleResult && regleResult.isError === 0 && filtres === "valided") ||
+                        (regleResult && regleResult.isError === 1 && filtres === "detected")
+                        )) {
+                        regle.parentElement.remove(); // Supprime la balise <details> parente
+                    }
+                });
+            }
         });
     });
 }
@@ -198,16 +214,19 @@ function creation_regle() {
         "auteur": document.getElementById("auteur").value,
         "description": document.getElementById("description").value,
         "criticite": parseInt(document.getElementById("criticite").value),
-        "sql": document.getElementById("sql").value
+        "sql": document.getElementById("sql").value,
+        "nameBeforeModification": document.getElementById("nameBeforeModification").value
     };
 
     const jsonString = JSON.stringify(regle, null, 2);
-    parent.window.go.main.App.CreationReglesDetection(jsonString);
+    parent.window.go.main.App.CreationReglesDetection(jsonString).then(_ => {
+        document.getElementById("popup-newRule").style.display = "none";
+        document.getElementById("regles").innerHTML = "";
+        document.getElementById("nameBeforeModification").value = "";
+        afficher_regles(false);
+        update_summary()
+    });
 
-    document.getElementById("popup-newRule").style.display = "none";
-    document.getElementById("regles").innerHTML = "";
-    afficher_regles(false);
-    update_summary()
 }
 
 function supprimer_regle(id, nom_regle) {
@@ -225,6 +244,7 @@ function modifier_regle_panel(id, nom_regle) {
         document.getElementById("description").value = resultat["description"];
         document.getElementById("criticite").value = resultat["criticite"];
         document.getElementById("sql").value = resultat["sql"];
+        document.getElementById("nameBeforeModification").value = nom_regle;
 
         document.getElementById("popup-newRule").style.display = "block";
         update_summary()

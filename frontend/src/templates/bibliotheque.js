@@ -64,7 +64,7 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
             td.contentEditable = true;
             td.className = "input_massif";
             td.id = "valeur_filtre_" + key;
-            if(filtres.has(key)){
+            if(filtres && filtres.has(key)){
                 td.textContent = filtres.get(key);
             }
             td.onblur = () => appliquer_filtre(key);
@@ -93,7 +93,7 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
             let inferieur_a = document.createElement("option");
             inferieur_a.textContent = "🔤 < 🔎";
             selectFiltre.appendChild(inferieur_a);
-            if (consignes_filtres.has(key)){
+            if (consignes_filtres && consignes_filtres.has(key)){
                 selectFiltre.value = consignes_filtres.get(key);
             }
             tdSelect.appendChild(selectFiltre);

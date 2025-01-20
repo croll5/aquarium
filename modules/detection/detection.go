@@ -138,6 +138,27 @@ func searchDetectionRules(rulesPath string, args ...string) ([]string, error) {
 	return listeRegles, nil
 }
 
+/*
+*
+return the path of the rule if it exist and if its a global rule
+*/
+func getRulePathFolder(cheminProjet string, nomRegle string) (string, bool) {
+	// Search where the rule is saved in local
+	path_local := filepath.Join(cheminProjet, "regles_detection")
+	existInLocal, _ := searchDetectionRules(path_local, nomRegle)
+	if len(existInLocal) == 1 {
+		return path_local, false
+	}
+	// Search where the rule is saved in global
+	path_global := emplacementRegles()
+	existInGlobal, _ := searchDetectionRules(path_global, nomRegle)
+	if len(existInGlobal) == 1 {
+		return path_global, true
+	}
+	// The rule doesnt exist
+	return "", false
+}
+
 /********************************************************************************/
 /****************************** FONCTIONS GLOBALES ******************************/
 /********************************************************************************/
@@ -205,16 +226,8 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 func DetailsRegleDetection(cheminProjet string, nomRegle string) (Regle, error) {
 	var donneesRegle Regle
 	// Search where the rule is saved
-	path_local := filepath.Join(cheminProjet, "regles_detection")
-	path_global := emplacementRegles()
-	var path string
-	exist, _ := searchDetectionRules(path_local, nomRegle)
-	if len(exist) == 1 {
-		path = path_local
-	} else {
-		path = path_global
-		donneesRegle.IsGlobal = true
-	}
+	path, isGlobal := getRulePathFolder(cheminProjet, nomRegle)
+	donneesRegle.IsGlobal = isGlobal
 	// Read and extract the rule.json data
 	donneesFichier, err := os.ReadFile(filepath.Join(path, nomRegle+".json"))
 	if err != nil {
@@ -227,15 +240,7 @@ func DetailsRegleDetection(cheminProjet string, nomRegle string) (Regle, error) 
 
 func ResultatRegleDetection(cheminProjet string, nomRegle string) (int, error) {
 	// Search where the rule is saved
-	path_local := filepath.Join(cheminProjet, "regles_detection")
-	path_global := emplacementRegles()
-	var path string
-	exist, _ := searchDetectionRules(path_local, nomRegle)
-	if len(exist) == 1 {
-		path = path_local
-	} else {
-		path = path_global
-	}
+	path, _ := getRulePathFolder(cheminProjet, nomRegle)
 	// Execute the SQL request
 	return lancerRegle(cheminProjet, filepath.Join(path, nomRegle+".json"))
 }
@@ -246,25 +251,6 @@ func ResultatSQL(cheminProjet string, ruleName string) ([]map[string]interface{}
 	id_value := id_frame.Strloc(0, 0)
 	df := adb_rules.SelectFrom0("SELECT * FROM error_" + id_value)
 	return df.ToMap(), nil
-	/*
-		// On charge la requete SQL associée à la règle
-		var detailsRegle regleSQL
-		donneesFichier, err := os.ReadFile(cheminRegle)
-		if err != nil {
-			log.Println("WARN | Le fichier de règle "+cheminRegle+" n'existe pas ou n'a pas pu être ouvert : ", err.Error())
-			return nil, err
-		}
-		err = json.Unmarshal(donneesFichier, &detailsRegle)
-		if err != nil {
-			return nil, err
-		}
-		log.Println(detailsRegle.SQL)
-
-		// On exécute la requête SQL
-		var adb = aquabase.InitDB_Extraction(cheminProjet)
-		result := adb.SelectFrom(detailsRegle.SQL)
-		fmt.Println(result)
-		return result, nil*/
 }
 
 func SuppressionRegleDetection(cheminProjet string, nomRegle string) error {
@@ -282,6 +268,16 @@ func SuppressionRegleDetection(cheminProjet string, nomRegle string) error {
 		return err
 	}
 	fmt.Println("Suppression de la regle: " + nomRegle)
+	// Delete all data about this rule from regles.db
+	adb_rules := aquabase.InitDB_Rules(cheminProjet)
+	err = adb_rules.DropTable(nomRegle)
+	if err != nil {
+		return err
+	}
+	err = adb_rules.RemoveFromWhere("regles", "name='"+nomRegle+"'")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -293,4 +289,47 @@ func StatutReglesDetection(cheminProjet string) ([]map[string]interface{}, error
 		return []map[string]interface{}{}, nil
 	}
 	return df.ToMap(), nil
+}
+
+func NewDetectionRule(chemin_projet string, json_rule string) error {
+	chemin_regles := filepath.Join(chemin_projet, "regles_detection")
+	// Conversion de la chaîne JSON en une structure Go
+	var regle map[string]interface{}
+	if err := json.Unmarshal([]byte(json_rule), &regle); err != nil {
+		return err
+	}
+	// Récupération du nom à partir du JSON
+	nom, ok := regle["nom"].(string)
+	if !ok {
+		return fmt.Errorf("Json without the variable: nom")
+	}
+	nameBeforeModification, ok := regle["nameBeforeModification"].(string)
+	if !ok {
+		return fmt.Errorf("Json without the variable: nameBeforeModification")
+	}
+	//Verification que la regle n'existe pas déjà
+	rulePathFolder, _ := getRulePathFolder(chemin_projet, nom)
+	if len(rulePathFolder) != 0 && nom != nameBeforeModification {
+		return fmt.Errorf("The name '" + nom + "' is already used")
+	}
+	// Suppression du champ json nameBeforeModification et du json avec l'ancien nom
+	if nameBeforeModification != "" {
+		err := SuppressionRegleDetection(chemin_projet, nameBeforeModification)
+		if err != nil {
+			return err
+		}
+	}
+	delete(regle, "nameBeforeModification")
+	// Conversion de la structure Go en JSON formaté
+	data, err := json.MarshalIndent(regle, "", "  ")
+	if err != nil {
+		return err
+	}
+	// Création du chemin complet du fichier avec le nom du JSON
+	chemin_complet := filepath.Join(chemin_regles, nom+".json")
+	// Écriture des données JSON dans un fichier
+	if err := os.WriteFile(chemin_complet, data, 0644); err != nil {
+		return err
+	}
+	return nil
 }

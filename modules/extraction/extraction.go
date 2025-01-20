@@ -2,6 +2,7 @@ package extraction
 
 import (
 	"aquarium/modules/aquabase"
+	"aquarium/modules/extraction/avlogs"
 	"aquarium/modules/extraction/divers"
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/getthis"
@@ -32,6 +33,7 @@ type InfosExtracteur struct {
 }
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
+	"avs":        avlogs.AvLogs{},
 	"evtx":       evtx.Evtx{},
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},
@@ -46,7 +48,7 @@ var colonnesSimmplesChronologie []string = []string{"idEvt", "extracteur", "nomT
 
 func ListeExtracteursHtml(cheminProjet string) (map[string]InfosExtracteur, error) {
 	// On itère sur tous les extracteurs
-	var resultat map[string]InfosExtracteur = map[string]InfosExtracteur{}
+	var resultat = map[string]InfosExtracteur{}
 	for k, v := range liste_extracteurs {
 		//log.Println(filepath.Join(cheminProjet, "collecteORC"))
 		if v.PrerequisOK(filepath.Join(cheminProjet, "collecteORC")) {

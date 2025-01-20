@@ -1,4 +1,3 @@
-build/bin
 # After editing .gitignore to match the ignored files, you can do < git ls-files -ci --exclude-standard >
 # to see the files that are included in the exclude lists; you can then do
 #
@@ -9,7 +8,7 @@ build/bin
 
 # Wails directories
 build/bin
-frontend/wailsjs
+/frontend/wailsjs/
 
 
 # Wails junk files
