@@ -809,10 +809,17 @@ func (adb *Aquabase) GetListeTablesDansBDD() []string {
 		}
 		return nil
 	})
+	// On supprime les noms de tables vides
+	var listeTablesNettoyee []string
+	for _, nomTable := range listeTables {
+		if !adb.EstTableVide(nomTable) {
+			listeTablesNettoyee = append(listeTablesNettoyee, nomTable)
+		}
+	}
 	if err != nil {
 		return []string{"ERREUR : " + err.Error()}
 	}
-	return listeTables
+	return listeTablesNettoyee
 }
 
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */
