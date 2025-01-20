@@ -33,7 +33,7 @@ type InfosExtracteur struct {
 }
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
-	"avs":        avlogs.AvLogs{},
+	"avs":        avlogs.AvLog{},
 	"evtx":       evtx.Evtx{},
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},

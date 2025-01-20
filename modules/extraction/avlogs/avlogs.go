@@ -16,7 +16,7 @@ import (
 
 var pourcentageChargement float32 = -1
 
-var colonnesTableAVLog []string = []string{"timestamp", "eventType", "severity", "description", "source"}
+var colonnesTableAVLog []string = []string{"timestamp", "eventType", "source", "user", "description"}
 
 type AvLog struct{}
 
@@ -32,7 +32,8 @@ func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requ
 		return // Skip duplicate entries
 	}
 
-	parsedTime, err := time.Parse(time.RFC3339, timestamp)
+	layout := "2006-01-02T15:04:05.00Z"
+	parsedTime, err := time.Parse(layout, timestamp)
 	if err != nil {
 		log.Println("Invalid timestamp format:", timestamp)
 		return
@@ -63,10 +64,10 @@ func (a AvLog) Extraction(cheminProjet string) error {
 	var buffer bytes.Buffer
 	for _, fileAV := range r.File {
 		ra, err := fileAV.Open()
+		defer ra.Close()
 		if err != nil {
 			return fmt.Errorf("failed to decompress log file: %w", err)
 		}
-		defer ra.Close()
 		if _, err := io.Copy(&buffer, ra); err != nil {
 			return fmt.Errorf("failed to read log file: %w", err)
 		}
@@ -118,5 +119,5 @@ func (a AvLog) DetailsEvenement(idEvt int) string {
 }
 
 func (a AvLog) SQLChronologie() string {
-	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (Severity: \" || severity || \"), Description: \" || description FROM av_log"
+	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (User: \" || user || \"), Description: \" || description FROM av_log"
 }
