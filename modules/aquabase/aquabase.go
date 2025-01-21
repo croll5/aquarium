@@ -672,6 +672,9 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 		if texteColonnes == "*" {
 			if len(partiesRequete) >= 2 {
 				var nomTable string = strings.Split(strings.TrimSpace(partiesRequete[1]), " ")[0]
+				if adb.EstTableVide(nomTable) {
+					return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}
+				}
 				colonnesTable := adb.SelectAllFrom(nomTable, 1)
 				for cles := range colonnesTable[0] {
 					ligne[cles] = ""
