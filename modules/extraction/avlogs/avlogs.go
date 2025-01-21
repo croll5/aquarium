@@ -18,7 +18,9 @@ import (
 var pourcentageChargement float32 = -1
 
 var colonnesTableAVLog []string = []string{"timestamp", "eventType", "source", "user", "description"}
+var colonnesTableAVLog []string = []string{"timestamp", "eventType", "source", "user", "description"}
 
+type AvLog struct{}
 type AvLog struct{}
 
 func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requete *aquabase.RequeteInsertion) {

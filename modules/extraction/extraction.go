@@ -62,7 +62,7 @@ func Extraction(module string, cheminProjet string) error {
 	if liste_extracteurs[module] == nil {
 		return errors.New("Erreur : module " + module + " non reconnu")
 	}
-	//err := liste_extracteurs[module].Extraction(filepath.Join(cheminProjet, "collecteORC")) // Master AbdelMoad: commit 04a90c8ebc005011aae072aa56441a6d656b68db
+
 	err := liste_extracteurs[module].Extraction(cheminProjet)
 	return err
 }
