@@ -38,7 +38,6 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"navigateur": navigateur.Navigateur{},
 	"werr":       werr.Werr{},
 	"sam":        sam.Sam{},
-	"avs":        avlogs.AvLog{},
 	"getthis":    getthis.Getthis{},
 	"divers":     divers.Divers{},
 	"prefetch":   prefetch.Prefetch{},
