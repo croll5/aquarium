@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 2,
+  "description": "Une tentative de sauvegarde de la clé principale de protection des données a été effectuée. Cette clé est utilisée pour chiffrer et déchiffrer des données sensibles, comme les mots de passe et les clés de chiffrement dans Windows.",
+  "nom": "Tentative de sauvegarde de la clé principale",
+  "sql": "SELECT * FROM evtx WHERE eventID=4692"
+}

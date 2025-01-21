@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 5,
+  "description": "L’historique SID a été ajouté à un compte. L'historique SID permet à l'utilisateur de conserver ses privilèges lorsqu'il change de SID.\nCet évènement peut être le signe qu'un attaquant tente une élévation de privilèges.",
+  "nom": "Modification de l'historique SID",
+  "sql": "SELECT * FROM evtx WHERE eventID=4765"
+}

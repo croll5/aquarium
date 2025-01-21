@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 2,
+  "description": "La stratégie d'audit (SACL) sur un objet a été modifiée.\n",
+  "nom": "Modification de la stratégie d'audit SACL",
+  "sql": "SELECT * FROM evtx WHERE eventID=4715"
+}

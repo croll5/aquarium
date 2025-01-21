@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 4,
+  "description": "Des groupes spéciaux ont été attribués à une nouvelle session.",
+  "nom": "Des groupes spéciaux ont été attribués à une nouvelle session.",
+  "sql": "SELECT * FROM evtx WHERE eventID=4964"
+}

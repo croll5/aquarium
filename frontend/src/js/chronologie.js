@@ -126,7 +126,7 @@ function appliquer_filtre(colonne){
             requete = demi_requetes[0];
         }
         if (filtrage_order_by.length > 1){
-            requete += " ORDER" + filtrage_order_by[1];
+            requete += " ORDER " + filtrage_order_by[1];
         }
     }else if (requete.includes(" ORDER ")){
         let demi_requetes = requete.split(" ORDER ");
@@ -142,13 +142,13 @@ function appliquer_filtre(colonne){
 function trier_par(colonne){
     if (order_by != colonne){
         order_by = colonne;
-        requete = requete.split(" ORDER")[0];
+        requete = requete.split(" ORDER ")[0];
         requete += " ORDER BY " + colonne;
         affichage_table(true);
     }
     else{
         order_by = "riendutout";
-        requete = requete.split(" ORDER")[0];
+        requete = requete.split(" ORDER ")[0];
         affichage_table(true);
     }
 }

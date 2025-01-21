@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 1,
+  "description": "Un paramètre de sécurité a été mis à jour sur le service de répondeur OCSP. Il s'agit d'un protocole permettant la vérification de la révocation des certificats numériques.",
+  "nom": "Mise à jour d'un paramètre de sécurité sur le service de répondeur OCSP",
+  "sql": "SELECT * FROM evtx WHERE eventID=5124"
+}

@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 4,
+  "description": "Une tentative de définition du mode de restauration des services d’annuaire a été effectuée. Il s'agit d'un mode de démarrage utilisé pour réparer un contrôleur de domaine défaillant.",
+  "nom": "Tentative de restauration des services d'annuaire",
+  "sql": "SELECT * FROM evtx WHERE eventID=4794"
+}

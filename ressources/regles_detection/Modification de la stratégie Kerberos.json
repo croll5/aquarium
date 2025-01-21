@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 3,
+  "description": "La stratégie Kerberos a été modifiée. Il s'agit d'un protocole d'authentification",
+  "nom": "Modification de la stratégie Kerberos",
+  "sql": "SELECT * FROM evtx WHERE eventID=4713"
+}

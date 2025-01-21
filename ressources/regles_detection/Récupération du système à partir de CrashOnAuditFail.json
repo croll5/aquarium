@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 4,
+  "description": "L’administrateur a récupéré le système à partir de CrashOnAuditFail. Les utilisateurs qui ne sont pas administrateurs sont désormais autorisés à se connecter. Certaines activités pouvant être auditées n’ont peut-être pas été enregistrées.",
+  "nom": "Récupération du système à partir de CrashOnAuditFail",
+  "sql": "SELECT * FROM evtx WHERE eventID=4621"
+}
