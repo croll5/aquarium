@@ -46,16 +46,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ulikunitz/xz"
+	"github.com/bodgit/sevenzip"
 
 	"aquarium/modules/aquabase"
 )
 
 var pourcentageChargement float32 = -1
 
-var colonnesTableAVLog []string = []string{"timestamp", "eventType", "severity", "description", "source"}
+var colonnesTableAVLog []string = []string{"timestamp", "eventType", "source", "user", "description"}
 
-type AvLogs struct{}
+type AvLog struct{}
 
 func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requete *aquabase.RequeteInsertion) {
 	fields := strings.Split(line, ",") // Assuming CSV format
@@ -69,7 +69,8 @@ func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requ
 		return // Skip duplicate entries
 	}
 
-	parsedTime, err := time.Parse(time.RFC3339, timestamp)
+	layout := "2006-01-02T15:04:05.00Z"
+	parsedTime, err := time.Parse(layout, timestamp)
 	if err != nil {
 		log.Println("Invalid timestamp format:", timestamp)
 		return
@@ -79,33 +80,34 @@ func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requ
 	(*dejaFait)[line] = true
 }
 
-func (a AvLogs) Description() string {
+func (a AvLog) Description() string {
 	return "Parsage des journaux d'antivirus dans le fichier avlogs"
 }
-
-func (a AvLogs) Extraction(cheminProjet string) error {
+func (a AvLog) Extraction(cheminProjet string) error {
 
 	// Parcourir les fichiers du répertoire
 	pourcentageChargement = 0
-	logFilePath := filepath.Join(cheminProjet, "collecteAV", "logs", "av_log.xz")
-	r, err := os.Open(logFilePath)
+	logFilePath := filepath.Join(cheminProjet, "collecteORC", "General", "TextLogs.7z")
+	r, err := sevenzip.OpenReader(logFilePath)
 	if err != nil {
 		return err
 	}
 	defer r.Close()
 
-	xzReader, err := xz.NewReader(r)
-	if err != nil {
-		return fmt.Errorf("failed to decompress log file: %w", err)
-	}
-
-	var dejaFait = map[string]bool{}
-	var abase = *aquabase.InitDB_Extraction(cheminProjet)
-	var requete = abase.InitRequeteInsertionExtraction("av_log", colonnesTableAVLog)
+	var dejaFait map[string]bool = map[string]bool{}
+	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	var requete aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("av_log", colonnesTableAVLog)
 
 	var buffer bytes.Buffer
-	if _, err := io.Copy(&buffer, xzReader); err != nil {
-		return fmt.Errorf("failed to read log file: %w", err)
+	for _, fileAV := range r.File {
+		ra, err := fileAV.Open()
+		defer ra.Close()
+		if err != nil {
+			return fmt.Errorf("failed to decompress log file: %w", err)
+		}
+		if _, err := io.Copy(&buffer, ra); err != nil {
+			return fmt.Errorf("failed to read log file: %w", err)
+		}
 	}
 
 	lines := strings.Split(buffer.String(), "\n")
@@ -119,13 +121,13 @@ func (a AvLogs) Extraction(cheminProjet string) error {
 	return nil
 }
 
-func (av AvLogs) CreationTable(cheminProjet string) error {
+func (av AvLog) CreationTable(cheminProjet string) error {
 	aqua := aquabase.InitDB_Extraction(cheminProjet)
 	aqua.CreateTableIfNotExist1("av_log", colonnesTableAVLog, true)
 	return nil
 }
 
-func (av AvLogs) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
+func (av AvLog) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
 	if pourcentageChargement == -1 {
 		bdd := aquabase.InitDB_Extraction(cheminProjet)
 		if !bdd.EstTableVide("av_log") {
@@ -135,28 +137,26 @@ func (av AvLogs) PourcentageChargement(cheminProjet string, verifierTableVide bo
 	return pourcentageChargement
 }
 
-func (av AvLogs) Annuler() bool {
+func (av AvLog) Annuler() bool {
 	return pourcentageChargement >= 100
 }
 
-func (a AvLogs) PrerequisOK(projectLink string) bool {
-	logDir := filepath.Join(projectLink, "logs")
-	files, err := os.ReadDir(logDir)
+func (a AvLog) PrerequisOK(projectLink string) bool {
+	logDir := filepath.Join(projectLink, "General", "TextLogs.7z")
+
+	_, err := os.Stat(logDir)
 	if err != nil {
 		return false
 	}
-	for _, file := range files {
-		if file.Name() == "av_log.xz" {
-			return true
-		}
-	}
-	return false
+	return true
 }
 
-func (a AvLogs) DetailsEvenement(idEvt int) string {
+func (a AvLog) DetailsEvenement(idEvt int) string {
 	return "Aucune information supplémentaire n'est disponible"
 }
 
-func (a AvLogs) SQLChronologie() string {
-	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (Severity: \" || severity || \"), Description: \" || description FROM av_log"
+func (a AvLog) SQLChronologie() string {
+	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (User: \" || user || \"), Description: \" || description FROM av_log"
 }
+
+//end of the code
