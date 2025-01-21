@@ -121,3 +121,5 @@ func (a AvLog) DetailsEvenement(idEvt int) string {
 func (a AvLog) SQLChronologie() string {
 	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (User: \" || user || \"), Description: \" || description FROM av_log"
 }
+
+//end of the code
