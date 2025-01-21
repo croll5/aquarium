@@ -17,6 +17,8 @@ import (
 
 var colonnesTableWer []string = []string{"horodatage", "source", "nomApp", "typeDevent", "typeDerreur"}
 
+var pourcentageChargement float32 = -1
+
 type Werr struct{}
 
 func (w Werr) Extraction(cheminProjet string) error {
@@ -30,7 +32,10 @@ func (w Werr) Extraction(cheminProjet string) error {
 
 	// Parcourt des fichier Errors.7z
 
-	for _, fichierWER := range r.File {
+	for numFichier, fichierWER := range r.File {
+		if filepath.Ext(fichierWER.Name) != ".data" {
+			continue
+		}
 		rc, err := fichierWER.Open()
 		if err != nil {
 			log.Println("Format de fichier non supporté : ", err.Error())
@@ -60,9 +65,9 @@ func (w Werr) Extraction(cheminProjet string) error {
 		if err != nil {
 			return fmt.Errorf("erreur lors l'ajout des valeurs WER dans la base de donnée - phase 2: %v", err)
 		}
-
+		pourcentageChargement = float32(numFichier) * 100 / float32(len(r.File))
 	}
-
+	pourcentageChargement = 101
 	return nil
 }
 
@@ -88,16 +93,13 @@ func analyserWER(contenu []byte) (time.Time, string, string, string) {
 		if valeurs[0] == stringEventTime {
 			val := valeurs[1]
 			horodatage = FileTimeVersGo(val)
-			log.Println(horodatage)
 
 		}
 		if valeurs[0] == stringAppPath {
 			nomApp = valeurs[1]
-			log.Println(nomApp)
 		}
 		if valeurs[0] == stringEventType {
 			typeDevent = valeurs[1]
-			log.Println(typeDevent)
 		}
 
 	}
@@ -146,11 +148,17 @@ func (w Werr) CreationTable(cheminProjet string) error {
 }
 
 func (w Werr) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
-	return -1
+	if verifierTableVide && pourcentageChargement == -1 {
+		var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+		if !abase.EstTableVide("wer") {
+			pourcentageChargement = 100
+		}
+	}
+	return pourcentageChargement
 }
 
 func (w Werr) Annuler() bool {
-	return true
+	return pourcentageChargement >= 100
 }
 
 func (w Werr) DetailsEvenement(idEvt int) string {
@@ -158,5 +166,5 @@ func (w Werr) DetailsEvenement(idEvt int) string {
 }
 
 func (w Werr) SQLChronologie() string {
-	return ""
+	return "SELECT id, \"wer\", \"wer\", source, horodatage, \"L'application \" || nomApp || \" a généré l'évènement \" || typeDevent FROM wer"
 }

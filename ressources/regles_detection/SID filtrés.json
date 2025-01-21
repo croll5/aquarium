@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 2,
+  "description": "Les SID ont été filtrés. ",
+  "nom": "SID filtrés",
+  "sql": "SELECT * FROM evtx WHERE eventID=4675"
+}

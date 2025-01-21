@@ -672,6 +672,9 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 		if texteColonnes == "*" {
 			if len(partiesRequete) >= 2 {
 				var nomTable string = strings.Split(strings.TrimSpace(partiesRequete[1]), " ")[0]
+				if adb.EstTableVide(nomTable) {
+					return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}
+				}
 				colonnesTable := adb.SelectAllFrom(nomTable, 1)
 				for cles := range colonnesTable[0] {
 					ligne[cles] = ""
@@ -684,6 +687,9 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 			}
 		}
 		results = append(results, ligne)
+	}
+	if len(results) == 0 {
+		return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}
 	}
 	if err != nil {
 		return []map[string]interface{}{{"Error": err.Error()}}
@@ -806,10 +812,17 @@ func (adb *Aquabase) GetListeTablesDansBDD() []string {
 		}
 		return nil
 	})
+	// On supprime les noms de tables vides
+	var listeTablesNettoyee []string
+	for _, nomTable := range listeTables {
+		if !adb.EstTableVide(nomTable) {
+			listeTablesNettoyee = append(listeTablesNettoyee, nomTable)
+		}
+	}
 	if err != nil {
 		return []string{"ERREUR : " + err.Error()}
 	}
-	return listeTables
+	return listeTablesNettoyee
 }
 
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */

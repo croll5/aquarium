@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 2,
+  "description": "Une nouvelle approbation a été créée sur un domaine.",
+  "nom": "Création d'une nouvelle approbation sur un domaine",
+  "sql": "SELECT * FROM evtx WHERE eventID=4706"
+}

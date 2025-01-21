@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 1,
+  "description": "Un groupe global sécurisé a été créé.",
+  "nom": "Un groupe global sécurisé a été créé",
+  "sql": "SELECT * FROM evtx WHERE eventID=4727"
+}

@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 5,
+  "description": "Le journal d’audit a été effacé. Cela peut être le signe de ce qu'un attaquant tente d'effacer des preuves.",
+  "nom": "Le journal d’audit a été effacé.",
+  "sql": "SELECT * FROM evtx WHERE eventID=1102 OR eventID=517"
+}

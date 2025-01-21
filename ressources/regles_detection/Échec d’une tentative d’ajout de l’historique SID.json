@@ -1,0 +1,7 @@
+{
+  "auteur": "Cécile Rolland",
+  "criticite": 4,
+  "description": "Échec d’une tentative d’ajout de l’historique SID à un compte. Cela peut être le signe d'une tentative d'élévation de privilèges.",
+  "nom": "Échec d’une tentative d’ajout de l’historique SID",
+  "sql": "SELECT * FROM evtx WHERE eventID=4765"
+}
