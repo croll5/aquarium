@@ -3,8 +3,8 @@ Copyright ou © ou Copr. Cécile Rolland, (21 janvier 2025)
 
 aquarium[@]mailo[.]com
 
-Ce logiciel est un programme informatique servant à [rappeler les
-caractéristiques techniques de votre logiciel]. 
+Ce logiciel est un programme informatique servant à l'analyse des collectes
+traçologiques effectuées avec le logiciel DFIR-ORC. 
 
 Ce logiciel est régi par la licence CeCILL soumise au droit français et
 respectant les principes de diffusion des logiciels libres. Vous pouvez
