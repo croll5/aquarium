@@ -41,7 +41,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/fs"
 	"log"
 	"math"
 	"os"
@@ -170,7 +169,7 @@ Fonction qui ajoute les fichiers contenus dans un fichier GetThis.csv à un arbo
 @arbo : arborescence que l'on veut remplir
 @return : une erreur s'il y en a eu une
 */
-func remplitArborescenceDepuisCSV(fichierCSV *sevenzip.File, arbo *Arborescence, modeleArbo *Arborescence) error {
+func remplitArborescenceDepuisCSV(fichierCSV *sevenzip.File, arbo *Arborescence, modeleArbo *Arborescence, colonneChemin int, colonneMD5 int, colonneParent int, colonneNom int) error {
 	// On commence par ouvrir le fichier CSV
 	contenuBrute, err := fichierCSV.Open()
 	if err != nil {
@@ -189,7 +188,13 @@ func remplitArborescenceDepuisCSV(fichierCSV *sevenzip.File, arbo *Arborescence,
 		if err != nil {
 			return err
 		}
-		ajoutCheminDansArborescence(ligne[4], ligne[7], arbo, modeleArbo)
+		var cheminFichier string
+		if colonneChemin == -1 {
+			cheminFichier = strings.Join([]string{ligne[colonneParent], ligne[colonneNom]}, "\\")
+		} else {
+			cheminFichier = ligne[colonneChemin]
+		}
+		ajoutCheminDansArborescence(cheminFichier, ligne[colonneMD5], arbo, modeleArbo)
 	}
 	return nil
 }
@@ -246,32 +251,43 @@ func ExtraireArborescence(cheminProjet string, cheminModele string) (Arborescenc
 	var resultatArbo Arborescence = Arborescence{}
 	resultatArbo.Nom = "racine"
 	resultatArbo.Enfants = []Arborescence{}
-	// On parcourt les fichiers GetTHis
-	collectes, err := os.ReadDir(filepath.Join(cheminProjet, "collecteORC"))
+	// On commence par lire la liste de tous les fichiers
+	var cheminFichierNTFS string = filepath.Join(cheminProjet, "collecteORC", "Detail", "NTFSInfo_detail.7z")
+	r, err := sevenzip.OpenReaderWithPassword(cheminFichierNTFS, "avproof")
 	if err != nil {
-		log.Println(err.Error())
 		return resultatArbo, err
 	}
-	for _, collecte := range collectes {
-		if collecte.IsDir() {
-			filepath.Walk(filepath.Join(cheminProjet, "collecteORC", collecte.Name()), func(path string, info fs.FileInfo, err error) error {
-				if filepath.Ext(path) != ".7z" {
-					return nil
-				}
-				log.Println("INFO | Ouverture de l'archive ", path)
-				r, err := sevenzip.OpenReaderWithPassword(path, "avproof")
-				if err != nil {
-					return err
-				}
-				for _, fichierCSV := range r.File {
-					if fichierCSV.Name == "GetThis.csv" {
-						remplitArborescenceDepuisCSV(fichierCSV, &resultatArbo, &modeleArbo)
-					}
-				}
-				return nil
-			})
+	for _, fichier := range r.File {
+		if strings.HasPrefix(fichier.Name, "NTFSInfo") {
+			remplitArborescenceDepuisCSV(fichier, &resultatArbo, &modeleArbo, -1, 25, 3, 2)
 		}
-	}
+	} /*
+		// On parcourt les fichiers GetTHis
+		collectes, err := os.ReadDir(filepath.Join(cheminProjet, "collecteORC"))
+		if err != nil {
+			log.Println(err.Error())
+			return resultatArbo, err
+		}
+		for _, collecte := range collectes {
+			if collecte.IsDir() {
+				filepath.Walk(filepath.Join(cheminProjet, "collecteORC", collecte.Name()), func(path string, info fs.FileInfo, err error) error {
+					if filepath.Ext(path) != ".7z" {
+						return nil
+					}
+					log.Println("INFO | Ouverture de l'archive ", path)
+					r, err := sevenzip.OpenReaderWithPassword(path, "avproof")
+					if err != nil {
+						return err
+					}
+					for _, fichierCSV := range r.File {
+						if fichierCSV.Name == "GetThis.csv" {
+							remplitArborescenceDepuisCSV(fichierCSV, &resultatArbo, &modeleArbo, 4, 7, -1, -1)
+						}
+					}
+					return nil
+				})
+			}
+		}*/
 	// On enregistre l'arborescence que l'on vient d'extraire
 	err = enregistrerArborescenceJson(&resultatArbo, filepath.Join(cheminProjet, "analyse", "arborescence.json"))
 	return resultatArbo, err
