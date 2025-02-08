@@ -1,3 +1,34 @@
+# Mots-clés
+
+aquarium - analyse forensique - analyse traçologique - forensic analysis - DFIR-ORC 
+
+# Présentation
+
+Aquarium est conçu pour faciliter l'analyse des collectes traçologiques effectuées avec l'outil [DFIR-ORC](https://dfir-orc.github.io/). 
+
+Il se veut de répondre à plusieurs besoins : 
+- Permettre de **visualiser et d’interroger les données** issues de la collecte ORC de manière intuitive et centralisée ;
+-	Permettre d’accéder à une **chronologie exacte et compréhensible des évènements** qui ont eu lieu sur la machine ;
+-	Permettre l’**automatisation de la détection** des traces d’attaques ;
+-	Permettre une **visualisation synthétique** des éléments collectés par l’outil DFIR-ORC ;
+
+# Utilisation
+
+> 💡 La manière la plus simple d'utiliser aquarium est de télécharger les `releases`. Elles contiennent des version compilées pour Windows et Linux
+
+Pour compiler le projet, il est nécessaire d'installer [wails](https://wails.io/docs/gettingstarted/installation). La compilation se fait ensuite en utilisant la commande `wails build`:
+
+```shell
+$ git clone https://github.com/croll5/aquarium
+$ cd aquarium/
+$ wails build
+```
+Un exécutable est alors créé dans le dossier `build/bin`
+
+> ⚠️ Pour qu'aquarium fonctionne correctement, vous devez copier le dossier `aquarium/ressources` dans le même dossier que l'exécutable.
+
+Pour recompiler automatiquement le projet à chaque modification du code, vous pouvez utiliser la commande `wails dev`.
+
 # Présentation des technologies utilisées
 
 Notre projet utilise Wails, un cadriciel permettant de construire une application en utilisant le langage Go pour la logique applicative et les technologies Web pour l’interface graphique. La liaison entre le code en Go et le code en JavaScript se fait comme indiqué sur la figure ci-dessous :
