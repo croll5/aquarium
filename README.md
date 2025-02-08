@@ -1,3 +1,23 @@
+# Mots clé
+
+aquarium - analyse forensique - forensic analysis - DFIR-ORC 
+
+# Utilisation
+
+> La manière la plus simple d'utiliser aquarium est de télécharger les releases. Elles contiennent des version compilées pour Windows et Linux
+
+Pour compiler le projet, il est nécessaire d'installer [wails](https://wails.io/docs/gettingstarted/installation). On peut ensuite les compiler en utilisant la commande `wails build`:
+```shell
+$ git clone https://github.com/croll5/aquarium
+$ cd aquarium/
+$ wails build
+```
+Un exécutable est alors créé dans le dossier `build/bin`
+
+> ⚠️ Pour qu'aquarium fonctionne correctement, vous devez copier le dossier `aquarium/ressources` dans le même dossier que l'exécutable.
+
+Pour recompiler automatiquement le projet à chaque modification du code, vous pouvez utiliser la commande `wails dev`.
+
 # Présentation des technologies utilisées
 
 Notre projet utilise Wails, un cadriciel permettant de construire une application en utilisant le langage Go pour la logique applicative et les technologies Web pour l’interface graphique. La liaison entre le code en Go et le code en JavaScript se fait comme indiqué sur la figure ci-dessous :
