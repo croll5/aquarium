@@ -1,10 +1,10 @@
-# Mots clés
+# Mots-clés
 
 aquarium - analyse forensique - forensic analysis - DFIR-ORC 
 
 # Utilisation
 
-> La manière la plus simple d'utiliser aquarium est de télécharger les releases. Elles contiennent des version compilées pour Windows et Linux
+> 💡 La manière la plus simple d'utiliser aquarium est de télécharger les releases. Elles contiennent des version compilées pour Windows et Linux
 
 Pour compiler le projet, il est nécessaire d'installer [wails](https://wails.io/docs/gettingstarted/installation). On peut ensuite les compiler en utilisant la commande `wails build`:
 ```shell
