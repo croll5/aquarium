@@ -6,7 +6,8 @@ aquarium - analyse forensique - forensic analysis - DFIR-ORC
 
 > 💡 La manière la plus simple d'utiliser aquarium est de télécharger les releases. Elles contiennent des version compilées pour Windows et Linux
 
-Pour compiler le projet, il est nécessaire d'installer [wails](https://wails.io/docs/gettingstarted/installation). On peut ensuite les compiler en utilisant la commande `wails build`:
+Pour compiler le projet, il est nécessaire d'installer [wails](https://wails.io/docs/gettingstarted/installation). La compilation se fait ensuite en utilisant la commande `wails build`:
+
 ```shell
 $ git clone https://github.com/croll5/aquarium
 $ cd aquarium/
