@@ -81,6 +81,16 @@ func FileTimeVersGo(date []byte) time.Time {
 	return time.Unix(referentiel+difference, complement)
 }
 
+func Utf16LEToUtf8(s string) string {
+	initial := []byte(s)
+	runes := []rune{}
+	for i := 0; i < len(initial)-1; i += 2 {
+		char := uint16(initial[i]) | uint16(initial[i+1])<<8
+		runes = append(runes, rune(char))
+	}
+	return string(runes)
+}
+
 /* Fonction permettant d'extraire un fichier d'un dossier compressé en 7z
  */
 func ExtraireFichierDepuis7z(file *sevenzip.File, destination string) error {
