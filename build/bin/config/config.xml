@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extractions>
+    <collecte>collecteORC</collecte>
+    <chronologie nom="chronologie">
+        <colonne type="INT">idEvt</colonne>
+        <colonne type="TEXT">extraction</colonne>
+        <colonne type="TEXT">nomTable</colonne>
+        <colonne type="TEXT">source</colonne>
+        <colonne type="DATETIME">horodatage</colonne>
+        <colonne type="TEXT">message</colonne>
+    </chronologie>
+    <extraction id="getthis">getthis</extraction>
+    <extraction id="evtx">evtx</extraction>
+    <extraction id="sam">sam</extraction>
+    <extraction id="firefox">firefox</extraction>
+</extractions>

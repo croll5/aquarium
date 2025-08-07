@@ -43,9 +43,10 @@ type ConfigExtraction struct {
 }
 
 type ConfigurationXML struct {
-	Chronologie ConfigTableBDD     `xml:"chronologie"`
-	Extractions []ConfigExtraction `xml:"extraction"`
-	Collectes   []string           `xml:"collecte"`
+	Chronologie   ConfigTableBDD     `xml:"chronologie"`
+	Extractions   []ConfigExtraction //`xml:"extraction"`
+	IdExtractions []string           `xml:"extraction"`
+	Collectes     []string           `xml:"collecte"`
 }
 
 type DossierAExtraire struct {
@@ -65,7 +66,7 @@ func GetConfigurationProjet() (ConfigurationXML, error) {
 	if err != nil {
 		return donneesConfig, err
 	}
-	fichierConf, err := os.Open(filepath.Join(filepath.Dir(wdir), "config", "default.xml"))
+	fichierConf, err := os.Open(filepath.Join(filepath.Dir(wdir), "config", "config.xml"))
 	if err != nil {
 		return donneesConfig, err
 	}
@@ -77,6 +78,17 @@ func GetConfigurationProjet() (ConfigurationXML, error) {
 	if err != nil {
 		return donneesConfig, err
 	}
+	log.Println(donneesConfig)
+	// On récupère toutes les données des extractions
+	var configExtractions []ConfigExtraction = []ConfigExtraction{}
+	for _, idConfig := range donneesConfig.IdExtractions {
+		configExtraction, err := lireConfigExtraction(filepath.Join(filepath.Dir(wdir), "config", "extractions", idConfig+".xml"))
+		if err != nil {
+			return donneesConfig, err
+		}
+		configExtractions = append(configExtractions, configExtraction)
+	}
+	donneesConfig.Extractions = configExtractions
 	// On transforme le complement
 	for i, configExtration := range donneesConfig.Extractions {
 		configExtration.Complement = map[string]string{}
@@ -86,6 +98,21 @@ func GetConfigurationProjet() (ConfigurationXML, error) {
 		donneesConfig.Extractions[i] = configExtration
 	}
 	return donneesConfig, nil
+}
+
+func lireConfigExtraction(cheminExtraction string) (ConfigExtraction, error) {
+	var configExtraction ConfigExtraction
+	// On ouvre le ficher de configuration
+	fichierConfig, err := os.Open(cheminExtraction)
+	if err != nil {
+		return configExtraction, err
+	}
+	bytesConfig, err := io.ReadAll(fichierConfig)
+	if err != nil {
+		return configExtraction, err
+	}
+	err = xml.Unmarshal(bytesConfig, &configExtraction)
+	return configExtraction, err
 }
 
 func ListeFichiersExtraction(extraction ConfigExtraction, cheminProjet string) ([]DossierAExtraire, error) {

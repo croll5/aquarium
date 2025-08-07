@@ -39,6 +39,7 @@ package extraction
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
+	"aquarium/modules/extraction/bdd_sqlite"
 	"aquarium/modules/extraction/csv"
 	"aquarium/modules/extraction/evtx"
 	"aquarium/modules/extraction/registre"
@@ -59,7 +60,8 @@ type Extracteur interface {
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	// "avs":        avlogs.AvLog{},
-	"evtx": evtx.Evtx{},
+	"evtx":   evtx.Evtx{},
+	"sqlite": bdd_sqlite.SQLite{},
 	// "navigateur": navigateur.Navigateur{},
 	// "werr":       werr.Werr{},
 	"registre": registre.Registre{},
