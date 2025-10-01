@@ -60,13 +60,11 @@ type ComplementConfigXML struct {
 	Valeur string `xml:",innerxml"`
 }
 
-func GetConfigurationProjet() (ConfigurationXML, error) {
+func GetConfigurationProjet(cheminProjet string) (ConfigurationXML, error) {
 	var donneesConfig ConfigurationXML
-	wdir, err := os.Executable()
-	if err != nil {
-		return donneesConfig, err
-	}
-	fichierConf, err := os.Open(filepath.Join(filepath.Dir(wdir), "config", "config.xml"))
+	var cheminFichierConfigPrincipal string
+	cheminFichierConfigPrincipal, err := cheminFichierConfig(cheminProjet, "config.xml")
+	fichierConf, err := os.Open(cheminFichierConfigPrincipal)
 	if err != nil {
 		return donneesConfig, err
 	}
@@ -82,7 +80,9 @@ func GetConfigurationProjet() (ConfigurationXML, error) {
 	// On récupère toutes les données des extractions
 	var configExtractions []ConfigExtraction = []ConfigExtraction{}
 	for _, idConfig := range donneesConfig.IdExtractions {
-		configExtraction, err := lireConfigExtraction(filepath.Join(filepath.Dir(wdir), "config", "extractions", idConfig+".xml"))
+		var cheminFichierConfExtraction string
+		cheminFichierConfExtraction, err = cheminFichierConfig(cheminProjet, filepath.Join("extractions", idConfig+".xml"))
+		configExtraction, err := lireConfigExtraction(cheminFichierConfExtraction)
 		if err != nil {
 			return donneesConfig, err
 		}
@@ -121,7 +121,7 @@ func ListeFichiersExtraction(extraction ConfigExtraction, cheminProjet string) (
 	var resultat []DossierAExtraire = []DossierAExtraire{}
 	var probleme error
 	if len(extraction.Collectes) == 0 {
-		config, err := GetConfigurationProjet()
+		config, err := GetConfigurationProjet(cheminProjet)
 		if err != nil {
 			return resultat, err
 		}
@@ -153,6 +153,22 @@ func ListeFichiersExtraction(extraction ConfigExtraction, cheminProjet string) (
 	}
 
 	return resultat, probleme
+}
+
+/**                           FONCTIONS LOCALES                           **/
+
+func cheminFichierConfig(cheminProjet string, nomFichierConfig string) (string, error) {
+	// On commence par regarder si le fichier est présent dans le dossier de l'analyse
+	var cheminLocal string = filepath.Join(cheminProjet, "config", nomFichierConfig)
+	_, err := os.Stat(cheminLocal)
+	if err == nil {
+		return cheminLocal, nil
+	}
+	emplacementExecutable, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(filepath.Dir(emplacementExecutable), "config", nomFichierConfig), nil
 }
 
 /** Fonction qui renvoie la liste des chemins qui parcourent les dossiers donnés en argument

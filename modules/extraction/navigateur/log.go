@@ -1,4 +1,4 @@
-﻿/*
+/*
 Copyright ou © ou Copr. @EroOlf (pseudo GitHub, contacter Cécile Rolland pour toute remarque sur ce code), (21 janvier 2025)
 
 aquarium[@]mailo[.]com

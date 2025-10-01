@@ -78,7 +78,7 @@ var liste_extractions map[string]config.ConfigExtraction = map[string]config.Con
 **/
 func ListeExtracteursHtml(cheminProjet string) (map[string]config.ConfigExtraction, error) {
 	// On commence par récupérer la liste des extractions dans le fichier de config
-	config, err := config.GetConfigurationProjet()
+	config, err := config.GetConfigurationProjet(cheminProjet)
 	if err != nil {
 		return liste_extractions, err
 	}
@@ -158,7 +158,7 @@ func CreationBaseAnalyse(cheminProjet string) {
 		// On récupère une liste des colonnes
 		creerTableExtraction(cheminProjet, extraction)
 	}
-	configAnalyse, err := config.GetConfigurationProjet()
+	configAnalyse, err := config.GetConfigurationProjet(cheminProjet)
 	if err != nil {
 		return
 	}
@@ -214,7 +214,7 @@ func ExtraireTableChronologie(cheminProjet string) error {
 		}
 	}
 	// On liste les colonnes de la table chronologie
-	configAnalyse, err := config.GetConfigurationProjet()
+	configAnalyse, err := config.GetConfigurationProjet(cheminProjet)
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func ExtraireTableChronologie(cheminProjet string) error {
 **/
 func ValeursTableChronologie(cheminProjet string, debut int, taille int) []map[string]interface{} {
 	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	configAnalyse, err := config.GetConfigurationProjet()
+	configAnalyse, err := config.GetConfigurationProjet(cheminProjet)
 	if err != nil {
 		return []map[string]interface{}{}
 	}

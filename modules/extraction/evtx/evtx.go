@@ -68,6 +68,7 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aq
 			chemin := evtx.GoEvtxPath{"Event", "EventData"}
 			infosEvenement, err := evenement.Get(&chemin)
 			if err != nil {
+				listeContenuColonnes = append(listeContenuColonnes, "[AQUA] Problème dans l'extraction du message : "+err.Error())
 				continue
 			}
 			var infosEvenementJson []byte = evtx.ToJSON(infosEvenement)
