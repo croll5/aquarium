@@ -17,8 +17,9 @@ type ConfigColonneBDD struct {
 }
 
 type ConfigTableBDD struct {
-	Nom      string             `xml:"nom,attr"`
-	Colonnes []ConfigColonneBDD `xml:"colonne"`
+	Nom       string             `xml:"nom,attr"`
+	Condition string             `xml:"condition,attr"`
+	Colonnes  []ConfigColonneBDD `xml:"colonne"`
 }
 
 type ConfigChemin struct {
@@ -28,14 +29,14 @@ type ConfigChemin struct {
 }
 
 type ConfigExtraction struct {
-	Id                 string         `xml:"id"`
-	Nom                string         `xml:"nom"`
-	Description        string         `xml:"description"`
-	Extracteur         string         `xml:"extracteur"`
-	Chemins            []ConfigChemin `xml:"chemin"`
-	Table              ConfigTableBDD `xml:"table"`
-	Collectes          []string       `xml:"collecte"`
-	SQLChronologie     string         `xml:"sql_chronologie"`
+	Id                 string           `xml:"id"`
+	Nom                string           `xml:"nom"`
+	Description        string           `xml:"description"`
+	Extracteur         string           `xml:"extracteur"`
+	Chemins            []ConfigChemin   `xml:"chemin"`
+	Table              []ConfigTableBDD `xml:"table"`
+	Collectes          []string         `xml:"collecte"`
+	SQLChronologie     string           `xml:"sql_chronologie"`
 	Progression        float32
 	AnnulationDemandee bool
 	ConfigComplement   []ComplementConfigXML `xml:"complements>parametre"`

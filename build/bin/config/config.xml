@@ -13,4 +13,5 @@
     <extraction id="evtx">evtx</extraction>
     <extraction id="sam">sam</extraction>
     <extraction id="firefox">firefox</extraction>
+    <extraction id="prefetch">prefetch</extraction>
 </extractions>

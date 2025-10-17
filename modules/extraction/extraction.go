@@ -42,6 +42,7 @@ import (
 	"aquarium/modules/extraction/bdd_sqlite"
 	"aquarium/modules/extraction/csv"
 	"aquarium/modules/extraction/evtx"
+	"aquarium/modules/extraction/prefetch"
 	"aquarium/modules/extraction/registre"
 	"bytes"
 	"io"
@@ -67,7 +68,7 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"registre": registre.Registre{},
 	"csv":      csv.Csv{},
 	// "divers":     divers.Divers{},
-	// "prefetch":   prefetch.Prefetch{},
+	"prefetch": prefetch.Prefetch{},
 }
 
 var liste_extractions map[string]config.ConfigExtraction = map[string]config.ConfigExtraction{}
@@ -89,7 +90,7 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]config.ConfigExtracti
 			// TODO: Ajouter une vérification que le chemin existe
 			extracteur.Progression = -1
 			var adb *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-			if !adb.EstTableVide(extracteur.Table.Nom) {
+			if !adb.EstTableVide(extracteur.Table[0].Nom) {
 				extracteur.Progression = 100
 			}
 			extracteur.AnnulationDemandee = false
@@ -134,7 +135,9 @@ func Extraction(idExtraction string, cheminProjet string) error {
 			configExtraction.AnnulationDemandee = false
 			liste_extractions[idExtraction] = configExtraction
 			var adb *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-			adb.DropTable(configExtraction.Table.Nom)
+			for _, table := range configExtraction.Table {
+				adb.DropTable(table.Nom)
+			}
 			return probleme
 		}
 		if dossierAExtraire.Est7Z {
@@ -251,12 +254,17 @@ func ValeursTableChronologie(cheminProjet string, debut int, taille int) []map[s
 
 func creerTableExtraction(cheminProjet string, extraction config.ConfigExtraction) error {
 	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	var listeColonnes map[string]string = map[string]string{}
-	for _, colonne := range extraction.Table.Colonnes {
-		listeColonnes[colonne.Nom] = colonne.Type
+	for _, table := range extraction.Table {
+		var listeColonnes map[string]string = map[string]string{}
+		for _, colonne := range table.Colonnes {
+			listeColonnes[colonne.Nom] = colonne.Type
+		}
+		err := base.CreateTableIfNotExist2(table.Nom, listeColonnes, true)
+		if err != nil {
+			return err
+		}
 	}
-	err := base.CreateTableIfNotExist2(extraction.Table.Nom, listeColonnes, true)
-	return err
+	return nil
 }
 
 func extrationAchive7z(cheminProjet string, configArchive config.DossierAExtraire, idExtraction string, i *int, total int) error {

@@ -62,7 +62,7 @@ func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aq
 	log.Println(cleDeRegistre.Name())
 	var listeContenuColonnes []interface{} = make([]interface{}, 0)
 	// On parcourt les colonnes à ajouter
-	for _, configColonne := range configExtraction.Table.Colonnes {
+	for _, configColonne := range configExtraction.Table[0].Colonnes {
 		switch configColonne.Contenu {
 		case "nomCle":
 			listeContenuColonnes = append(listeContenuColonnes, cleDeRegistre.Name())
@@ -132,12 +132,12 @@ func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source s
 	}
 	// On récupère les colonnes de la table
 	var nomColonnesTable []string = []string{}
-	for _, colonne := range configExtraction.Table.Colonnes {
+	for _, colonne := range configExtraction.Table[0].Colonnes {
 		nomColonnesTable = append(nomColonnesTable, colonne.Nom)
 	}
 	// On crée une requête d'insertion dans la BDD
 	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
-	var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table.Nom, nomColonnesTable)
+	var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomColonnesTable)
 	// Ouverture de la clé de registre contenant les comptes personnels
 	cleDeBase := registre.OpenKey(configExtraction.Complement["registre"])
 	if configExtraction.Complement["parcourir_enfants"] == "oui" {

@@ -66,8 +66,13 @@ func (gt Csv) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichie
 	if err != nil {
 		return err
 	}
-	err = exportDfToDb(df, cheminProjet, cheminFichierAExtraire, configExtraction.Table.Nom, configExtraction.Table.Colonnes)
-	return err
+	for _, table := range configExtraction.Table {
+		err = exportDfToDb(df, cheminProjet, cheminFichierAExtraire, table.Nom, table.Colonnes)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 /* **************************************************************************** */

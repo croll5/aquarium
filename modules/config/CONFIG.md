@@ -1,4 +1,4 @@
-# Comment configurer aquarium
+# Comment configurer aquarium ?
 
 Aquarium peut être configuré à l'aide d'un fichier `config/config.xml`, contenu par défaut dans le dossier de l'exécutable. Ce fichier a la structure suivante : 
 
@@ -49,3 +49,4 @@ Voici la liste des extracteurs utilisables et leur documentation
 - [csv](../extraction/csv/CONFIG.md) : extraction des fichiers au format CSV
 - [evtx](../extraction/evtx/CONFIG.md) : extraction des fichiers d'évènements Windows (evtx)
 - [registre](../extraction/registre/CONFIG.md) : extraction des bases de clés de registre Windows
+- [prefetch](../extraction/prefetch/CONFIG.md) : extraction des données des fichiers de préchargement

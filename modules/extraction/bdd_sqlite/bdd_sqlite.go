@@ -55,13 +55,13 @@ func traiterReponseBDD(cheminProjet string, source string, reponse *sql.Rows, co
 	// On fait la liste des noms des colonnes
 	var contenuColonnesAttendues []string = []string{}
 	var nomColonnesAttendues []string = []string{}
-	for _, colonneVoulue := range configExtraction.Table.Colonnes {
+	for _, colonneVoulue := range configExtraction.Table[0].Colonnes {
 		contenuColonnesAttendues = append(contenuColonnesAttendues, colonneVoulue.Contenu)
 		nomColonnesAttendues = append(nomColonnesAttendues, colonneVoulue.Nom)
 	}
 	// On prépare la requête d'insertion dans la BDD
 	var abase = aquabase.InitDB_Extraction(cheminProjet)
-	var requeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table.Nom, nomColonnesAttendues)
+	var requeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomColonnesAttendues)
 	// On remplit la requête
 	var contenuLigne []interface{} = make([]interface{}, len(listeColonnes))
 	var pointeursColonnes []interface{} = make([]interface{}, len(listeColonnes))

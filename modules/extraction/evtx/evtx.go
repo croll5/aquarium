@@ -59,7 +59,7 @@ type Evtx struct{}
 */
 func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aquabase.RequeteInsertion, fichierSource string, configExtraction config.ConfigExtraction) error {
 	var listeContenuColonnes []interface{} = make([]interface{}, 0)
-	for _, colonne := range configExtraction.Table.Colonnes {
+	for _, colonne := range configExtraction.Table[0].Colonnes {
 		if colonne.Contenu == "horodatage" {
 			listeContenuColonnes = append(listeContenuColonnes, evenement.TimeCreated())
 		} else if colonne.Contenu == "source" {
@@ -113,7 +113,7 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier 
 	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
 	var listeColonnesEvtx []string = []string{}
 	// On répurère la liste des colonnes à extraire
-	for _, colonne := range configExtraction.Table.Colonnes {
+	for _, colonne := range configExtraction.Table[0].Colonnes {
 		listeColonnesEvtx = append(listeColonnesEvtx, colonne.Nom)
 	}
 	// On prépare le contenu qui sera inséré dans la table
