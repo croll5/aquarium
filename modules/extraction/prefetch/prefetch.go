@@ -38,167 +38,106 @@ package prefetch
 
 import (
 	"aquarium/modules/aquabase"
+	"aquarium/modules/config"
 	"bytes"
-	"io"
-	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/bodgit/sevenzip"
 	"www.velocidex.com/golang/go-prefetch"
 )
 
 type Prefetch struct{}
 
-/* VARIABLE LOCALES */
-
-var pourcentageChargement float32 = -1
-var annulationDemandee bool = false
-var annulationReussie bool = false
-
-var colonnesTablePrefetch []string = []string{"executable", "fileSize", "hash", "runCount", "version", "source"}
-var colonnesTableFichierAccedesPrefetch []string = []string{"idFichier", "fileAccessed"}
-var colonnesTableDernieresExecutionsPrefetch []string = []string{"idFichier", "dateExecution"}
-
-/* FONCTIONS LOCALES */
-
-func extraireInfosPrefetchDepuis7z(fichier *sevenzip.File, insertionPrefetch *aquabase.RequeteInsertion, insertionRessourcesPrefetch *aquabase.RequeteInsertion, insertionExecutionPrefetch *aquabase.RequeteInsertion, numFichier int) error {
-	// On commence par ouvrir le fichier prefetch
-	rc, err := fichier.Open()
-	if err != nil {
-		log.Println("Format de fichier non supporté : ", err.Error())
-	}
-	defer rc.Close()
-	// Copie du contenu du fichier dans un tampon, pour pouvoir l'ouvrir avec l'extracteur de registres
-	var tampon bytes.Buffer
-	if _, err := io.Copy(&tampon, rc); err != nil {
-		log.Println("Format de fichier non supporté : ", err.Error())
-	}
-	readerAt := bytes.NewReader(tampon.Bytes())
-	// Ouverture du fichier avec la bibliothèque go-prefetch de Velocidex
+func (p Prefetch) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction) error {
+	readerAt := bytes.NewReader(fichier.Bytes())
 	infosPrechargement, err := prefetch.LoadPrefetch(readerAt)
 	if err != nil {
 		return err
 	}
-	// On ajoute les informations sur le fichier dans la base de données
-	insertionPrefetch.AjouterDansRequete(infosPrechargement.Executable, infosPrechargement.FileSize, infosPrechargement.Hash, infosPrechargement.RunCount, infosPrechargement.Version, fichier.Name, numFichier)
-	// On ajoute les dates d'execution dans la table des executions
-	for _, execution := range infosPrechargement.LastRunTimes {
-		insertionExecutionPrefetch.AjouterDansRequete(numFichier, execution.Local())
-	}
-	// On ajoute les ressources dans la table des ressources
-	for _, ressource := range infosPrechargement.FilesAccessed {
-		insertionRessourcesPrefetch.AjouterDansRequete(numFichier, ressource)
+	var adb aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	for _, table := range configExtraction.Table {
+		var requeteInsertion aquabase.RequeteInsertion = adb.InitRequeteInsertionExtraction(table.Nom, listeColonnesTable(table))
+		if table.Condition == "" {
+			var valeurs []interface{} = make([]interface{}, 0)
+			for _, colonne := range table.Colonnes {
+				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, nomFichier))
+			}
+			requeteInsertion.AjouterDansRequete(valeurs...)
+		} else {
+			extraireValeursMultiples(infosPrechargement, table, nomFichier, &requeteInsertion)
+		}
+		requeteInsertion.Executer()
 	}
 	return nil
 }
 
-func annulerExtraction(cheminProjet string) error {
-	base := aquabase.InitDB_Extraction(cheminProjet)
-	err := base.RemoveFromWhere("prefetch", "1=1")
-	if err != nil {
-		return err
+/* FONCTIONS LOCALES */
+
+func listeColonnesTable(table config.ConfigTableBDD) []string {
+	var nomsColonnes []string = []string{}
+	for _, colonne := range table.Colonnes {
+		nomsColonnes = append(nomsColonnes, colonne.Nom)
 	}
-	err = base.RemoveFromWhere("executionPrefetch", "1=1")
-	if err != nil {
-		return err
-	}
-	err = base.RemoveFromWhere("ressourcesPrefetch", "1=1")
-	return err
+	return nomsColonnes
 }
 
-/* FONCTIONS REQUISES PAR LE MODULE EXTRACTEUR */
-
-func (pref Prefetch) Extraction(cheminProjet string) error {
-	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
-	var insertionPrefetch aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("prefetch", append(colonnesTablePrefetch, "id"))
-	var insertionExecutionPrefetch aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("executionPrefetch", colonnesTableDernieresExecutionsPrefetch)
-	var insertionRessourcesPrefetch aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("ressourcesPrefetch", colonnesTableFichierAccedesPrefetch)
-	var numFichier = 0
-	dossierArtefact, err := sevenzip.OpenReader(filepath.Join(cheminProjet, "CollecteORC", "General", "Artefacts.7z"))
-	if err == nil {
-		for fichiersTraites, artefact := range dossierArtefact.File {
-			if annulationDemandee {
-				err := annulerExtraction(cheminProjet)
-				if err == nil {
-					annulationReussie = true
-					return nil
-				}
-			}
-			if strings.Contains(artefact.Name, "Prefetch") {
-				extraireInfosPrefetchDepuis7z(artefact, &insertionPrefetch, &insertionRessourcesPrefetch, &insertionExecutionPrefetch, numFichier)
-				numFichier++
-			}
-			pourcentageChargement = float32(fichiersTraites*100) / float32(len(dossierArtefact.File))
+func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.ConfigColonneBDD, source string) interface{} {
+	switch colonne.Contenu {
+	case "executable":
+		return fichierPrefetch.Executable
+	case "empreinte":
+		return fichierPrefetch.Hash
+	case "version":
+		return fichierPrefetch.Version
+	case "taille_fichier":
+		return fichierPrefetch.FileSize
+	case "nb_executions":
+		return fichierPrefetch.RunCount
+	case "aqua_source":
+		return source
+	case "date_execution":
+		var datesExecutions []string = make([]string, len(fichierPrefetch.LastRunTimes))
+		for i, date := range fichierPrefetch.LastRunTimes {
+			datesExecutions[i] = date.Format("02/01/2006 ")
 		}
-		dossierArtefact.Close()
+		return strings.Join(datesExecutions, "\n")
+	case "ressource":
+		return strings.Join(fichierPrefetch.FilesAccessed, "\n")
+	default:
+		return "[AQUA] Contenu de colonne inconnu"
 	}
-	insertionPrefetch.Executer()
-	insertionExecutionPrefetch.Executer()
-	insertionRessourcesPrefetch.Executer()
-	pourcentageChargement = 101
-	return nil
 }
 
-func (pref Prefetch) Description() string {
-	return "Fichiers de préchargement (contenant des informations sur l'exécution d'applications)"
-}
-
-func (pref Prefetch) PrerequisOK(cheminCollecte string) bool {
-	dossierGeneral, err := os.ReadDir(filepath.Join(cheminCollecte, "General"))
-	if err == nil {
-		for _, fichier := range dossierGeneral {
-			if fichier.Name() == "Artefacts.7z" {
-				dossierArtefact, err := sevenzip.OpenReader(filepath.Join(cheminCollecte, "General", "Artefacts.7z"))
-				if err != nil {
-					return false
-				}
-				for _, artefact := range dossierArtefact.File {
-					if strings.Contains(artefact.Name, "Prefetch") {
-						return true
-					}
-				}
-				dossierArtefact.Close()
+func extraireValeursMultiples(infosPrechargement *prefetch.PrefetchInfo, table config.ConfigTableBDD, source string, requeteInsertion *aquabase.RequeteInsertion) {
+	var valeursARepeter = getListeValeurs(infosPrechargement, table.Condition)
+	for _, valeurARepeter := range valeursARepeter {
+		var valeurs []interface{} = make([]interface{}, 0)
+		for _, colonne := range table.Colonnes {
+			if colonne.Contenu == table.Condition {
+				valeurs = append(valeurs, valeurARepeter)
+			} else {
+				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, source))
 			}
 		}
+		requeteInsertion.AjouterDansRequete(valeurs...)
 	}
-	return false
 }
 
-func (pref Prefetch) CreationTable(cheminProjet string) error {
-	base := aquabase.InitDB_Extraction(cheminProjet)
-	base.CreateTableIfNotExist1("prefetch", colonnesTablePrefetch, true)
-	base.CreateTableIfNotExist1("executionPrefetch", colonnesTableDernieresExecutionsPrefetch, true)
-	base.CreateTableIfNotExist1("ressourcesPrefetch", colonnesTableFichierAccedesPrefetch, true)
-	return nil
-}
-
-func (pref Prefetch) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
-	if pourcentageChargement == -1 && verifierTableVide {
-		base := aquabase.InitDB_Extraction(cheminProjet)
-		if !base.EstTableVide("prefetch") {
-			pourcentageChargement = 100
+func getListeValeurs(fichierPrefetch *prefetch.PrefetchInfo, contenuColonne string) []interface{} {
+	switch contenuColonne {
+	case "ressource":
+		var resultat []interface{} = make([]interface{}, len(fichierPrefetch.FilesAccessed))
+		for i, fichier := range fichierPrefetch.FilesAccessed {
+			resultat[i] = fichier
 		}
+		return resultat
+	case "date_execution":
+		var resultat []interface{} = make([]interface{}, len(fichierPrefetch.LastRunTimes))
+		for i, execution := range fichierPrefetch.LastRunTimes {
+			resultat[i] = execution
+		}
+		return resultat
 	}
-	return pourcentageChargement
-}
-
-func (pref Prefetch) Annuler() bool {
-	if !annulationDemandee {
-		annulationDemandee = true
-		annulationReussie = false
-	}
-	if annulationReussie {
-		annulationDemandee = false
-	}
-	return annulationReussie
-}
-
-func (pref Prefetch) DetailsEvenement(idEvt int) string {
-	return "Pas d'informations supplémentaires"
-}
-
-func (pref Prefetch) SQLChronologie() string {
-	return "SELECT executionPrefetch.id, \"prefetch\", \"executionPrefetch\", prefetch.source, executionPrefetch.dateExecution, \"Exécution du programme \" || prefetch.executable || \" (version : \" || prefetch.version || \", taille : \" || prefetch.fileSize || \", empreinte : \" || prefetch.hash || \"), qui a été exécuté au total \" || prefetch.runCount || \" fois.\" FROM executionPrefetch INNER JOIN prefetch ON executionPrefetch.idFichier = prefetch.id"
+	var resultat []interface{} = make([]interface{}, 1)
+	resultat[0] = "[AQUA] Erreur dans l’extraction."
+	return resultat
 }

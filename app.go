@@ -43,6 +43,7 @@ package main
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/arborescence"
+	"aquarium/modules/config"
 	"aquarium/modules/detection"
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
@@ -247,7 +248,7 @@ func (a *App) ValidationCreationModele(nomModele string, description string, sup
 
 /* Fonction renvoyant la liste des éléments pouvant être extraits de l'ORC
  */
-func (a *App) ListeExtractionsPossibles() map[string]extraction.InfosExtracteur {
+func (a *App) ListeExtractionsPossibles() map[string]config.ConfigExtraction {
 	resultat, err := extraction.ListeExtracteursHtml(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)

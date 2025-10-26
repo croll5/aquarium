@@ -36,7 +36,9 @@ termes.
 
 package aquaticket
 
-import "time"
+import (
+	"time"
+)
 
 type Distributeur struct {
 	curseurPassage int

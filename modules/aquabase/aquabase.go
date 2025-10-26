@@ -479,7 +479,7 @@ func (abd *Aquabase) InitRequeteInsertionExtraction(nomTable string, colonnesTab
 
 func (requete *RequeteInsertion) AjouterDansRequete(valeurs ...any) error {
 	if len(valeurs) != len(requete.colonnesTable) {
-		return errors.New("Mauvais nombre de colonnes")
+		return fmt.Errorf("Mauvais nombre de colonnes\nLes valeurs %s n'ont pas pu être ajoutées", valeurs...)
 	}
 	// On en fait une unique chaîne de caractères
 	requete.valeurs = append(requete.valeurs, valeurs)

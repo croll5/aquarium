@@ -36,7 +36,7 @@ termes.
 
 let position_dans_table = 0;
 let position_debut_recuperation = 0;
-let requete = "SELECT id, extracteur, horodatage, message, source FROM chronologie";
+let requete = "SELECT id, extraction, horodatage, message, source FROM chronologie";
 let taille_requete = 0;
 let valeurs_filtres = new Map();
 let consignes_filtres = new Map();
