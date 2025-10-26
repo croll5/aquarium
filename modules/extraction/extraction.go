@@ -42,9 +42,11 @@ import (
 	"aquarium/modules/extraction/bdd_sqlite"
 	"aquarium/modules/extraction/csv"
 	"aquarium/modules/extraction/evtx"
+	"aquarium/modules/extraction/journaux"
 	"aquarium/modules/extraction/prefetch"
 	"aquarium/modules/extraction/registre"
 	"bytes"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -69,6 +71,7 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"csv":      csv.Csv{},
 	// "divers":     divers.Divers{},
 	"prefetch": prefetch.Prefetch{},
+	"journaux": journaux.Journaux{},
 }
 
 var liste_extractions map[string]config.ConfigExtraction = map[string]config.ConfigExtraction{}
@@ -106,11 +109,9 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]config.ConfigExtracti
   * @return : une erreur s'il y a lieu
 **/
 func Extraction(idExtraction string, cheminProjet string) error {
-	log.Println(liste_extractions[idExtraction].Complement)
 	var probleme error
 	// On liste les fichiers concernés par cette extraction
 	listeFichiersAExtraire, probleme := config.ListeFichiersExtraction(liste_extractions[idExtraction], cheminProjet)
-	log.Println(listeFichiersAExtraire)
 	// On récupère la configuration de l'extraction
 	var configExtraction config.ConfigExtraction = liste_extractions[idExtraction]
 	// On met la progression à 0 (début de l'extraction)
@@ -126,7 +127,6 @@ func Extraction(idExtraction string, cheminProjet string) error {
 	for _, dossierAExtraire := range listeFichiersAExtraire {
 		nbFichiers += len(dossierAExtraire.Elements)
 	}
-	log.Println(nbFichiers, " fichiers à extraire")
 	var i int = 0
 	// On boucle sur les fichiers à extraire
 	for _, dossierAExtraire := range listeFichiersAExtraire {
@@ -141,9 +141,9 @@ func Extraction(idExtraction string, cheminProjet string) error {
 			return probleme
 		}
 		if dossierAExtraire.Est7Z {
-			extrationAchive7z(cheminProjet, dossierAExtraire, idExtraction, &i, nbFichiers)
+			probleme = extrationAchive7z(cheminProjet, dossierAExtraire, idExtraction, &i, nbFichiers)
 		} else {
-			extractionDossier(cheminProjet, dossierAExtraire, idExtraction, &i, nbFichiers)
+			probleme = extractionDossier(cheminProjet, dossierAExtraire, idExtraction, &i, nbFichiers)
 		}
 	}
 	configExtraction.Progression = 101
@@ -285,7 +285,11 @@ func extrationAchive7z(cheminProjet string, configArchive config.DossierAExtrair
 			log.Println("Format de fichier non supporté : ", err.Error())
 		}
 		var source string = strings.Replace(filepath.Join(configArchive.Chemin, archive.File[numFichier].Name), cheminProjet, "", 1)
-		liste_extracteurs[liste_extractions[idExtraction].Extracteur].Extraction(cheminProjet, tampon, source, liste_extractions[idExtraction])
+		extracteur, ok := liste_extracteurs[liste_extractions[idExtraction].Extracteur]
+		if !ok {
+			return errors.New("L’extracteur « " + liste_extractions[idExtraction].Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
+		}
+		extracteur.Extraction(cheminProjet, tampon, source, liste_extractions[idExtraction])
 		fichier.Close()
 		// On change la progression du chargement
 		*i++
@@ -313,7 +317,11 @@ func extractionDossier(cheminProjet string, configDossier config.DossierAExtrair
 		if _, err := io.Copy(&tampon, fichier); err != nil {
 			log.Println("Format de fichier non supporté : ", err.Error())
 		}
-		liste_extracteurs[liste_extractions[idExtraction].Extracteur].Extraction(cheminProjet, tampon, strings.Replace(cheminFichier, cheminProjet, "", 1), liste_extractions[idExtraction])
+		extracteur, ok := liste_extracteurs[liste_extractions[idExtraction].Extracteur]
+		if !ok {
+			return errors.New("L’extracteur « " + liste_extractions[idExtraction].Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
+		}
+		extracteur.Extraction(cheminProjet, tampon, strings.Replace(cheminFichier, cheminProjet, "", 1), liste_extractions[idExtraction])
 		fichier.Close()
 	}
 	return nil

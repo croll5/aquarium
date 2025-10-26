@@ -95,29 +95,11 @@ func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aq
 				taille = int64(binary.LittleEndian.Uint32(DonneesCle[taille : taille+8]))
 			}
 			// On ajoute les valeurs de la clé à la table
-			listeContenuColonnes = append(listeContenuColonnes, traiterValeurCle(DonneesCle[debut:debut+taille], contenu[4]))
+			listeContenuColonnes = append(listeContenuColonnes, utilitaires.DecoderBytes(DonneesCle[debut:debut+taille], contenu[4]))
 		}
 	}
 	requete.AjouterDansRequete(listeContenuColonnes...)
 	return nil
-}
-
-func traiterValeurCle(valeur []byte, encodage string) interface{} {
-	switch encodage {
-	case "string":
-		return string(valeur)
-	case "utf16":
-		return utilitaires.Utf16LEToUtf8(string(valeur))
-	case "littleEndian64":
-		return binary.LittleEndian.Uint64(valeur)
-	case "filetime":
-		if binary.LittleEndian.Uint64(valeur) == 0 {
-			return "n/a"
-		}
-		return utilitaires.FileTimeVersGo(valeur)
-	default:
-		return "[AQUARIUM ERREUR] Type d'encodage non reconnu"
-	}
 }
 
 func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source string, configExtraction config.ConfigExtraction) error {

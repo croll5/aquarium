@@ -43,6 +43,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bodgit/sevenzip"
@@ -73,10 +75,57 @@ func AjoutEvenementDansBDD(cheminProjet string, extracteur string, horodatage ti
 	return err
 }
 
+func DecoderBytes(donnees []byte, encodage string) interface{} {
+	switch encodage {
+	case "littleEndian64":
+		return binary.LittleEndian.Uint64(donnees)
+	case "filetime":
+		if binary.LittleEndian.Uint64(donnees) == 0 {
+			return "n/a"
+		}
+		return FileTimeVersGo(donnees)
+	default:
+		return DecoderString(string(donnees), encodage)
+	}
+}
+
+func DecoderString(donnees string, encodage string) interface{} {
+	detailsEncodage := strings.Split(encodage, "[aqua_sep]")
+	switch detailsEncodage[0] {
+	case "utf16":
+		return Utf16LEToUtf8(donnees)
+	case "filetime":
+		date, err := strconv.ParseInt(donnees, 10, 64)
+		if err != nil {
+			log.Printf("Erreur de conversion de l'horodatage : %s, erreur : %v\n", donnees, err)
+			return "[AQUA] Erreur dans l’extraction de la date au format filetime suivante :" + donnees
+		}
+		return FiletimeFromIntVersGo(date)
+	case "date":
+		if len(detailsEncodage) < 2 {
+			return "[AQUA] Date non extraite : " + donnees
+		} else {
+			date, err := time.Parse(detailsEncodage[1], donnees)
+			if err != nil {
+				return "[AQUA] Erreur dans l’extraction de la date " + donnees + " : " + err.Error()
+			}
+			return date
+		}
+	case "string":
+		return donnees
+	default:
+		return "[AQUA] Impossible de décoder « " + donnees + " ». Encodage non reconnu"
+	}
+}
+
 func FileTimeVersGo(date []byte) time.Time {
 	var dateInt = int64(binary.LittleEndian.Uint64(date))
-	var difference = dateInt / 10000000
-	var complement = dateInt % 10000000
+	return FiletimeFromIntVersGo(dateInt)
+}
+
+func FiletimeFromIntVersGo(date int64) time.Time {
+	var difference = date / 10000000
+	var complement = date % 10000000
 	var referentiel = time.Date(1601, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 	return time.Unix(referentiel+difference, complement)
 }

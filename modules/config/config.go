@@ -269,3 +269,11 @@ func listeCorrespondancesDansDossier(cheminDossier string, nomCible string) ([]D
 	}
 	return []DossierAExtraire{DossierAExtraire{Chemin: cheminDossier, Est7Z: false, Elements: numFichiersOk}}, probleme
 }
+
+func (cftable ConfigTableBDD) GetNomsColonnes() []string {
+	var res []string = []string{}
+	for _, colonne := range cftable.Colonnes {
+		res = append(res, colonne.Nom)
+	}
+	return res
+}

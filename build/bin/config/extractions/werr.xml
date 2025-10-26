@@ -1,0 +1,25 @@
+<extraction>
+    <id>werr</id>
+    <extracteur>journaux</extracteur>
+    <nom>Fichiers d’erreurs Windows (Werr)</nom>
+    <description>Fichiers d’erreurs Windows (Werr)</description>
+    <chemin>
+        <dossier>General</dossier>
+        <archive>Errors.7z</archive>
+        <fichier>WER/*</fichier>
+    </chemin>
+    <table nom="werr">
+        <colonne type="DATETIME" contenu="EventTime|aqua_encodage:filetime">horodatage</colonne>
+        <colonne type="TEXT" contenu="aqua_source">source</colonne>
+        <colonne type="TEXT" contenu="AppName">nomApp</colonne>
+        <colonne type="TEXT" contenu="EventType">typeDevent</colonne>
+        <colonne type="TEXT" contenu="FriendlyEventName">nomEvent</colonne>
+        <colonne type="TEXT" contenu="AppPath">cheminApp</colonne>
+    </table>
+    <complements>
+        <parametre cle="encodage">utf16</parametre>
+        <parametre cle="separateur_champs">\r\n</parametre>
+        <parametre cle="symbole_association">=</parametre>
+    </complements>
+    <sql_chronologie></sql_chronologie>
+</extraction>
