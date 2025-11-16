@@ -34,7 +34,85 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
-function choix_enregistrement(){
+function ajuster_champs(id_section){
+    let noeud_principal = document.getElementById(id_section)
+    let liste_elements = noeud_principal.children;
+    let numero_champ = liste_elements.length - 1
+    if(section_remplie(liste_elements.item(numero_champ), false)){
+        let element_de_base = liste_elements.item(numero_champ);
+        let clone = element_de_base.cloneNode(true);
+        vider_champs(clone);
+        noeud_principal.appendChild(clone);
+        // Ajout d'un bouton « supprimer »
+        let suppr = document.createElement("button");
+        suppr.innerText = "❌";
+        suppr.className = "bouton_invisible";
+        suppr.onclick = (ev) => {
+            element_de_base.remove();
+        }
+        element_de_base.appendChild(suppr);
+    } else if(numero_champ > 0 && !section_remplie(liste_elements.item(numero_champ - 1), false)){
+        liste_elements.item(numero_champ).remove()
+    }
+}
+
+function vider_champs(objet){
+    let liste_elements = objet.children;
+    for(let i = 0; i < liste_elements.length; i++){
+        let element = liste_elements.item(i);
+        if(liste_elements.item(i).hasChildNodes()){
+            vider_champs(element);
+        } else {
+            element.value = "";
+            if(element.hasAttribute("required")){
+                element.removeAttribute("required");
+            }
+        }
+    }
+}
+
+function section_remplie(objet, completement = true) {
+    let contenu_element = objet.children;
+    for(let i = 0; i < contenu_element.length; i++){
+        if(contenu_element.item(i).hasChildNodes()){
+            let remplissage_enfant = section_remplie(contenu_element.item(i), completement)
+            if(completement && !remplissage_enfant){
+                return false
+            } else if(!completement && remplissage_enfant){
+                return true
+            }
+        }else if(contenu_element.item(i).value != undefined && contenu_element.item(i).value != ""){
+            if(!completement){
+                return true;
+            }
+        } else if(completement && contenu_element.item(i).hasAttribute("required") && (contenu_element.item(i).value == undefined || contenu_element.item(i).value == "")){
+                return false;
+        }
+    }
+    return completement;
+}
+
+function afficher_bloc(a_afficher, id){
+    let bloc = document.getElementById(id);
+    if(a_afficher){
+        bloc.style.display = "inline";
+    } else{
+        bloc.style.display = "none";
+    }
+}
+
+function verifier_remplissage(section, prochaine_etape){
+    let element = document.getElementById(section);
+    if(section_remplie(element, true)){
+        document.getElementById(prochaine_etape).removeAttribute("disabled");
+    } else{
+        document.getElementById(prochaine_etape).setAttribute("disabled", true);
+    }
+}
+
+/* ANCIENNES FONCTIONS */
+
+function avt_choix_enregistrement(){
     parent.window.go.main.App.CreationNouveauProjet().then(resultat =>{
         document.getElementById("enregistrement").value = resultat;
         document.getElementById("archives").value = "";
@@ -42,7 +120,7 @@ function choix_enregistrement(){
     })
 }
 
-function choix_orc(){
+function avt_choix_orc(){
     let chemin_enreg = document.getElementById("enregistrement").value;
     if(chemin_enreg == ""){
         alert("Vous deviez d'abord choisir où vous voulez enregistrer votre ORC")
@@ -67,7 +145,7 @@ function choix_orc(){
     }
 }
 
-function change_auteur(){
+function avt_change_auteur(){
     let nom_auteur = document.getElementById("auteur").value;
     let enregistrement = document.getElementById("enregistrement").value;
     let archives = document.getElementById("archives").value;
@@ -79,7 +157,7 @@ function change_auteur(){
     }
 }
 
-function validation(){
+function avt_validation(){
     let auteur = document.getElementById("auteur").value;
     let description = document.getElementById("description").value;
     parent.window.go.main.App.ValidationCreationProjet(auteur, description).then(resultat =>{

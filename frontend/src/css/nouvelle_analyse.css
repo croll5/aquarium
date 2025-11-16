@@ -42,3 +42,139 @@ termes.
 #valider{
     display: none;
 }
+
+.cadre_clair{
+    background-color: var(--or-6);
+    color: black;
+    width: 80vw;
+    height: 75vh;
+    margin-left: 10vw;
+    cursor: default;
+    border-radius: 15px;
+    box-shadow: 10px 5px 30px #2e2e2e;
+    overflow: hidden;
+}
+
+/* Configuration de la navigation */
+
+.navigation{
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+input[name="case-navigation"]{
+    display: none;
+}
+
+input#etape_1:checked ~ .navigation label[for="etape_1"],
+input#etape_2:checked ~ .navigation label[for="etape_2"],
+input#etape_3:checked ~ .navigation label[for="etape_3"],
+input#etape_4:checked ~ .navigation label[for="etape_4"]{
+    background-color: var(--bleu-2);
+    color: var(--or-6);
+}
+
+input#etape_1:disabled ~ .navigation label[for="etape_1"],
+input#etape_2:disabled ~ .navigation label[for="etape_2"],
+input#etape_3:disabled ~ .navigation label[for="etape_3"],
+input#etape_4:disabled ~ .navigation label[for="etape_4"],
+input#etape_1:disabled ~ .pages label[for="etape_1"],
+input#etape_2:disabled ~ .pages label[for="etape_2"],
+input#etape_3:disabled ~ .pages label[for="etape_3"],
+input#etape_4:disabled ~ .pages label[for="etape_4"]{
+    background-color: #727272;
+    color: var(--or-6);
+    cursor: not-allowed;
+}
+
+label.bouton_sombre, label.bouton_clair{
+    font-size: smaller;
+    transition: 0.5s;
+}
+
+select{
+    border-color: var(--or-5);
+}
+
+/* Pages */
+
+.pages{
+    display: flex;
+    flex-direction: row;
+    transition: 0.5s;
+}
+
+.page_navigation{
+    width: calc(100% - 30px);
+    height: 60vh;
+    overflow: overlay;
+    scrollbar-width: none;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding: 15px;
+}
+
+textarea.input_clair{
+    height: 10vh;
+    width: 95%;
+}
+
+input[type="radio"].input_clair {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  border-radius: 50%;
+  border: solid 2px var(--or-2);
+
+  margin: 0;
+  padding: 8px;
+
+  transition: 0.5s;
+}
+
+input[type="radio"].input_clair:checked{
+    background-color: var(--or-2);
+}
+
+.liste_options{
+    display: flex;
+    flex-direction: column;
+}
+
+.bloc_cache_par_defaut{
+    display: none;
+}
+
+.bloc_de_liste{
+    margin-top: 15px;
+}
+
+.input_clair{
+    margin: 3px;
+}
+
+input#etape_1:checked ~ .pages{ transform: translateX(0%);}
+input#etape_2:checked ~ .pages{ transform: translateX(-100%);}
+input#etape_3:checked ~ .pages{ transform: translateX(-200%);}
+input#etape_4:checked ~ .pages{ transform: translateX(-300%);}
+
+/* Réseau */
+
+#vue_generale {
+    width: 80%;
+    height: 70%;
+    border: 1px solid lightgray;
+    background-color: #fff;
+}
+
+.fond-popup{
+    left: 100%;
+}
+
+.cadre-popup{
+    left: calc(115% - 5px);
+}

@@ -66,7 +66,7 @@ function police_dyslexie(){
 function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, filtres, consignes_filtres, order_by, offset, lignes_selectionnees){
     // Créer un tableau Bootstrap
     let table = document.createElement('table');
-    table.className = 'table table-striped table-bordered';
+    table.className = 'table_chronologie';
     table.style.fontSize = 'smaller'; // Réduire la taille du texte
 
     // Créer l'en-tête du tableau
@@ -144,12 +144,16 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
         let tr = document.createElement('tr');
         for (let [key, value] of Object.entries(valueRows)) {
                 let td = document.createElement('td');
-                td.textContent = value;
+                let contenutd = document.createElement("div");
+                contenutd.textContent = value;
+                contenutd.classList.add("contenutd");
+                td.appendChild(contenutd);
                 tr.appendChild(td);
         }
         // Ajouter une case à cocher pour enregistrer la table
         if (lignes_selectionnees != undefined){
             let tdCasacocher =  document.createElement("td");
+            tdCasacocher.classList.add("tdcasacocher");
             let casacocher = document.createElement("input");
             casacocher.type = "checkbox";
             let idEvenement = Number(idRow) + offset;

@@ -1,0 +1,78 @@
+<!--
+Copyright ou © ou Copr. Cécile Rolland, (21 janvier 2025) 
+
+aquarium[@]mailo[.]com
+
+Ce logiciel est un programme informatique servant à l'analyse des collectes
+traçologiques effectuées avec le logiciel DFIR-ORC. 
+
+Ce logiciel est régi par la licence CeCILL soumise au droit français et
+respectant les principes de diffusion des logiciels libres. Vous pouvez
+utiliser, modifier et/ou redistribuer ce programme sous les conditions
+de la licence CeCILL telle que diffusée par le CEA, le CNRS et l'INRIA 
+sur le site "http://www.cecill.info".
+
+En contrepartie de l'accessibilité au code source et des droits de copie,
+de modification et de redistribution accordés par cette licence, il n'est
+offert aux utilisateurs qu'une garantie limitée.  Pour les mêmes raisons,
+seule une responsabilité restreinte pèse sur l'auteur du programme,  le
+titulaire des droits patrimoniaux et les concédants successifs.
+
+A cet égard  l'attention de l'utilisateur est attirée sur les risques
+associés au chargement,  à l'utilisation,  à la modification et/ou au
+développement et à la reproduction du logiciel par l'utilisateur étant 
+donné sa spécificité de logiciel libre, qui peut le rendre complexe à 
+manipuler et qui le réserve donc à des développeurs et des professionnels
+avertis possédant  des  connaissances  informatiques approfondies.  Les
+utilisateurs sont donc invités à charger  et  tester  l'adéquation  du
+logiciel à leurs besoins dans des conditions permettant d'assurer la
+sécurité de leurs systèmes et ou de leurs données et, plus généralement, 
+à l'utiliser et l'exploiter dans les mêmes conditions de sécurité. 
+
+Le fait que vous puissiez accéder à cet en-tête signifie que vous avez 
+pris connaissance de la licence CeCILL, et que vous en avez accepté les
+termes.
+-->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset=utf-8 />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nouvelle analyse</title>
+    <link rel="stylesheet" href="../templates/commun_sombre.css">
+    <link rel="stylesheet" href="../templates/bibliotheque.css">
+    <link rel="stylesheet" href="../css/nouvelle_analyse.css">
+    <script src="../js/outils/bubulles.js" async></script>
+    <script src="../js/nouvelle_analyse.js" async></script>
+    <script src="../templates/bibliotheque.js" async></script>
+</head>
+<body>
+    <div class="bubble-cursor"></div>
+    <h1>Nouvelle analyse ORC</h1>
+    <h3 id="patientez">Import de l’ORC en cours... En attendant, nous vous conseillons de buller 🫧😏</h3>
+    <div id="formulaire">
+        <div class="champ">
+            <label for="enregistrement">Dossier d’enregistrement de l’analyse :</label><br>
+            <input type="text" class="input_clair" id="enregistrement" onchange="choix_enregistrement()">
+            <button class="bouton_clair" onclick="choix_enregistrement()">Choisir un dossier</button>
+        </div>
+        <div class="champ">
+            <label for="auteur">Nom de l’auteur :</label><br>
+            <input type="text" id="auteur" class="input_clair" onchange="change_auteur()">
+        </div>
+        <div class="champ">
+            <label for="description">Description de l’incident à l’origine de l’analyse :</label><br>
+            <textarea name="" id="description" class="input_clair"></textarea>
+        </div>
+        <div class="champ">
+            <label for="archives">Archives ORC à analyser :</label><br>
+            <input type="text" id="archives" class="input_clair" onchange="choix_orc()">
+            <button class="bouton_clair" onclick="choix_orc()">Choisir des fichiers</button>
+        </div>
+        <div id="div_valider">
+            <button class="bouton_clair" id="valider" onclick="validation()">Valider</button>
+        </div>
+    </div>
+</body>
+</html>
