@@ -16,7 +16,7 @@ const INDICATEUR_CONCATENATION = "[aqua_concat]"
 
 type Journaux struct{}
 
-func (jr Journaux) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction) error {
+func (jr Journaux) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
 	var listeEvenements []string = []string{decoderFichier(fichier, configExtraction.Complement["encodage"])}
 	if configExtraction.Complement["separateur"] != "" {
 		listeEvenements = getListeDesEvenements(listeEvenements[0], configExtraction.Complement["separateur"])
@@ -26,7 +26,7 @@ func (jr Journaux) Extraction(cheminProjet string, fichier bytes.Buffer, cheminF
 	for _, table := range configExtraction.Table {
 		var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(table.Nom, table.GetNomsColonnes())
 		for _, evenement := range listeEvenements {
-			ajouterEvenementDansRequete(&requeteInsertion, cheminFichierAExtraire, evenement, configExtraction.Complement["symbole_association"], configExtraction.Complement["separateur_champs"], table, configExtraction)
+			ajouterEvenementDansRequete(&requeteInsertion, cheminFichierAExtraire, evenement, configExtraction.Complement["symbole_association"], configExtraction.Complement["separateur_champs"], table, configExtraction, idMachine)
 		}
 		requeteInsertion.Executer()
 	}
@@ -139,7 +139,7 @@ func extraireValeursRegex(donnees string, regex string) map[string]string {
 	return resultat
 }
 
-func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, cheminFichierAExtraire string, evenement string, symboleAssociation string, separateurChamps string, configTable config.ConfigTableBDD, configExtraction config.ConfigExtraction) error {
+func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, cheminFichierAExtraire string, evenement string, symboleAssociation string, separateurChamps string, configTable config.ConfigTableBDD, configExtraction config.ConfigExtraction, idMachine string) error {
 	if evenement == "" {
 		return nil
 	}
@@ -153,6 +153,8 @@ func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, c
 		if dictChamps[nomColonne] == "" {
 			if nomColonne == "aqua_source" {
 				valeursAAjouter = append(valeursAAjouter, cheminFichierAExtraire)
+			} else if nomColonne == config.AQUA_MACHINE {
+				valeursAAjouter = append(valeursAAjouter, idMachine)
 			} else if strings.Contains(colonne.Contenu, INDICATEUR_CONCATENATION) {
 				valeur := ajouterConcatenation(colonne.Contenu, dictChamps)
 				valeursAAjouter = append(valeursAAjouter, valeurDecodee(valeur, colonne.Contenu))

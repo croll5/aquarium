@@ -132,9 +132,11 @@ termes.
                     <select id="nature_equipement">
                         <option value="" disabled selected>--- Sélectionnez un type d’objet ---</option>
                         <option value="routeur">Routeur</option>
-                        <option value="parefeu">Pare-feu</option>
                         <option value="commutateur">Commutateur</option>
+                        <option value="parefeu">Pare-feu</option>
                         <option value="serveur">Serveur</option>
+                        <option value="ordinateur">Ordinateur</option>
+                        <option value="telephone">Téléphone</option>
                         <option value="reseau">Réseau</option>
                     </select>
                     <p>Quelles sont les adresses de l’équipement ?</p>
@@ -144,6 +146,25 @@ termes.
                             <input type="text" placeholder="Commentaire (optionnel)" class="input_clair">
                         </div>
                     </div>
+                    <p>Voulez-vous analyser des éléments de cette machine ?</p>
+                    <div class="liste_options">
+                        <div>
+                            <input type="radio" id="oui_ana" name="faire_analyse" class="input_clair" onchange="afficher_bloc(true, 'parametres_analyse')">
+                            <label for="oui_ana">oui</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="non_ana" name="faire_analyse" class="input_clair" onchange="afficher_bloc(false, 'parametres_analyse')" checked>
+                            <label for="non_ana">non</label>
+                        </div>
+                    </div><br>
+                    <div id="parametres_analyse" class="bloc_cache_par_defaut">
+                        <div class="selecteur_fichier_clair">
+                            <div>
+                                <button class="bouton_sombre" onclick="selection_fichier()">Choisir un fichier</button>
+                            </div>
+                            <p id="liste_fichiers_analyses">Aucun fichier sélectionné...</p>
+                        </div>
+                    </div><br>
                     <div>
                         <button onclick="validerDonneesNoeud()" class="bouton_sombre">Valider</button>
                     </div>

@@ -57,13 +57,15 @@ type Evtx struct{}
 @param fichierSource : le chemin vers le fichier source
 @return : une erreur s'il y a eu des problèmes dans l'extraction des caractéristiques de l'évènement
 */
-func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aquabase.RequeteInsertion, fichierSource string, configExtraction config.ConfigExtraction) error {
+func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aquabase.RequeteInsertion, fichierSource string, configExtraction config.ConfigExtraction, idMachine string) error {
 	var listeContenuColonnes []interface{} = make([]interface{}, 0)
 	for _, colonne := range configExtraction.Table[0].Colonnes {
 		if colonne.Contenu == "horodatage" {
 			listeContenuColonnes = append(listeContenuColonnes, evenement.TimeCreated())
-		} else if colonne.Contenu == "source" {
+		} else if colonne.Contenu == "aqua_source" {
 			listeContenuColonnes = append(listeContenuColonnes, fichierSource)
+		} else if colonne.Contenu == config.AQUA_MACHINE {
+			listeContenuColonnes = append(listeContenuColonnes, idMachine)
 		} else if colonne.Contenu == "message" {
 			chemin := evtx.GoEvtxPath{"Event", "EventData"}
 			infosEvenement, err := evenement.Get(&chemin)
@@ -98,7 +100,7 @@ Fonction qui, à partir d'un fichier evtx zippé, ajoute tous ses évènements �
 @param cheminTemp : le chemin vers un répertoire temporaire
 @param fichierSource : le chemin du fichier evtx à extraire
 */
-func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier bytes.Buffer, fichierSource string, configExtraction config.ConfigExtraction) error {
+func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier bytes.Buffer, fichierSource string, configExtraction config.ConfigExtraction, idMachine string) error {
 	// On ouvre le tampon avec la bibliothèque evtx
 	readerAt := bytes.NewReader(tamponFichier.Bytes())
 	var fichierEvtx evtx.File
@@ -120,7 +122,7 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier 
 	var requeteInsertionEvtx aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("Evtx", listeColonnesEvtx)
 	for evenement := range listeEvenements {
 		// On ajoute chaque évènement à la requete
-		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource, configExtraction)
+		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource, configExtraction, idMachine)
 		if err != nil {
 			probleme = err
 		}
@@ -138,8 +140,8 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier 
 // ------------------------- FONCTIONS GLOBALES ------------------------- //
 
 /* Fonction d'extraction des fichiers evtx */
-func (e Evtx) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction) error {
-	err := e.extraireEvenementsDepuisTampon(cheminProjet, fichier, nomFichier, configExtraction)
+func (e Evtx) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
+	err := e.extraireEvenementsDepuisTampon(cheminProjet, fichier, nomFichier, configExtraction, idMachine)
 	return err
 }
 

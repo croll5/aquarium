@@ -58,7 +58,7 @@ type Csv struct{}
 /* ********************** Csv Methods ***************************** */
 /* ******************************************************************** */
 
-func (gt Csv) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction) error {
+func (gt Csv) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
 	var df dataframe.DataFrame
 	var err error
 	// On lit les données du fichier CSV
@@ -67,7 +67,7 @@ func (gt Csv) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichie
 		return err
 	}
 	for _, table := range configExtraction.Table {
-		err = exportDfToDb(df, cheminProjet, cheminFichierAExtraire, table.Nom, table.Colonnes)
+		err = exportDfToDb(df, cheminProjet, cheminFichierAExtraire, table.Nom, table.Colonnes, idMachine)
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func (gt Csv) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichie
 /* *********************** Csv Utils Methods ****************************** */
 /* **************************************************************************** */
 
-func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string, colonnesTable []config.ConfigColonneBDD) error {
+func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string, colonnesTable []config.ConfigColonneBDD, idMachine string) error {
 	adb := aquabase.InitDB_Extraction(cheminProjet)
 
 	// On crée un dictionnaire des colonnes de la table
@@ -87,8 +87,11 @@ func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, t
 	var listeContenuColonnes []string = []string{}
 	for _, colonne := range colonnesTable {
 		// La colonne source est un peu particulière car elle n'est pas dans le csv
-		if colonne.Contenu == "source" {
+		if colonne.Contenu == "aqua_source" {
 			df = DfAddColumn(df, "source", filname)
+		}
+		if colonne.Contenu == config.AQUA_MACHINE {
+			df = DfAddColumn(df, config.AQUA_MACHINE, idMachine)
 		}
 		nouveauNomColonne[colonne.Contenu] = colonne.Nom
 		listeContenuColonnes = append(listeContenuColonnes, colonne.Contenu)

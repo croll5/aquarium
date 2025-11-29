@@ -3,11 +3,6 @@
     <extracteur>journaux</extracteur>
     <nom>Journaux divers.log</nom>
     <description>Journaux « divers.log », contenant les informations sur les opérations effectuées par le système</description>
-    <chemin>
-        <dossier>General</dossier>
-        <archive>TextLogs.7z</archive>
-        <fichier>divers/*</fichier>
-    </chemin>
     <table nom="divers_log">
         <colonne type="DATETIME" contenu="1|aqua_encodage:date[aqua_sep]2006/01/02 15:04:05">horodatage</colonne>
         <colonne type="TEXT" contenu="2">operation</colonne>

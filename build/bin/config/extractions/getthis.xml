@@ -4,15 +4,6 @@
     <extracteur>csv</extracteur> 
     <nom>Fichiers GetThis</nom>
     <description>Fichiers GetThis, qui contiennent les métadonnées des fichiers collectés par ORC</description>
-    <chemin>
-        <dossier>*</dossier>
-        <archive>*.7z</archive>
-        <fichier>GetThis.csv</fichier>
-    </chemin>
-    <chemin>
-        <dossier>*</dossier>
-        <fichier>GetThis.csv</fichier>
-    </chemin>
     <table nom="getthis">
         <colonne type="TEXT" contenu="source">source</colonne>
         <colonne type="TEXT" contenu="SampleName">chemin_copie</colonne>

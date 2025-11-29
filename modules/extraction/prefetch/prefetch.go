@@ -47,7 +47,7 @@ import (
 
 type Prefetch struct{}
 
-func (p Prefetch) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction) error {
+func (p Prefetch) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
 	readerAt := bytes.NewReader(fichier.Bytes())
 	infosPrechargement, err := prefetch.LoadPrefetch(readerAt)
 	if err != nil {
@@ -59,11 +59,11 @@ func (p Prefetch) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichi
 		if table.Condition == "" {
 			var valeurs []interface{} = make([]interface{}, 0)
 			for _, colonne := range table.Colonnes {
-				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, nomFichier))
+				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, nomFichier, idMachine))
 			}
 			requeteInsertion.AjouterDansRequete(valeurs...)
 		} else {
-			extraireValeursMultiples(infosPrechargement, table, nomFichier, &requeteInsertion)
+			extraireValeursMultiples(infosPrechargement, table, nomFichier, &requeteInsertion, idMachine)
 		}
 		requeteInsertion.Executer()
 	}
@@ -80,7 +80,7 @@ func listeColonnesTable(table config.ConfigTableBDD) []string {
 	return nomsColonnes
 }
 
-func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.ConfigColonneBDD, source string) interface{} {
+func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.ConfigColonneBDD, source string, idMachine string) interface{} {
 	switch colonne.Contenu {
 	case "executable":
 		return fichierPrefetch.Executable
@@ -94,6 +94,8 @@ func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.Con
 		return fichierPrefetch.RunCount
 	case "aqua_source":
 		return source
+	case config.AQUA_MACHINE:
+		return idMachine
 	case "date_execution":
 		var datesExecutions []string = make([]string, len(fichierPrefetch.LastRunTimes))
 		for i, date := range fichierPrefetch.LastRunTimes {
@@ -107,7 +109,7 @@ func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.Con
 	}
 }
 
-func extraireValeursMultiples(infosPrechargement *prefetch.PrefetchInfo, table config.ConfigTableBDD, source string, requeteInsertion *aquabase.RequeteInsertion) {
+func extraireValeursMultiples(infosPrechargement *prefetch.PrefetchInfo, table config.ConfigTableBDD, source string, requeteInsertion *aquabase.RequeteInsertion, idMachine string) {
 	var valeursARepeter = getListeValeurs(infosPrechargement, table.Condition)
 	for _, valeurARepeter := range valeursARepeter {
 		var valeurs []interface{} = make([]interface{}, 0)
@@ -115,7 +117,7 @@ func extraireValeursMultiples(infosPrechargement *prefetch.PrefetchInfo, table c
 			if colonne.Contenu == table.Condition {
 				valeurs = append(valeurs, valeurARepeter)
 			} else {
-				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, source))
+				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, source, idMachine))
 			}
 		}
 		requeteInsertion.AjouterDansRequete(valeurs...)

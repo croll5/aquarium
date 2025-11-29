@@ -13,11 +13,6 @@
         <colonne type="TEXT" contenu="title">titre</colonne>
         <colonne type="TEXT" contenu="aqua_source">source</colonne>
     </table>
-    <chemin>
-        <dossier>Browsers</dossier>
-        <archive>Browsers_history.7z</archive>
-        <fichier>Firefox_Vista_History/*</fichier>
-    </chemin>
     <complements>
         <parametre cle="requete_sql">SELECT url, visit_count, title, datetime(last_visit_date/1000000, 'unixepoch') as last_visit_date, guid, description FROM moz_places</parametre>
     </complements>

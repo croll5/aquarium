@@ -3,11 +3,6 @@
     <extracteur>journaux</extracteur>
     <nom>Journaux IIS</nom>
     <description>Journaux IIS (serveur Web Windows)</description>
-    <chemin>
-        <dossier>General</dossier>
-        <archive>TextLogs.7z</archive>
-        <fichier>IIS_log/*</fichier>
-    </chemin>
     <table nom="iis">
         <colonne type="DATETIME" contenu="0[aqua_concat]1[aqua_concat] |aqua_encodage:date[aqua_sep]2006-01-02 15:04:05">horodatage</colonne>
         <colonne type="TEXT" contenu="2">ip_serveur</colonne>

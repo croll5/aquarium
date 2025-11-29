@@ -135,6 +135,7 @@ func (a *App) OuvrirAnalyseExistante() bool {
 		return false
 	}
 	chemin_projet = filepath.Dir(fichier)
+	extraction.CreationBaseAnalyse(chemin_projet)
 	return true
 }
 
@@ -246,14 +247,22 @@ func (a *App) ValidationCreationModele(nomModele string, description string, sup
 /************************* Extraction FUNCTIONS PAGE **********************************/
 /***************************************************************************************/
 
-/* Fonction renvoyant la liste des éléments pouvant être extraits de l'ORC
- */
-func (a *App) ListeExtractionsPossibles() map[string]config.ConfigExtraction {
-	resultat, err := extraction.ListeExtracteursHtml(chemin_projet)
+func (a *App) ListeMachinesAnalysees() map[string]config.AquaConfigMachine {
+	liste, err := config.ListeMachinesAnalysees(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)
 	}
-	return resultat
+	return liste
+}
+
+/* Fonction renvoyant la liste des éléments pouvant être extraits de l'ORC
+ */
+func (a *App) ListeExtractionsPossibles() map[string]extraction.ExtractionMachine {
+	extractions, err := extraction.ListeExtractionsHtml(chemin_projet)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return extractions
 }
 
 /*
@@ -262,8 +271,8 @@ func (a *App) ListeExtractionsPossibles() map[string]config.ConfigExtraction {
 @param module : le nom du module à utiliser pour l'extraction
 @param description : la description du module à extraire
 */
-func (a *App) ExtraireElements(module string, description string) {
-	err := extraction.Extraction(module, chemin_projet)
+func (a *App) ExtraireElements(module string, description string, dossierMachine string) {
+	err := extraction.Extraction(module, chemin_projet, dossierMachine)
 	if err != nil {
 		log.Println("Erreur dans l’extraction du module", module, ":", err.Error())
 		a.signalerErreur(err)
@@ -281,13 +290,13 @@ func (a *App) ExtraireElements(module string, description string) {
 
 @return : vrai si et seulement si l'annulation a bien fonctionné
 */
-func (a *App) AnnulerExtraction(module string) bool {
-	return extraction.AnnulerExtraction(module)
+func (a *App) AnnulerExtraction(idMachine string, module string) bool {
+	return extraction.AnnulerExtraction(idMachine, module)
 }
 
 /* Fonction permettant de connaitre le pourcentage de progression d'une extraction*/
-func (a *App) ProgressionExtraction(idExtracteur string) float32 {
-	return extraction.ProgressionExtraction(chemin_projet, idExtracteur)
+func (a *App) ProgressionExtraction(idMachine string, idExtracteur string) float32 {
+	return extraction.ProgressionExtraction(chemin_projet, idMachine, idExtracteur)
 }
 
 /* Fonction permettant de lancer l'extraction de la table chronologie */
@@ -442,10 +451,6 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 /*************************** Chronologie FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
-func (app *App) ValeursTableChronologie(debut int, taille int) []map[string]interface{} {
-	return extraction.ValeursTableChronologie(chemin_projet, debut, taille)
-}
-
 func (app *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
 	requete = fmt.Sprintf("%s LIMIT %d OFFSET %d", requete, taille, debut)
 	log.Println("[INFO] - Execution depuis JS de la requete ", requete)
@@ -509,4 +514,20 @@ func (app *App) DonneesTableRapport(nomTable string) []map[string]interface{} {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
 	log.Println(nomTable)
 	return rprt.GetDonnesTableSauvegardee(nomTable)
+}
+
+/***************************************************************************************/
+/******************************* FONCTIONS UTILITAIRES  ********************************/
+/***************************************************************************************/
+
+func (app *App) ChoisirFichier(ordre string) []string {
+	chemin, err := runtime.OpenMultipleFilesDialog(app.ctx, runtime.OpenDialogOptions{
+		Title: ordre})
+	if err != nil {
+		runtime.MessageDialog(app.ctx, runtime.MessageDialogOptions{
+			Title: "Erreur lors de l'ouverture du fichier",
+			Type:  runtime.ErrorDialog,
+		})
+	}
+	return chemin
 }

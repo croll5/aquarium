@@ -58,7 +58,7 @@ import (
 )
 
 type Extracteur interface {
-	Extraction(string, bytes.Buffer, string, config.ConfigExtraction) error
+	Extraction(string, bytes.Buffer, string, config.ConfigExtraction, string) error
 }
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
@@ -74,32 +74,50 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	"journaux": journaux.Journaux{},
 }
 
-var liste_extractions map[string]config.ConfigExtraction = map[string]config.ConfigExtraction{}
+type ExtractionMachine struct {
+	ConfigMachine    config.AquaConfigMachine
+	ListeExtractions map[string]config.ConfigExtraction
+}
+
+var liste_extractions map[string]ExtractionMachine = map[string]ExtractionMachine{}
 
 /** Fonction qui renvoie des informations sur les extractions qui peuvent être effectuées
   * @param cheminProjet string : le chemin d'enregistrement de l'analyse aquarium
   * @return une liste de configurations d'extractions, et s'il y a lieu une erreur
 **/
-func ListeExtracteursHtml(cheminProjet string) (map[string]config.ConfigExtraction, error) {
-	// On commence par récupérer la liste des extractions dans le fichier de config
-	config, err := config.GetConfigurationProjet(cheminProjet)
+func ListeExtractionsHtml(cheminProjet string) (map[string]ExtractionMachine, error) {
+	// On commence par lister les machines
+	listeMachines, err := config.ListeMachinesAnalysees(cheminProjet)
 	if err != nil {
-		return liste_extractions, err
+		return map[string]ExtractionMachine{}, nil
 	}
-	// On itère sur toutes les extractions
-	for _, extracteur := range config.Extractions {
-		val, ok := liste_extractions[extracteur.Id]
-		if !ok || (val.Progression == -1) {
-			// TODO: Ajouter une vérification que le chemin existe
-			extracteur.Progression = -1
-			var adb *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-			if !adb.EstTableVide(extracteur.Table[0].Nom) {
-				extracteur.Progression = 100
+	for idMachine, configMachine := range listeMachines {
+		// On commence par récupérer la liste des extractions dans le fichier de config
+		configExtr, err := config.GetConfigurationProjet(cheminProjet, idMachine)
+		if err != nil {
+			return liste_extractions, err
+		}
+		// On crée le dossier de la machine s’il n’existe pas
+		_, existe := liste_extractions[idMachine]
+		if !existe {
+			liste_extractions[idMachine] = ExtractionMachine{ConfigMachine: configMachine, ListeExtractions: map[string]config.ConfigExtraction{}}
+		}
+		// On itère sur toutes les extractions
+		for _, extracteur := range configExtr.Extractions {
+			val, ok := liste_extractions[idMachine].ListeExtractions[extracteur.Id]
+			if !ok || (val.Progression == -1) {
+				// TODO: Ajouter une vérification que le chemin existe
+				extracteur.Progression = -1
+				var adb *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+				if !adb.EstTableVide(extracteur.Table[0].Nom) {
+					extracteur.Progression = 100
+				}
+				extracteur.AnnulationDemandee = false
+				liste_extractions[idMachine].ListeExtractions[extracteur.Id] = extracteur
 			}
-			extracteur.AnnulationDemandee = false
-			liste_extractions[extracteur.Id] = extracteur
 		}
 	}
+
 	return liste_extractions, nil
 }
 
@@ -108,17 +126,17 @@ func ListeExtracteursHtml(cheminProjet string) (map[string]config.ConfigExtracti
   * @cheminProjet string : le chemin d'enregistrement du projet
   * @return : une erreur s'il y a lieu
 **/
-func Extraction(idExtraction string, cheminProjet string) error {
+func Extraction(idExtraction string, cheminProjet string, idMachine string) error {
 	var probleme error
 	// On liste les fichiers concernés par cette extraction
-	listeFichiersAExtraire, probleme := config.ListeFichiersExtraction(liste_extractions[idExtraction], cheminProjet)
+	listeFichiersAExtraire, probleme := config.ListeFichiersExtraction(liste_extractions[idMachine].ListeExtractions[idExtraction], cheminProjet, idMachine)
 	// On récupère la configuration de l'extraction
-	var configExtraction config.ConfigExtraction = liste_extractions[idExtraction]
+	var configExtr config.ConfigExtraction = liste_extractions[idMachine].ListeExtractions[idExtraction]
 	// On met la progression à 0 (début de l'extraction)
-	configExtraction.Progression = 0
-	liste_extractions[idExtraction] = configExtraction
+	configExtr.Progression = 0
+	liste_extractions[idMachine].ListeExtractions[idExtraction] = configExtr
 	// On crée la table qui sera utilisée par l'extracteur
-	err := creerTableExtraction(cheminProjet, configExtraction)
+	err := creerTableExtraction(cheminProjet, configExtr)
 	if err != nil {
 		return err
 	}
@@ -130,67 +148,71 @@ func Extraction(idExtraction string, cheminProjet string) error {
 	var i int = 0
 	// On boucle sur les fichiers à extraire
 	for _, dossierAExtraire := range listeFichiersAExtraire {
-		if liste_extractions[idExtraction].AnnulationDemandee {
-			configExtraction.Progression = -1
-			configExtraction.AnnulationDemandee = false
-			liste_extractions[idExtraction] = configExtraction
+		if liste_extractions[idMachine].ListeExtractions[idExtraction].AnnulationDemandee {
+			configExtr.Progression = -1
+			configExtr.AnnulationDemandee = false
+			liste_extractions[idMachine].ListeExtractions[idExtraction] = configExtr
 			var adb *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-			for _, table := range configExtraction.Table {
+			for _, table := range configExtr.Table {
 				adb.DropTable(table.Nom)
 			}
 			return probleme
 		}
 		if dossierAExtraire.Est7Z {
-			probleme = extrationAchive7z(cheminProjet, dossierAExtraire, idExtraction, &i, nbFichiers)
+			probleme = extrationAchive7z(cheminProjet, dossierAExtraire, idMachine, idExtraction, &i, nbFichiers)
 		} else {
-			probleme = extractionDossier(cheminProjet, dossierAExtraire, idExtraction, &i, nbFichiers)
+			probleme = extractionDossier(cheminProjet, dossierAExtraire, idMachine, idExtraction, &i, nbFichiers)
 		}
 	}
-	configExtraction.Progression = 101
-	liste_extractions[idExtraction] = configExtraction
+	configExtr.Progression = 101
+	liste_extractions[idMachine].ListeExtractions[idExtraction] = configExtr
 	return probleme
 }
 
 /** Fonction qui crée toutes les tables de l'analyse
   * @param cheminProjet string : le chemin d'enregistrement du projet
-  * TODO: Essayer de se passer de cette fonction
 **/
-func CreationBaseAnalyse(cheminProjet string) {
-	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	for _, extraction := range liste_extractions {
-		// On récupère une liste des colonnes
-		creerTableExtraction(cheminProjet, extraction)
-	}
-	configAnalyse, err := config.GetConfigurationProjet(cheminProjet)
+func CreationBaseAnalyse(cheminProjet string) error {
+	// Ouverture de la base de données
+	donneesMachines, err := ListeExtractionsHtml(cheminProjet)
 	if err != nil {
-		return
+		return err
 	}
-	var listeColonnesChronologie map[string]string = map[string]string{}
-	for _, colonne := range configAnalyse.Chronologie.Colonnes {
-		listeColonnesChronologie[colonne.Nom] = colonne.Type
+	var probleme error
+	for _, machine := range donneesMachines {
+		for _, extraction := range machine.ListeExtractions {
+			err = creerTableExtraction(cheminProjet, extraction)
+			if err != nil {
+				probleme = err
+			}
+		}
 	}
-	base.CreateTableIfNotExist2(configAnalyse.Chronologie.Nom, listeColonnesChronologie, true)
+	err = creerTableChronologie(cheminProjet)
+	if err != nil {
+		probleme = err
+	}
+	return probleme
 }
 
 /** Fonction qui renvoie le pourcentage de chargement de l'extraction
  ** @param cheminProjet string : le chemin de l'analyse aquarium
  ** @param idExtraction string : l'identifiant de l'extraction
 **/
-func ProgressionExtraction(cheminProjet string, idExtraction string) float32 {
-	return liste_extractions[idExtraction].Progression
+func ProgressionExtraction(cheminProjet string, idMachine string, idExtraction string) float32 {
+	return liste_extractions[idMachine].ListeExtractions[idExtraction].Progression
 }
 
 /** Fonction permettant d'annuler une extraction en cours
   * @param idExtraction string : l'identifiant de l'extraction à annuler
   * @return un booléen indiquant si l'extraction a bien pu être annulée
 **/
-func AnnulerExtraction(idExtraction string) bool {
-	var configExtraction config.ConfigExtraction = liste_extractions[idExtraction]
-	configExtraction.AnnulationDemandee = true
-	liste_extractions[idExtraction] = configExtraction
+func AnnulerExtraction(idMachine string, idExtraction string) bool {
+	var configExtr config.ConfigExtraction = liste_extractions[idMachine].ListeExtractions[idExtraction]
+	configExtr.AnnulationDemandee = true
+	liste_extractions[idMachine].ListeExtractions[idExtraction] = configExtr
 	ticker := time.NewTicker(500 * time.Millisecond)
 	for range ticker.C {
-		if !liste_extractions[idExtraction].AnnulationDemandee {
+		if !liste_extractions[idMachine].ListeExtractions[idExtraction].AnnulationDemandee {
 			ticker.Stop()
 			return true
 		}
@@ -199,8 +221,8 @@ func AnnulerExtraction(idExtraction string) bool {
 	return false
 }
 
-func DetailsEvenement(idExtraction string, idEvenement int) string {
-	return liste_extractions[idExtraction].Description
+func DetailsEvenement(idMachine string, idExtraction string, idEvenement int) string {
+	return liste_extractions[idMachine].ListeExtractions[idExtraction].Description
 }
 
 /** Fonction qui lance l'extraction de la table chronologie, qui contient un
@@ -209,25 +231,31 @@ func DetailsEvenement(idExtraction string, idEvenement int) string {
   * @return : une erreur s'il y a lieu
 **/
 func ExtraireTableChronologie(cheminProjet string) error {
-	var listeRequetesChronologie []string = []string{}
-	// On fait une liste des requêtes SQL à exécuter
-	for _, extraction := range liste_extractions {
-		if extraction.SQLChronologie != "" {
-			listeRequetesChronologie = append(listeRequetesChronologie, extraction.SQLChronologie)
+	var probleme error = nil
+	for idMachine, configMachine := range liste_extractions {
+		var listeRequetesChronologie []string = []string{}
+		// On fait une liste des requêtes SQL à exécuter
+		for _, extraction := range configMachine.ListeExtractions {
+			if extraction.SQLChronologie != "" {
+				listeRequetesChronologie = append(listeRequetesChronologie, extraction.SQLChronologie)
+			}
+		}
+		// On liste les colonnes de la table chronologie
+		configAnalyse, err := config.GetConfigurationProjet(cheminProjet, idMachine)
+		if err != nil {
+			return err
+		}
+		var listeColonnesChrolonogie []string = []string{}
+		for _, colonne := range configAnalyse.Chronologie.Colonnes {
+			listeColonnesChrolonogie = append(listeColonnesChrolonogie, colonne.Nom)
+		}
+		var base *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+		err = base.RemplirTableDepuisRequetes(configAnalyse.Chronologie.Nom, listeColonnesChrolonogie, listeRequetesChronologie, true, "horodatage")
+		if err != nil {
+			probleme = err
 		}
 	}
-	// On liste les colonnes de la table chronologie
-	configAnalyse, err := config.GetConfigurationProjet(cheminProjet)
-	if err != nil {
-		return err
-	}
-	var listeColonnesChrolonogie []string = []string{}
-	for _, colonne := range configAnalyse.Chronologie.Colonnes {
-		listeColonnesChrolonogie = append(listeColonnesChrolonogie, colonne.Nom)
-	}
-	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	err = base.RemplirTableDepuisRequetes(configAnalyse.Chronologie.Nom, listeColonnesChrolonogie, listeRequetesChronologie, true, "horodatage")
-	return err
+	return probleme
 }
 
 /** Fonction qui renvoie le contenu de la tables "chronologie", contenant un résumé de l'ensemble des
@@ -236,7 +264,7 @@ func ExtraireTableChronologie(cheminProjet string) error {
   * @param debut int : l'index à partir duquel on veut récupérer les valeurs
   * @param taill int : le nombre de valeurs que l'on veut récupérer
   * @return une liste des lignes de la table
-**/
+**/ /*
 func ValeursTableChronologie(cheminProjet string, debut int, taille int) []map[string]interface{} {
 	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
 	configAnalyse, err := config.GetConfigurationProjet(cheminProjet)
@@ -248,7 +276,7 @@ func ValeursTableChronologie(cheminProjet string, debut int, taille int) []map[s
 		listeColonnesChrolonogie = append(listeColonnesChrolonogie, colonne.Nom)
 	}
 	return abase.RecupererValeursTable("chronologie", listeColonnesChrolonogie, debut, taille)
-}
+}*/
 
 /** --------------------- FONCTIONS À USAGE INTERNE --------------------- **/
 
@@ -267,7 +295,7 @@ func creerTableExtraction(cheminProjet string, extraction config.ConfigExtractio
 	return nil
 }
 
-func extrationAchive7z(cheminProjet string, configArchive config.DossierAExtraire, idExtraction string, i *int, total int) error {
+func extrationAchive7z(cheminProjet string, configArchive config.DossierAExtraire, idMachine string, idExtraction string, i *int, total int) error {
 	// On commence par ouvrir l'archive
 	archive, err := sevenzip.OpenReaderWithPassword(configArchive.Chemin, "avproof")
 	if err != nil {
@@ -285,22 +313,22 @@ func extrationAchive7z(cheminProjet string, configArchive config.DossierAExtrair
 			log.Println("Format de fichier non supporté : ", err.Error())
 		}
 		var source string = strings.Replace(filepath.Join(configArchive.Chemin, archive.File[numFichier].Name), cheminProjet, "", 1)
-		extracteur, ok := liste_extracteurs[liste_extractions[idExtraction].Extracteur]
+		extracteur, ok := liste_extracteurs[liste_extractions[idMachine].ListeExtractions[idExtraction].Extracteur]
 		if !ok {
-			return errors.New("L’extracteur « " + liste_extractions[idExtraction].Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
+			return errors.New("L’extracteur « " + liste_extractions[idMachine].ListeExtractions[idExtraction].Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
 		}
-		extracteur.Extraction(cheminProjet, tampon, source, liste_extractions[idExtraction])
+		extracteur.Extraction(cheminProjet, tampon, source, liste_extractions[idMachine].ListeExtractions[idExtraction], idMachine)
 		fichier.Close()
 		// On change la progression du chargement
 		*i++
-		var confExtraction config.ConfigExtraction = liste_extractions[idExtraction]
+		var confExtraction config.ConfigExtraction = liste_extractions[idMachine].ListeExtractions[idExtraction]
 		confExtraction.Progression = float32(*i) / float32(total) * 100
-		liste_extractions[idExtraction] = confExtraction
+		liste_extractions[idMachine].ListeExtractions[idExtraction] = confExtraction
 	}
 	return nil
 }
 
-func extractionDossier(cheminProjet string, configDossier config.DossierAExtraire, idExtraction string, i *int, total int) error {
+func extractionDossier(cheminProjet string, configDossier config.DossierAExtraire, idMachine string, idExtraction string, i *int, total int) error {
 	// On commence par lire le dossier
 	contenuDossier, err := os.ReadDir(configDossier.Chemin)
 	if err != nil {
@@ -317,12 +345,58 @@ func extractionDossier(cheminProjet string, configDossier config.DossierAExtrair
 		if _, err := io.Copy(&tampon, fichier); err != nil {
 			log.Println("Format de fichier non supporté : ", err.Error())
 		}
-		extracteur, ok := liste_extracteurs[liste_extractions[idExtraction].Extracteur]
+		extracteur, ok := liste_extracteurs[liste_extractions[idMachine].ListeExtractions[idExtraction].Extracteur]
 		if !ok {
-			return errors.New("L’extracteur « " + liste_extractions[idExtraction].Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
+			return errors.New("L’extracteur « " + liste_extractions[idMachine].ListeExtractions[idExtraction].Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
 		}
-		extracteur.Extraction(cheminProjet, tampon, strings.Replace(cheminFichier, cheminProjet, "", 1), liste_extractions[idExtraction])
+		extracteur.Extraction(cheminProjet, tampon, strings.Replace(cheminFichier, cheminProjet, "", 1), liste_extractions[idMachine].ListeExtractions[idExtraction], idMachine)
 		fichier.Close()
 	}
 	return nil
+}
+
+/*
+*
+Fonction qui crée les tables de chronologie en fonction de la configuration des machines de l’analyse
+S’il y a deux tables de chronologie du même nom non identiques, une table contenant les colonnes des deux
+tables sera créée.
+@param cheminProjet : le chemin du dossier d'analyse
+*/
+func creerTableChronologie(cheminProjet string) error {
+	// Récupération du fichier de configuration
+	aquaconfig, err := config.GetAquaConfig(cheminProjet)
+	if err != nil {
+		return err
+	}
+	// Établissement de la liste des colonnes
+	var listeColonnes map[string]map[string]string = map[string]map[string]string{}
+	for idMachine := range aquaconfig.Machines {
+		config, err := config.GetConfigurationProjet(cheminProjet, idMachine)
+		_, tableExiste := listeColonnes[config.Chronologie.Nom]
+		if !tableExiste {
+			listeColonnes[config.Chronologie.Nom] = map[string]string{}
+		}
+		if err != nil {
+			return err
+		}
+		for _, colonne := range config.Chronologie.Colonnes {
+			typeColonne, existe := listeColonnes[config.Chronologie.Nom][colonne.Nom]
+			if !existe {
+				listeColonnes[config.Chronologie.Nom][colonne.Nom] = colonne.Type
+			}
+			if typeColonne != colonne.Type {
+				listeColonnes[config.Chronologie.Nom][colonne.Nom] = "TEXT"
+			}
+		}
+	}
+	// Création de la base de donnees
+	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+	var probleme error = nil
+	for nomTable, colonnesTable := range listeColonnes {
+		err = abase.CreateTableIfNotExist2(nomTable, colonnesTable, false)
+		if err != nil {
+			probleme = err
+		}
+	}
+	return probleme
 }

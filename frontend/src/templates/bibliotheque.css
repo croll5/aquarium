@@ -122,6 +122,13 @@ body{
     border-style: dashed;
 }
 
+.selecteur_fichier_clair{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--or-5);
+}
+
 div.champ{
     padding: 10px;
     text-align: left;

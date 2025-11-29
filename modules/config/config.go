@@ -3,12 +3,14 @@ package config
 import (
 	"encoding/xml"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/bodgit/sevenzip"
 )
+
+var DOSSIER_FICHIERS_A_ANALYSER = "fichiers"
+var AQUA_MACHINE = "aqua_machine"
 
 type ConfigColonneBDD struct {
 	Nom     string `xml:",chardata"`
@@ -29,13 +31,12 @@ type ConfigChemin struct {
 }
 
 type ConfigExtraction struct {
-	Id                 string           `xml:"id"`
-	Nom                string           `xml:"nom"`
-	Description        string           `xml:"description"`
-	Extracteur         string           `xml:"extracteur"`
-	Chemins            []ConfigChemin   `xml:"chemin"`
+	Id                 string `xml:"id"`
+	Nom                string `xml:"nom"`
+	Description        string `xml:"description"`
+	Extracteur         string `xml:"extracteur"`
+	Chemins            []ConfigChemin
 	Table              []ConfigTableBDD `xml:"table"`
-	Collectes          []string         `xml:"collecte"`
 	SQLChronologie     string           `xml:"sql_chronologie"`
 	Progression        float32
 	AnnulationDemandee bool
@@ -43,11 +44,15 @@ type ConfigExtraction struct {
 	Complement         map[string]string
 }
 
+type DetailsConfigExtraction struct {
+	Id      string         `xml:"id,attr"`
+	Chemins []ConfigChemin `xml:"chemin"`
+}
+
 type ConfigurationXML struct {
-	Chronologie   ConfigTableBDD     `xml:"chronologie"`
-	Extractions   []ConfigExtraction //`xml:"extraction"`
-	IdExtractions []string           `xml:"extraction"`
-	Collectes     []string           `xml:"collecte"`
+	Chronologie       ConfigTableBDD            `xml:"chronologie"`
+	Extractions       []ConfigExtraction        //`xml:"extraction"`
+	DetailsExtraction []DetailsConfigExtraction `xml:"extraction"`
 }
 
 type DossierAExtraire struct {
@@ -61,10 +66,13 @@ type ComplementConfigXML struct {
 	Valeur string `xml:",innerxml"`
 }
 
-func GetConfigurationProjet(cheminProjet string) (ConfigurationXML, error) {
+func GetConfigurationProjet(cheminProjet string, idMachine string) (ConfigurationXML, error) {
 	var donneesConfig ConfigurationXML
 	var cheminFichierConfigPrincipal string
 	cheminFichierConfigPrincipal, err := cheminFichierConfig(cheminProjet, "config.xml")
+	if err != nil {
+		return donneesConfig, err
+	}
 	fichierConf, err := os.Open(cheminFichierConfigPrincipal)
 	if err != nil {
 		return donneesConfig, err
@@ -77,16 +85,20 @@ func GetConfigurationProjet(cheminProjet string) (ConfigurationXML, error) {
 	if err != nil {
 		return donneesConfig, err
 	}
-	log.Println(donneesConfig)
 	// On récupère toutes les données des extractions
 	var configExtractions []ConfigExtraction = []ConfigExtraction{}
-	for _, idConfig := range donneesConfig.IdExtractions {
+	for _, detailsConfig := range donneesConfig.DetailsExtraction {
 		var cheminFichierConfExtraction string
-		cheminFichierConfExtraction, err = cheminFichierConfig(cheminProjet, filepath.Join("extractions", idConfig+".xml"))
-		configExtraction, err := lireConfigExtraction(cheminFichierConfExtraction)
+		cheminFichierConfExtraction, err = cheminFichierConfig(cheminProjet, filepath.Join("extractions", detailsConfig.Id+".xml"))
 		if err != nil {
 			return donneesConfig, err
 		}
+		configExtraction, err := lireConfigExtraction(cheminFichierConfExtraction)
+		configExtraction.Chemins = detailsConfig.Chemins
+		if err != nil {
+			return donneesConfig, err
+		}
+		configExtraction.Table = ajouterColonneMachineDansTables(configExtraction.Table)
 		configExtractions = append(configExtractions, configExtraction)
 	}
 	donneesConfig.Extractions = configExtractions
@@ -116,41 +128,28 @@ func lireConfigExtraction(cheminExtraction string) (ConfigExtraction, error) {
 	return configExtraction, err
 }
 
-func ListeFichiersExtraction(extraction ConfigExtraction, cheminProjet string) ([]DossierAExtraire, error) {
-	// On commence par regarder quelles collectes on doit parcourir
-	var collectes []string = extraction.Collectes
+func ListeFichiersExtraction(extraction ConfigExtraction, cheminProjet string, dossierMachine string) ([]DossierAExtraire, error) {
 	var resultat []DossierAExtraire = []DossierAExtraire{}
 	var probleme error
-	if len(extraction.Collectes) == 0 {
-		config, err := GetConfigurationProjet(cheminProjet)
+	for _, configChemin := range extraction.Chemins {
+		listeDossiers, err := listeCheminsDossiersRec(configChemin.Dossiers, filepath.Join(cheminProjet, DOSSIER_FICHIERS_A_ANALYSER, dossierMachine))
 		if err != nil {
 			return resultat, err
 		}
-		collectes = config.Collectes
-	}
-	for _, collecte := range collectes {
-		for _, configChemin := range extraction.Chemins {
-			listeDossiers, err := listeCheminsDossiersRec(configChemin.Dossiers, filepath.Join(cheminProjet, collecte))
+		for _, dossier := range listeDossiers {
+			var err error
+			var correspondances []DossierAExtraire
+			if configChemin.Archive != "" {
+				correspondances, err = listeCheminsArchives(dossier, configChemin.Archive, configChemin.Fichier)
+			} else {
+				correspondances, err = listeCorrespondancesDansDossier(dossier, configChemin.Fichier)
+			}
 			if err != nil {
-				return resultat, err
+				probleme = err
+				continue
 			}
-			for _, dossier := range listeDossiers {
-				var err error
-				var correspondances []DossierAExtraire
-				log.Println(configChemin.Archive)
-				if configChemin.Archive != "" {
-					correspondances, err = listeCheminsArchives(dossier, configChemin.Archive, configChemin.Fichier)
-				} else {
-					correspondances, err = listeCorrespondancesDansDossier(dossier, configChemin.Fichier)
-				}
-				if err != nil {
-					probleme = err
-					continue
-				}
-				resultat = append(resultat, correspondances...)
-			}
+			resultat = append(resultat, correspondances...)
 		}
-
 	}
 
 	return resultat, probleme
@@ -276,4 +275,11 @@ func (cftable ConfigTableBDD) GetNomsColonnes() []string {
 		res = append(res, colonne.Nom)
 	}
 	return res
+}
+
+func ajouterColonneMachineDansTables(confTable []ConfigTableBDD) []ConfigTableBDD {
+	for i := range confTable {
+		confTable[i].Colonnes = append(confTable[i].Colonnes, ConfigColonneBDD{Nom: AQUA_MACHINE, Contenu: AQUA_MACHINE, Type: "VARCHAR(20)"})
+	}
+	return confTable
 }

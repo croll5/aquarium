@@ -11,7 +11,7 @@ import (
 
 type SQLite struct{}
 
-func (sq SQLite) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction) error {
+func (sq SQLite) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
 	// On commence par créer un fichier temporaire qui contienra les données
 	baseSqlite, err := os.CreateTemp(cheminProjet, "base_sqlite")
 	if err != nil {
@@ -36,7 +36,7 @@ func (sq SQLite) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFic
 		return err
 	}
 	// On liste les colonnes
-	traiterReponseBDD(cheminProjet, cheminFichierAExtraire, reponse, configExtraction)
+	traiterReponseBDD(cheminProjet, cheminFichierAExtraire, reponse, configExtraction, idMachine)
 	reponse.Close()
 	return err
 }
@@ -46,7 +46,7 @@ func supprimerBDDTemp(bdd *sql.DB, cheminBDD string) {
 	os.Remove(cheminBDD)
 }
 
-func traiterReponseBDD(cheminProjet string, source string, reponse *sql.Rows, configExtraction config.ConfigExtraction) error {
+func traiterReponseBDD(cheminProjet string, source string, reponse *sql.Rows, configExtraction config.ConfigExtraction, idMachine string) error {
 	// On récupère les noms des colonnes
 	listeColonnes, err := reponse.Columns()
 	if err != nil {
@@ -77,6 +77,10 @@ func traiterReponseBDD(cheminProjet string, source string, reponse *sql.Rows, co
 		for i := range contenuColonnesAttendues {
 			if contenuColonnesAttendues[i] == "aqua_source" {
 				valeursColonnes[i] = source
+				continue
+			}
+			if contenuColonnesAttendues[i] == config.AQUA_MACHINE {
+				valeursColonnes[i] = idMachine
 				continue
 			}
 			for j := range listeColonnes {

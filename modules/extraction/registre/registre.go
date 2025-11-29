@@ -58,7 +58,7 @@ var colonnesTableSam []string = []string{"horodatage", "idCompte", "nomCompte", 
 
 type Registre struct{}
 
-func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aquabase.RequeteInsertion, configExtraction config.ConfigExtraction) error {
+func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aquabase.RequeteInsertion, configExtraction config.ConfigExtraction, idMachine string) error {
 	log.Println(cleDeRegistre.Name())
 	var listeContenuColonnes []interface{} = make([]interface{}, 0)
 	// On parcourt les colonnes à ajouter
@@ -66,8 +66,10 @@ func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aq
 		switch configColonne.Contenu {
 		case "nomCle":
 			listeContenuColonnes = append(listeContenuColonnes, cleDeRegistre.Name())
-		case "source":
+		case "aqua_source":
 			listeContenuColonnes = append(listeContenuColonnes, source)
+		case config.AQUA_MACHINE:
+			listeContenuColonnes = append(listeContenuColonnes, idMachine)
 		default:
 			var contenu []string = strings.Split(configColonne.Contenu, ":")
 			if len(contenu) != 5 {
@@ -102,7 +104,7 @@ func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aq
 	return nil
 }
 
-func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source string, configExtraction config.ConfigExtraction) error {
+func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source string, configExtraction config.ConfigExtraction, idMachine string) error {
 	readerAt := bytes.NewReader(fichier.Bytes())
 	// Ouverture du fichier comme fichier et clés de registres
 	registre, err := regparser.NewRegistry(readerAt)
@@ -136,10 +138,10 @@ func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source s
 			if pasCetteCle {
 				continue
 			}
-			traiterCle(cleEnfant, source, &requeteInsertion, configExtraction)
+			traiterCle(cleEnfant, source, &requeteInsertion, configExtraction, idMachine)
 		}
 	} else {
-		traiterCle(cleDeBase, source, &requeteInsertion, configExtraction)
+		traiterCle(cleDeBase, source, &requeteInsertion, configExtraction, idMachine)
 	}
 	return requeteInsertion.Executer()
 }
