@@ -166,6 +166,14 @@ func (a *App) CreationDossierNouveauModele() string {
 /************************* NOUVELLE ANALYSE FUNCTIONS **********************************/
 /***************************************************************************************/
 
+func (a *App) ListeConfigurationsDisponibles() []string {
+	resultat, err := config.GetListeConfigurationsDisponibles()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
 /*
 	Fonction permettant la création d'un nouveau projet
 
@@ -526,6 +534,18 @@ func (app *App) ChoisirFichier(ordre string) []string {
 	if err != nil {
 		runtime.MessageDialog(app.ctx, runtime.MessageDialogOptions{
 			Title: "Erreur lors de l'ouverture du fichier",
+			Type:  runtime.ErrorDialog,
+		})
+	}
+	return chemin
+}
+
+func (app *App) ChoisirDossier(ordre string) string {
+	chemin, err := runtime.OpenDirectoryDialog(app.ctx, runtime.OpenDialogOptions{
+		Title: ordre})
+	if err != nil {
+		runtime.MessageDialog(app.ctx, runtime.MessageDialogOptions{
+			Title: "Erreur lors de l'ouverture du dossier",
 			Type:  runtime.ErrorDialog,
 		})
 	}

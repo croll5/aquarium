@@ -127,6 +127,11 @@ body{
     flex-direction: row;
     align-items: center;
     background-color: var(--or-5);
+    padding: 5px;
+}
+
+.selecteur_fichier_clair p{
+    padding-left: 5px;
 }
 
 div.champ{

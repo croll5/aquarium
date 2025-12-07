@@ -48,3 +48,20 @@ func ListeMachinesAnalysees(cheminProjet string) (map[string]AquaConfigMachine, 
 	}
 	return aquaconfig.Machines, nil
 }
+
+func EnregistrerAquaConfig(cheminProjet string, config AquaConfig) error {
+	// Ouverture du fichier
+	fichier, err := os.Open(filepath.Join(cheminProjet, ANALYSE_AQUA))
+	if err != nil {
+		return err
+	}
+	defer fichier.Close()
+	// Génération des données
+	donnees, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	// Enregistrement des données
+	_, err = fichier.Write(donnees)
+	return err
+}

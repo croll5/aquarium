@@ -277,6 +277,29 @@ func (cftable ConfigTableBDD) GetNomsColonnes() []string {
 	return res
 }
 
+func GetListeConfigurationsDisponibles() ([]string, error) {
+	// Récupération de l’emplacement de l’exécutable
+	emplacementExecutable, err := os.Executable()
+	if err != nil {
+		return []string{}, err
+	}
+	dossierConfig := filepath.Join(filepath.Dir(emplacementExecutable), "config")
+	// Liste des fichiers du dossier
+	fichiers, err := os.ReadDir(dossierConfig)
+	if err != nil {
+		return []string{}, err
+	}
+	// Énumération des ficheirs xml
+	var listeConfigs []string = []string{}
+	for _, fichier := range fichiers {
+		ok, _ := filepath.Match("*.xml", fichier.Name())
+		if ok {
+			listeConfigs = append(listeConfigs, fichier.Name())
+		}
+	}
+	return listeConfigs, nil
+}
+
 func ajouterColonneMachineDansTables(confTable []ConfigTableBDD) []ConfigTableBDD {
 	for i := range confTable {
 		confTable[i].Colonnes = append(confTable[i].Colonnes, ConfigColonneBDD{Nom: AQUA_MACHINE, Contenu: AQUA_MACHINE, Type: "VARCHAR(20)"})

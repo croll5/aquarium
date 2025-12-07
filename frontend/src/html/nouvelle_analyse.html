@@ -55,14 +55,12 @@ termes.
     <h3 id="patientez">Import de l’ORC en cours... En attendant, nous vous conseillons de buller 🫧😏</h3>
     <div id="formulaire" class="cadre_clair">
         <input type="radio" id="etape_1" name="case-navigation" checked>
-        <input type="radio" id="etape_2" name="case-navigation">
+        <input type="radio" id="etape_2" name="case-navigation" disabled>
         <input type="radio" id="etape_3" name="case-navigation" disabled>
-        <input type="radio" id="etape_4" name="case-navigation" disabled>
         <div class="navigation">
             <label for="etape_1" class="bouton_clair indicateur_navigation">Détails de l’incident</label>
             <label for="etape_2" class="bouton_clair indicateur_navigation">Architecture réseau</label>
             <label for="etape_3" class="bouton_clair indicateur_navigation">Configuration de l’analyse</label>
-            <label for="etape_4" class="bouton_clair indicateur_navigation">Détails sur les machines</label>
         </div>
         <div class="pages">
             <div class="page_navigation" id="page_1" onchange="verifier_remplissage('page_1', 'etape_2')">
@@ -70,16 +68,16 @@ termes.
                 <h3>Main courante</h3>
                 <p>Renseignez la chronologie des faits liés à l’incident :</p>
                 <div id="main_courante">
-                    <div class="bloc_de_liste">
-                        <input type="date" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required>
-                        <input type="time" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required>
-                        <input type="text" class="input_clair" placeholder="Description de l’évènement" onchange="ajuster_champs('main_courante')" required>
+                    <div class="bloc_de_liste" aqua_champ="main_courante">
+                        <input type="date" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="date">
+                        <input type="time" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="heure">
+                        <input type="text" class="input_clair" placeholder="Description de l’évènement" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="description">
                     </div>
                 </div>
                 <h3>Impacts de l’incident</h3>
                 <p>Quelles sont les entités impactées ou susceptibles de l’être ?</p>
                 <div>
-                    <textarea class="input_clair" required></textarea>
+                    <textarea class="input_clair" required aqua_champ="entites_impactees"></textarea>
                 </div>
                 <p>Y a-t-il des données personnelles susceptibles d’avoir fuité ?</p>
                 <div class="liste_options">
@@ -95,26 +93,26 @@ termes.
                 <div class="bloc_cache_par_defaut" id="percisions_dp">
                     <p>Listez les données concernées :</p>
                     <div id="dp_impactees">
-                        <div class="bloc_de_liste">
-                            <input type="text" placeholder="Nature des données" class="input_clair" onchange="ajuster_champs('dp_impactees')">
-                            <input type="text" placeholder="Emplacement" class="input_clair" onchange="ajuster_champs('dp_impactees')">
+                        <div class="bloc_de_liste" aqua_champ="donnees_perso">
+                            <input type="text" placeholder="Nature des données" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="nature">
+                            <input type="text" placeholder="Emplacement" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="emplacement">
                         </div>
                     </div>
                 </div>
                 <h3>Contacts</h3>
                 <p>Quelles personnes pouvez-vous contacter pour obtenir plus d’informations ?</p>
                 <div id="liste_contacts">
-                    <div class="bloc_de_liste">
-                        <select name="genre">
+                    <div class="bloc_de_liste" aqua_champ="contacts">
+                        <select name="genre" aqua_prof="1" aqua_champ="genre">
                             <option disabled selected value>...</option>
                             <option value="M.">M.</option>
                             <option value="Mme">Mme</option>
                         </select>
-                        <input type="text" class="input_clair" placeholder="Prénom" onchange="ajuster_champs('liste_contacts')">
-                        <input type="text" class="input_clair" placeholder="Nom" onchange="ajuster_champs('liste_contacts')">
-                        <input type="text" class="input_clair" placeholder="Qualité" onchange="ajuster_champs('liste_contacts')">
-                        <input type="text" class="input_clair" placeholder="Téléphone" onchange="ajuster_champs('liste_contacts')">
-                        <input type="email" class="input_clair" placeholder="Courriel" onchange="ajuster_champs('liste_contacts')">
+                        <input type="text" class="input_clair" placeholder="Prénom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="prenom">
+                        <input type="text" class="input_clair" placeholder="Nom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="nom">
+                        <input type="text" class="input_clair" placeholder="Qualité" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="qualite">
+                        <input type="text" class="input_clair" placeholder="Téléphone" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="telephone">
+                        <input type="email" class="input_clair" placeholder="Courriel" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="courriel">
                     </div>
                 </div>
                 <br>
@@ -122,12 +120,14 @@ termes.
                     <label class="bouton_sombre" for="etape_2">Suivant</button>
                 </div>
             </div>
-            <div class="page_navigation" id="page_2">
+            <div class="page_navigation" id="page_2" onchange="verifier_archi_utilisable('etape_3')">
                 <h2>Architecture réseau</h2>
                 <div id="vue_generale"></div><br>
                 <div class="fond-popup" id="fond-popup"></div>
                 <div class="cadre-popup" id="popup-config-objet">
                     <h3>Paramètres de l’équipement</h3>
+                    <p>Quel est le nom de l'appareil ?</p>
+                    <input type="text" id="nom_machine" class="input_clair" placeholder="Nom de l’appareil">
                     <p>De quel type d’objet s’agit-il ?</p>
                     <select id="nature_equipement">
                         <option value="" disabled selected>--- Sélectionnez un type d’objet ---</option>
@@ -164,6 +164,11 @@ termes.
                             </div>
                             <p id="liste_fichiers_analyses">Aucun fichier sélectionné...</p>
                         </div>
+                        <p>Quelle configuration voulez-vous utiliser ?</p>
+                        <select id="fichier_config_analyse">
+                            <option selected value="AUCUNE_SELECTION" disabled> --- Choisissez une configuration --- </option>
+                            <option value="">Utiliser une configuration personnalisée</option>
+                        </select><br>
                     </div><br>
                     <div>
                         <button onclick="validerDonneesNoeud()" class="bouton_sombre">Valider</button>
@@ -174,18 +179,19 @@ termes.
                     <label for="etape_3" class="bouton_sombre">Suivant</label>
                 </div>
             </div>
-            <div class="page_navigation" id="page_3">
-                <h2>Éléments analysés</h2>
+            <div class="page_navigation" id="page_3" onchange="verifier_remplissage('page_3', 'bouton_validation')">
+                <h2>Configuration de l’analyse</h2>
+                <p>Dans quel dossier voulez-vous enregistrer l’analyse ?</p>
+                <div class="selecteur_fichier_clair">
+                    <div>
+                        <button class="bouton_sombre" onclick="selection_dossier('nom_dossier_analyse', 'input_dossier_analyse', 'page_3', 'bouton_validation')">Choisir un dossier</button>
+                    </div>
+                    <p id="nom_dossier_analyse">Aucun dossier selectionné...</p>
+                    <input type="text" id="input_dossier_analyse" required hidden aqua_champ="dossier_analyse">
+                </div><br>
                 <div>
                     <label for="etape_2" class="bouton_sombre">Précédent</label>
-                    <label for="etape_4" class="bouton_sombre">Suivant</label>
-                </div>
-            </div>
-            <div class="page_navigation" id="page_4">
-                <h2>Détails sur les machines</h2>
-                <div>
-                    <label for="etape_3" class="bouton_sombre">Précédent</label>
-                    <input type="submit" value="Valider" class="bouton_sombre">
+                    <button onclick="valider_creation_analyse()" class="bouton_sombre" disabled id="bouton_validation">Valider</button>
                 </div>
             </div>
         </div>

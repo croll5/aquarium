@@ -52,6 +52,10 @@ function ajuster_champs(id_section){
         }
         element_de_base.appendChild(suppr);
     } else if(numero_champ > 0 && !section_remplie(liste_elements.item(numero_champ - 1), false)){
+        let liste_boutons = liste_elements.item(numero_champ-1).getElementsByClassName("bouton_invisible");
+        for(bouton of liste_boutons){
+            bouton.remove();
+        }
         liste_elements.item(numero_champ).remove()
     }
 }
@@ -104,10 +108,62 @@ function afficher_bloc(a_afficher, id){
 function verifier_remplissage(section, prochaine_etape){
     let element = document.getElementById(section);
     if(section_remplie(element, true)){
-        document.getElementById(prochaine_etape).removeAttribute("disabled");
+        if(document.getElementById(prochaine_etape).hasAttribute("disabled")){
+            document.getElementById(prochaine_etape).removeAttribute("disabled");
+        }
     } else{
         document.getElementById(prochaine_etape).setAttribute("disabled", true);
     }
+}
+
+function selection_dossier(id_paragraphe, id_input, id_section, id_suivant){
+    parent.window.go.main.App.ChoisirDossier("Sélectionnez un dossier d’enregistrement").then(resultat => {
+        if(resultat == ""){
+            document.getElementById(id_paragraphe).textContent = "Aucun dossier sélectionné...";
+            document.getElementById(id_input).value = ""; 
+        } else{
+            document.getElementById(id_paragraphe).textContent = resultat;
+            document.getElementById(id_input).value = resultat; 
+        }
+        verifier_remplissage(id_section, id_suivant);
+    })
+}
+
+function valider_creation_analyse(){
+    let donnees_analyse = donnees_conf_analyse();
+    console.log(donnees_analyse);
+}
+
+function donnees_conf_analyse(base = document, profondeur = 0){
+    // Création de la variable résultat
+    let resultat = {}
+    // Gestion des inputs
+    let inputs = base.getElementsByTagName("input");
+    for(let input of inputs){
+        if (input.hasAttribute("aqua_champ") && (!input.hasAttribute("aqua_prof") || input.getAttribute("aqua_prof") == String(profondeur))){
+            resultat[input.getAttribute("aqua_champ")] = input.value;
+        }
+    }
+    // Gestion des text area
+    let textareas = base.getElementsByTagName("textarea");
+    for(let textarea of textareas){
+        if (textarea.hasAttribute("aqua_champ") && (!textarea.hasAttribute("aqua_prof") || textarea.getAttribute("aqua_prof") == String(profondeur))){
+            resultat[textarea.getAttribute("aqua_champ")] = textarea.value;
+        }
+    }
+    // Gestion des divs
+    let divs = base.getElementsByTagName("div");
+    for(let div of divs){
+        if(div.hasAttribute("aqua_champ")){
+            let nom_liste = div.getAttribute("aqua_champ");
+            console.log(nom_liste);
+            if(resultat[nom_liste] == null){
+                resultat[nom_liste] = []
+            }
+            resultat[nom_liste].push(donnees_conf_analyse(div, profondeur+1));
+        }
+    }
+    return resultat
 }
 
 /* ANCIENNES FONCTIONS */
