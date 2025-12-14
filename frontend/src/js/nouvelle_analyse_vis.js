@@ -105,12 +105,12 @@ function ajout_modif_noeud(donneesNoeud, callback, ajout){
 
 function preremplissage_noeud(id){
     document.getElementById("nature_equipement").value = contenu_noeuds[id]["nature_equipement"];
-    document.getElementById("fichier_config_analyse").value = contenu_noeuds[id]["fichier_config"];
-    document.getElementById("nom_machine").value = contenu_noeuds[id]["nom_machine"];
+    document.getElementById("fichier_config_analyse").value = contenu_noeuds[id]["config"];
+    document.getElementById("nom_machine").value = contenu_noeuds[id]["nom"];
     let div_adresses = document.getElementById("adresses_equipement");
     for(const adresse of contenu_noeuds[id]["adresses"]){
-        let bloc = div_adresses.children.item(div_adresses.children.length-1)
-        div_adresses.appendChild(bloc.cloneNode(true))
+        let bloc = div_adresses.children.item(div_adresses.children.length-1);
+        div_adresses.appendChild(bloc.cloneNode(true));
         bloc.children.item(0).value = adresse["adresse"];
         bloc.children.item(1).value = adresse["commentaire"];
         let bouton = document.createElement('button');
@@ -138,7 +138,7 @@ function validerDonneesNoeud(){
         alert("Vous devez donner un nom à cet appareil");
         return
     } 
-    contenu_noeuds[noeudEnCoursDeModif["id"]]["nom_machine"] = nom_appareil.value;
+    contenu_noeuds[noeudEnCoursDeModif["id"]]["nom"] = nom_appareil.value;
     nom_appareil.value = "";
     // Ajout d’une légende avec la liste des adresses
     let texte_adresses = recupere_liste_adresses();
@@ -169,7 +169,7 @@ function recuperer_informations_analyse() {
     let affichage = document.getElementById("liste_fichiers_analyses");
     affichage.innerHTML = "Aucun fichier sélectionné...";
     // On récupère le fichier de configuration choisi
-    contenu_noeuds[noeudEnCoursDeModif["id"]]["fichier_config"] = document.getElementById("fichier_config_analyse").value;
+    contenu_noeuds[noeudEnCoursDeModif["id"]]["config"] = document.getElementById("fichier_config_analyse").value;
     document.getElementById("fichier_config_analyse").value = "AUCUNE_SELECTION";
 }
 
@@ -178,7 +178,7 @@ function recupere_liste_adresses(){
     let liste_adresses = div_adresses.children;
     let texte_adresses = "";
     if(contenu_noeuds[noeudEnCoursDeModif["id"]] != undefined){
-        texte_adresses = contenu_noeuds[noeudEnCoursDeModif["id"]]["nom_machine"]
+        texte_adresses = contenu_noeuds[noeudEnCoursDeModif["id"]]["nom"]
     }
     let table_adresses = [];
     for(let i = 0; i < liste_adresses.length-1; i++){
@@ -207,7 +207,11 @@ function selection_fichier(){
     parent.window.go.main.App.ChoisirFichier("Sélectionnez les fichiers à analyser").then(resultat =>{
         if(contenu_noeuds[noeudEnCoursDeModif["id"]] == null){
             contenu_noeuds[noeudEnCoursDeModif["id"]] = {};
-            contenu_noeuds[noeudEnCoursDeModif["id"]]["fichiers"] = resultat;
+            if(typeof(resultat) == String){
+                contenu_noeuds[noeudEnCoursDeModif["id"]]["fichiers"] = [resultat];
+            }else{
+                contenu_noeuds[noeudEnCoursDeModif["id"]]["fichiers"] = resultat;
+            }
         }else{
             for (const chemin of resultat) {
                 if(!(chemin in contenu_noeuds[noeudEnCoursDeModif["id"]]["fichiers"])){

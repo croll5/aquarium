@@ -7,6 +7,7 @@
         <colonne type="TEXT">source</colonne>
         <colonne type="DATETIME">horodatage</colonne>
         <colonne type="TEXT">message</colonne>
+        <colonne type="TEXT">machine</colonne>
     </chronologie>
     <extraction id="getthis">
         <chemin>
@@ -21,49 +22,49 @@
     </extraction>
     <extraction id="evtx">
         <chemin>
-            <dossier>General</dossier>
+            <dossier>*General.7z</dossier>
             <archive>Event.7z</archive>
             <fichier>evtx/*</fichier>
         </chemin>
     </extraction>
     <extraction id="sam">
         <chemin>
-            <dossier>SAM</dossier>
+            <dossier>*SAM.7z</dossier>
             <archive>SAM.7z</archive>
             <fichier>*</fichier>
         </chemin>
     </extraction>
     <extraction id="firefox">
         <chemin>
-            <dossier>Browsers</dossier>
+            <dossier>*Browsers.7z</dossier>
             <archive>Browsers_history.7z</archive>
             <fichier>Firefox_Vista_History/*</fichier>
         </chemin>
     </extraction>
     <extraction id="prefetch">
         <chemin>
-            <dossier>General</dossier>
+            <dossier>*General.7z</dossier>
             <archive>Artefacts.7z</archive>
             <fichier>Prefetch/*</fichier>
         </chemin>
     </extraction>
     <extraction id="werr">
         <chemin>
-            <dossier>General</dossier>
+            <dossier>*General.7z</dossier>
             <archive>Errors.7z</archive>
             <fichier>WER/*</fichier>
         </chemin>
     </extraction>
     <extraction id="iis">
         <chemin>
-            <dossier>General</dossier>
+            <dossier>*General.7z</dossier>
             <archive>TextLogs.7z</archive>
             <fichier>IIS_log/*</fichier>
         </chemin>
     </extraction>
     <extraction id="divers">
         <chemin>
-            <dossier>General</dossier>
+            <dossier>*General.7z</dossier>
             <archive>TextLogs.7z</archive>
             <fichier>divers/*</fichier>
         </chemin>

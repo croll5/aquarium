@@ -131,24 +131,37 @@ function selection_dossier(id_paragraphe, id_input, id_section, id_suivant){
 
 function valider_creation_analyse(){
     let donnees_analyse = donnees_conf_analyse();
-    console.log(donnees_analyse);
+    donnees_analyse["Machines"] = get_donnees_reseau();
+    document.getElementById("formulaire").style.display = "none";
+    document.getElementById("patientez").style.display = "inline";
+    parent.window.go.main.App.CreationNouveauProjet(donnees_analyse).then(resultat =>{
+        if (resultat != "") {
+            window.location.replace("../html/extraction.html");
+            parent.document.getElementsByTagName("header")[0].style.display = "inline";
+            let onglet_courant = parent.document.getElementById("onglet_extraction");
+            onglet_courant.style.backgroundColor = "#FCF5DC";
+            onglet_courant.style.color = "#000";
+        } else{
+            document.getElementById("formulaire").style.display = "inline";
+            document.getElementById("patientez").style.display = "none";
+        }
+    });
 }
 
 function donnees_conf_analyse(base = document, profondeur = 0){
     // Création de la variable résultat
     let resultat = {}
-    // Gestion des inputs
-    let inputs = base.getElementsByTagName("input");
-    for(let input of inputs){
-        if (input.hasAttribute("aqua_champ") && (!input.hasAttribute("aqua_prof") || input.getAttribute("aqua_prof") == String(profondeur))){
-            resultat[input.getAttribute("aqua_champ")] = input.value;
-        }
-    }
-    // Gestion des text area
-    let textareas = base.getElementsByTagName("textarea");
-    for(let textarea of textareas){
-        if (textarea.hasAttribute("aqua_champ") && (!textarea.hasAttribute("aqua_prof") || textarea.getAttribute("aqua_prof") == String(profondeur))){
-            resultat[textarea.getAttribute("aqua_champ")] = textarea.value;
+    // Récupération des données 
+    let tags = ["input", "textarea", "select"];
+    for(let tag of tags){
+        let elements = base.getElementsByTagName(tag);
+        for(let element of elements){
+            if (element.hasAttribute("aqua_champ") && element.value != "" && (!element.hasAttribute("aqua_prof") || element.getAttribute("aqua_prof") == String(profondeur))){
+                resultat[element.getAttribute("aqua_champ")] = element.value;
+                if(element.hasAttribute("type") && element.getAttribute("type") == "datetime-local"){
+                    resultat[element.getAttribute("aqua_champ")] = element.value + ":00Z";
+                }
+            }
         }
     }
     // Gestion des divs
@@ -160,7 +173,10 @@ function donnees_conf_analyse(base = document, profondeur = 0){
             if(resultat[nom_liste] == null){
                 resultat[nom_liste] = []
             }
-            resultat[nom_liste].push(donnees_conf_analyse(div, profondeur+1));
+            let donnees = donnees_conf_analyse(div, profondeur+1);
+            if(Object.keys(donnees).length != 0){
+                resultat[nom_liste].push(donnees);
+            }
         }
     }
     return resultat

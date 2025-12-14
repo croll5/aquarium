@@ -15,6 +15,6 @@
         <colonne type="TEXT" contenu="1:variable:0xC:0x10:utf16">nomCompte</colonne>
         <colonne type="TEXT" contenu="aqua_source">source</colonne>
     </table>
-    <sql_chronologie>SELECT DISTINCT id, "registre", "sam", source, derniereConnexion, "Date de la dernière connexion sur le compte " || nomCompte || " (idCompte : " || idCompte || ")" FROM sam WHERE derniereConnexion != "n/a" 
-        UNION SELECT DISTINCT id, "registre", "sam", source, creationCompte, "Création du compte " || nomCompte || " (idCompte : " || idCompte || ")" FROM sam WHERE creationCompte != "n/a"</sql_chronologie>
+    <sql_chronologie>SELECT DISTINCT id, "registre", "sam", source, derniereConnexion, "Date de la dernière connexion sur le compte " || nomCompte || " (idCompte : " || idCompte || ")", aqua_machine FROM sam WHERE derniereConnexion != "n/a" 
+        UNION SELECT DISTINCT id, "registre", "sam", source, creationCompte, "Création du compte " || nomCompte || " (idCompte : " || idCompte || ")", aqua_machine FROM sam WHERE creationCompte != "n/a"</sql_chronologie>
 </extraction>

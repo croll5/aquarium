@@ -179,19 +179,13 @@ func (a *App) ListeConfigurationsDisponibles() []string {
 
 @return : le chemin vers le nouveau projet
 */
-func (a *App) CreationNouveauProjet() string {
-	// Partie création du squelette de l'analyse
-	projet, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Choix de l'emplacement de l'analyse"})
+func (a *App) CreationNouveauProjet(configuration config.AquaConfig) string {
+	// Création de l’arborescence de l’analyse
+	chemin_projet = configuration.DossierAnalyse
+	configuration.DebutAnalyse = time.Now()
+	err := gestionprojet.CreationArborescence(&chemin_projet, configuration)
 	if err != nil {
-		return ""
-	}
-	chemin_projet = projet
-	if !gestionprojet.CreationArborescence(&chemin_projet) {
-		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-			Type:    runtime.ErrorDialog,
-			Title:   "Problème dans la création de l'analyse",
-			Message: "Les fichiers d'analyse n'ont pas pu être créés. Vérifiez que le dossier sélectionné est vide et que vous avez les droits en écriture :/"})
+		a.signalerErreur(err)
 		return ""
 	}
 	return chemin_projet

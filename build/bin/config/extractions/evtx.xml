@@ -15,5 +15,5 @@
         <colonne type="TEXT" contenu="Event/System/Provider/Guid">Guid</colonne>
         <colonne type="TEXT" contenu="Event/System/Task">Task</colonne>
     </table>
-    <sql_chronologie>SELECT id, "evtx", "evtx", source, horodatage, "eventID : " || EventID || ", providerName : " || ProviderName FROM evtx</sql_chronologie>
+    <sql_chronologie>SELECT id, "evtx", "evtx", source, horodatage, "eventID : " || EventID || ", providerName : " || ProviderName, aqua_machine FROM evtx</sql_chronologie>
 </extraction>

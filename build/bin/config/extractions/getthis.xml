@@ -13,5 +13,7 @@
         <colonne type="DATETIME" contenu="LastModificationDate">derniere_modif</colonne>
         <colonne type="DATETIME" contenu="LastAccessDate">dernier_acces</colonne>
     </table>
-    <sql_chronologie>SELECT id, "getthis", "creation", source, date_creation AS horodatage, "Création du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis UNION SELECT id, "getthis", "modification", source, derniere_modif as horodatage, "Dernière modification du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis  UNION SELECT id, "getthis", "acces", source, dernier_acces as horodatage, "Dernier accès au fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis</sql_chronologie>
+    <sql_chronologie>SELECT id, "getthis", "creation", source, date_creation AS horodatage, "Création du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis 
+        UNION SELECT id, "getthis", "modification", source, derniere_modif as horodatage, "Dernière modification du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis  
+        UNION SELECT id, "getthis", "acces", source, dernier_acces as horodatage, "Dernier accès au fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis</sql_chronologie>
 </extraction>

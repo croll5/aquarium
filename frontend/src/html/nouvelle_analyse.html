@@ -69,8 +69,7 @@ termes.
                 <p>Renseignez la chronologie des faits liés à l’incident :</p>
                 <div id="main_courante">
                     <div class="bloc_de_liste" aqua_champ="main_courante">
-                        <input type="date" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="date">
-                        <input type="time" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="heure">
+                        <input type="datetime-local" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="horodatage">
                         <input type="text" class="input_clair" placeholder="Description de l’évènement" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="description">
                     </div>
                 </div>
@@ -93,8 +92,8 @@ termes.
                 <div class="bloc_cache_par_defaut" id="percisions_dp">
                     <p>Listez les données concernées :</p>
                     <div id="dp_impactees">
-                        <div class="bloc_de_liste" aqua_champ="donnees_perso">
-                            <input type="text" placeholder="Nature des données" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="nature">
+                        <div class="bloc_de_liste" aqua_champ="donnees_fuitees">
+                            <input type="text" placeholder="Nature des données" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="nature_donnees">
                             <input type="text" placeholder="Emplacement" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="emplacement">
                         </div>
                     </div>
@@ -181,13 +180,15 @@ termes.
             </div>
             <div class="page_navigation" id="page_3" onchange="verifier_remplissage('page_3', 'bouton_validation')">
                 <h2>Configuration de l’analyse</h2>
+                <p>Identité de l’analyste :</p>
+                <input type="text" placeholder="Entrez votre nom" required aqua_champ="analyste" class="input_clair">
                 <p>Dans quel dossier voulez-vous enregistrer l’analyse ?</p>
                 <div class="selecteur_fichier_clair">
                     <div>
                         <button class="bouton_sombre" onclick="selection_dossier('nom_dossier_analyse', 'input_dossier_analyse', 'page_3', 'bouton_validation')">Choisir un dossier</button>
                     </div>
                     <p id="nom_dossier_analyse">Aucun dossier selectionné...</p>
-                    <input type="text" id="input_dossier_analyse" required hidden aqua_champ="dossier_analyse">
+                    <input type="text" id="input_dossier_analyse" required hidden aqua_champ="DossierAnalyse">
                 </div><br>
                 <div>
                     <label for="etape_2" class="bouton_sombre">Précédent</label>
