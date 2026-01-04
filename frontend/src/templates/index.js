@@ -39,13 +39,11 @@ function change_onglet(destination, id_onglet){
     // On met tous les autres onglets à la couleur standard
     let onglets = document.getElementsByClassName("onglet");
     for (const onglet of onglets) {
-        onglet.style.backgroundColor = "#856B0D";
-        onglet.style.color = "#fff";
+        onglet.classList.remove("onglet_selectionne");
     }
     // On met l'onglet sur lequel on va à la couleur de la page
     let onglet_courant = parent.document.getElementById(id_onglet);
-    onglet_courant.style.backgroundColor = "#FCF5DC";
-    onglet_courant.style.color = "#000";
+    onglet_courant.classList.add("onglet_selectionne");
 }
 
 function accueil(){

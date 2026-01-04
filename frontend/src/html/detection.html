@@ -73,17 +73,17 @@ termes.
                     <h2 class="center">Nouvelle règle</h2>
                     <div>
                         <label for="nom">Nom:</label>
-                        <br><input type="text" class="input-area"  id="nom" placeholder="Detection Alpha" required/>
+                        <br><input type="text" class="input-area"  id="nom" placeholder="Detection Alpha" required autocomplete="off"/>
                         <br><label for="auteur">Auteur:</label>
-                        <br><input type="text" class="input-area"  id="auteur" placeholder="Aqua Rium" required/>
+                        <br><input type="text" class="input-area"  id="auteur" placeholder="Aqua Rium" required autocomplete="off"/>
                         <br><label for="criticite">Criticité:</label> <output id="criticite_value"></output>
                         <br><input type="range" class="input-area"  id="criticite" min="0" max="5" step="1" value="1" required style="accent-color: rgb(194, 209, 108);"/>
                         <br><label for="sql">SQL:</label>
-                        <br><input type="text" class="input-area"  id="sql" placeholder="SELECT col1, col2 FROM table WHERE column='value'" required><br><br>
+                        <br><input type="text" class="input-area"  id="sql" placeholder="SELECT col1, col2 FROM table WHERE column='value'" required autocomplete="off"><br><br>
                         <input type="hidden" id="nameBeforeModification" value=""/>
                     </div>
                     <label for="description">Description</label>
-                    <textarea class="input-area" id="description" rows="4" placeholder="..." required></textarea>
+                    <textarea class="input-area" id="description" rows="4" placeholder="..." required autocomplete="off"></textarea>
                     <div class="center">
                         <button class="bouton_sombre" type="reset" href="/">Effacer</button>
                         <button class="bouton_sombre" type="submit" onclick="return validateSQL()" href="/">Créer</button>

@@ -70,13 +70,13 @@ termes.
                 <div id="main_courante">
                     <div class="bloc_de_liste" aqua_champ="main_courante">
                         <input type="datetime-local" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="horodatage">
-                        <input type="text" class="input_clair" placeholder="Description de l’évènement" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="description">
+                        <input type="text" class="input_clair" placeholder="Description de l’évènement" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="description" autocomplete="off">
                     </div>
                 </div>
                 <h3>Impacts de l’incident</h3>
                 <p>Quelles sont les entités impactées ou susceptibles de l’être ?</p>
                 <div>
-                    <textarea class="input_clair" required aqua_champ="entites_impactees"></textarea>
+                    <textarea class="input_clair" required aqua_champ="entites_impactees" autocomplete="off"></textarea>
                 </div>
                 <p>Y a-t-il des données personnelles susceptibles d’avoir fuité ?</p>
                 <div class="liste_options">
@@ -93,8 +93,8 @@ termes.
                     <p>Listez les données concernées :</p>
                     <div id="dp_impactees">
                         <div class="bloc_de_liste" aqua_champ="donnees_fuitees">
-                            <input type="text" placeholder="Nature des données" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="nature_donnees">
-                            <input type="text" placeholder="Emplacement" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="emplacement">
+                            <input type="text" placeholder="Nature des données" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="nature_donnees" autocomplete="off">
+                            <input type="text" placeholder="Emplacement" class="input_clair" onchange="ajuster_champs('dp_impactees')" aqua_prof="1" aqua_champ="emplacement" autocomplete="off">
                         </div>
                     </div>
                 </div>
@@ -107,11 +107,11 @@ termes.
                             <option value="M.">M.</option>
                             <option value="Mme">Mme</option>
                         </select>
-                        <input type="text" class="input_clair" placeholder="Prénom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="prenom">
-                        <input type="text" class="input_clair" placeholder="Nom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="nom">
-                        <input type="text" class="input_clair" placeholder="Qualité" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="qualite">
-                        <input type="text" class="input_clair" placeholder="Téléphone" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="telephone">
-                        <input type="email" class="input_clair" placeholder="Courriel" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="courriel">
+                        <input type="text" class="input_clair" placeholder="Prénom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="prenom" autocomplete="off">
+                        <input type="text" class="input_clair" placeholder="Nom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="nom" autocomplete="off">
+                        <input type="text" class="input_clair" placeholder="Qualité" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="qualite" autocomplete="off">
+                        <input type="text" class="input_clair" placeholder="Téléphone" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="telephone" autocomplete="off">
+                        <input type="email" class="input_clair" placeholder="Courriel" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="courriel" autocomplete="off">
                     </div>
                 </div>
                 <br>
@@ -126,7 +126,7 @@ termes.
                 <div class="cadre-popup" id="popup-config-objet">
                     <h3>Paramètres de l’équipement</h3>
                     <p>Quel est le nom de l'appareil ?</p>
-                    <input type="text" id="nom_machine" class="input_clair" placeholder="Nom de l’appareil">
+                    <input type="text" id="nom_machine" class="input_clair" placeholder="Nom de l’appareil" autocomplete="off">
                     <p>De quel type d’objet s’agit-il ?</p>
                     <select id="nature_equipement">
                         <option value="" disabled selected>--- Sélectionnez un type d’objet ---</option>
@@ -141,8 +141,8 @@ termes.
                     <p>Quelles sont les adresses de l’équipement ?</p>
                     <div id="adresses_equipement">
                         <div class="bloc_de_liste" onchange="ajuster_champs('adresses_equipement')">
-                            <input type="text" placeholder="Adresse" class="input_clair">
-                            <input type="text" placeholder="Commentaire (optionnel)" class="input_clair">
+                            <input type="text" placeholder="Adresse" class="input_clair" autocomplete="off">
+                            <input type="text" placeholder="Commentaire (optionnel)" class="input_clair" autocomplete="off">
                         </div>
                     </div>
                     <p>Voulez-vous analyser des éléments de cette machine ?</p>
@@ -181,7 +181,7 @@ termes.
             <div class="page_navigation" id="page_3" onchange="verifier_remplissage('page_3', 'bouton_validation')">
                 <h2>Configuration de l’analyse</h2>
                 <p>Identité de l’analyste :</p>
-                <input type="text" placeholder="Entrez votre nom" required aqua_champ="analyste" class="input_clair">
+                <input type="text" placeholder="Entrez votre nom" required aqua_champ="analyste" class="input_clair" autocomplete="off">
                 <p>Dans quel dossier voulez-vous enregistrer l’analyse ?</p>
                 <div class="selecteur_fichier_clair">
                     <div>

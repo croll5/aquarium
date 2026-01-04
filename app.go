@@ -259,41 +259,12 @@ func (a *App) ListeMachinesAnalysees() map[string]config.AquaConfigMachine {
 
 /* Fonction renvoyant la liste des éléments pouvant être extraits de l'ORC
  */
-func (a *App) ListeExtractionsPossibles() map[string]extraction.ExtractionMachine {
+func (a *App) ListeExtractionsPossibles() []extraction.ParametresExtraction {
 	extractions, err := extraction.ListeExtractionsHtml(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)
 	}
 	return extractions
-}
-
-/*
-	Fonction de permettant de lancer une extraction
-
-@param module : le nom du module à utiliser pour l'extraction
-@param description : la description du module à extraire
-*/
-func (a *App) ExtraireElements(module string, description string, dossierMachine string) {
-	err := extraction.Extraction(module, chemin_projet, dossierMachine)
-	if err != nil {
-		log.Println("Erreur dans l’extraction du module", module, ":", err.Error())
-		a.signalerErreur(err)
-	} else {
-		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-			Type:    runtime.InfoDialog,
-			Title:   "Extraction réussie",
-			Message: "L’extraction du module " + description + " s'est terminée avec succès !",
-		})
-	}
-}
-
-/*
-	Fontion permettant d'annuler une extraction en cours
-
-@return : vrai si et seulement si l'annulation a bien fonctionné
-*/
-func (a *App) AnnulerExtraction(idMachine string, module string) bool {
-	return extraction.AnnulerExtraction(idMachine, module)
 }
 
 /* Fonction permettant de connaitre le pourcentage de progression d'une extraction*/
