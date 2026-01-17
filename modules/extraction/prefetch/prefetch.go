@@ -40,6 +40,8 @@ import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
 	"bytes"
+	"io"
+	"log"
 	"strings"
 
 	"www.velocidex.com/golang/go-prefetch"
@@ -47,8 +49,13 @@ import (
 
 type Prefetch struct{}
 
-func (p Prefetch) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
-	readerAt := bytes.NewReader(fichier.Bytes())
+func (p Prefetch) Extraction(cheminProjet string, fichier io.Reader, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
+	// Copie du contenu du fichier dans un tampon, pour pouvoir l'ouvrir avec l'extracteur de registres
+	var tampon bytes.Buffer
+	if _, err := io.Copy(&tampon, fichier); err != nil {
+		log.Println("Format de fichier non supporté : ", err.Error())
+	}
+	readerAt := bytes.NewReader(tampon.Bytes())
 	infosPrechargement, err := prefetch.LoadPrefetch(readerAt)
 	if err != nil {
 		return err

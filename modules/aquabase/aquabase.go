@@ -525,6 +525,7 @@ func (requete *RequeteInsertion) Executer() error {
 		err = tx.Commit()
 		return err
 	})
+	requete.valeurs = make([][]interface{}, 0)
 	return err
 }
 

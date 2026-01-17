@@ -3,22 +3,22 @@ package bdd_sqlite
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
-	"bytes"
 	"database/sql"
+	"io"
 	"log"
 	"os"
 )
 
 type SQLite struct{}
 
-func (sq SQLite) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
+func (sq SQLite) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
 	// On commence par créer un fichier temporaire qui contienra les données
 	baseSqlite, err := os.CreateTemp(cheminProjet, "base_sqlite")
 	if err != nil {
 		return err
 	}
 	// On ajoute les données dans la base SQLite
-	_, err = baseSqlite.Write(fichier.Bytes())
+	_, err = io.Copy(baseSqlite, fichier)
 	baseSqlite.Close()
 	if err != nil {
 		os.Remove(baseSqlite.Name())

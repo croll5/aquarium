@@ -45,7 +45,7 @@ function ajuster_champs(id_section){
         noeud_principal.appendChild(clone);
         // Ajout d'un bouton « supprimer »
         let suppr = document.createElement("button");
-        suppr.innerText = "❌";
+        suppr.innerText = "🗑️";
         suppr.className = "bouton_invisible";
         suppr.onclick = (ev) => {
             element_de_base.remove();

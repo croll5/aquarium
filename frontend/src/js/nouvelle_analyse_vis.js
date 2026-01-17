@@ -114,7 +114,7 @@ function preremplissage_noeud(id){
         bloc.children.item(0).value = adresse["adresse"];
         bloc.children.item(1).value = adresse["commentaire"];
         let bouton = document.createElement('button');
-        bouton.textContent = "❌";
+        bouton.textContent = "🗑️";
         bouton.classList.add("bouton_invisible");
         bouton.onclick = () =>{
             bloc.remove();
@@ -236,7 +236,7 @@ function afficher_fichiers_selectionnes(idNoeud) {
         item.value = contenu_noeuds[idNoeud]["fichiers"][i];
         affichage.appendChild(item);
         let bouton = document.createElement('button');
-        bouton.textContent = "❌";
+        bouton.textContent = "🗑️";
         bouton.classList.add("bouton_invisible");
         bouton.onclick = () =>{
             let index_valeur = contenu_noeuds[idNoeud]["fichiers"].indexOf(item.value);

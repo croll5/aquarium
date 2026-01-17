@@ -1,6 +1,7 @@
 package config
 
 import (
+	"aquarium/modules/aquabase"
 	"encoding/xml"
 	"io"
 	"log"
@@ -72,7 +73,14 @@ type ComplementConfigXML struct {
 	Valeur string `xml:",innerxml"`
 }
 
+var cacheConfigMachines map[string]ConfigurationXML = map[string]ConfigurationXML{}
+var cacheConfigExtractions map[string]ConfigExtraction = map[string]ConfigExtraction{}
+
 func GetConfigurationMachine(cheminProjet string, idMachine string, aquaConfigMachine AquaConfigMachine) (ConfigurationXML, error) {
+	cacheConfig, existe := cacheConfigMachines[idMachine]
+	if existe {
+		return cacheConfig, nil
+	}
 	// On commence par récupérer le chemin du fichier de configuration
 	var donneesConfig ConfigurationXML
 	var cheminFichierConfigPrincipal string
@@ -95,17 +103,32 @@ func GetConfigurationMachine(cheminProjet string, idMachine string, aquaConfigMa
 		listeDossier, err := ListeFichiersExtraction(extraction.Chemins, cheminProjet, idMachine, false)
 		if err != nil {
 			log.Println(err)
+		}
+		var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+		infosExtraction, err := GetConfigExtraction(cheminProjet, extraction.Id)
+		if err != nil {
+			log.Println(err)
 			continue
 		}
-		if len(listeDossier) > 0 {
-			listeExtractions = append(listeExtractions, extraction)
+		for _, tableExtraction := range infosExtraction.Table {
+			if abase.EstTableVide(tableExtraction.Nom) {
+				if len(listeDossier) > 0 {
+					listeExtractions = append(listeExtractions, extraction)
+				}
+				break
+			}
 		}
 	}
 	donneesConfig.DetailsExtraction = listeExtractions
+	cacheConfigMachines[idMachine] = donneesConfig
 	return donneesConfig, err
 }
 
 func GetConfigExtraction(cheminProjet string, nomFichierConfig string) (ConfigExtraction, error) {
+	cacheConfig, existe := cacheConfigExtractions[nomFichierConfig]
+	if existe {
+		return cacheConfig, nil
+	}
 	var donneesConfig ConfigExtraction
 	var cheminConfig string
 	cheminConfig, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_EXTRACTIONS, nomFichierConfig)+EXTENSION_XML)
@@ -121,6 +144,17 @@ func GetConfigExtraction(cheminProjet string, nomFichierConfig string) (ConfigEx
 		return donneesConfig, err
 	}
 	err = xml.Unmarshal(bytesConfig, &donneesConfig)
+	// On récupère les données complémentaires
+	var listeComplements map[string]string = map[string]string{}
+	for _, complement := range donneesConfig.ConfigComplement {
+		listeComplements[complement.Cle] = complement.Valeur
+	}
+	donneesConfig.Complement = listeComplements
+	cacheConfigExtractions[nomFichierConfig] = donneesConfig
+	// On ajoute le nom de la machine à la liste des colonnes
+	for i := range donneesConfig.Table {
+		donneesConfig.Table[i].Colonnes = append(donneesConfig.Table[i].Colonnes, ConfigColonneBDD{Nom: AQUA_MACHINE, Contenu: AQUA_MACHINE, Type: "TEXT"})
+	}
 	return donneesConfig, err
 }
 

@@ -45,10 +45,9 @@ import (
 	"aquarium/modules/extraction/journaux"
 	"aquarium/modules/extraction/prefetch"
 	"aquarium/modules/extraction/registre"
-	"bytes"
 	"errors"
+	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,11 +56,11 @@ import (
 )
 
 type Extracteur interface {
-	Extraction(string, bytes.Buffer, string, config.ConfigExtraction, string) error
+	Extraction(string, io.Reader, string, config.ConfigExtraction, string) error
 }
 
-var progressionExtraction float32 = -1
-var listeExtractionsEnAttente []ParametresExtraction = []ParametresExtraction{}
+var progressionExtraction map[string]string = map[string]string{}
+var listeExtractions map[string]ExtractionMachine = map[string]ExtractionMachine{}
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	// "avs":        avlogs.AvLog{},
@@ -78,54 +77,59 @@ var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 
 type ExtractionMachine struct {
 	ConfigMachine    config.AquaConfigMachine
-	ListeExtractions map[string]config.ConfigExtraction
+	ListeExtractions map[string]ParametresExtraction
 }
 
 type ParametresExtraction struct {
-	IdMachine               string
-	NomMachine              string
-	DetailsConfigExtraction config.DetailsConfigExtraction
-	InfosExtraction         config.InfosSommairesExtraction
+	Chemins         []config.ConfigChemin
+	InfosExtraction config.InfosSommairesExtraction
 }
 
 /** Fonction qui renvoie des informations sur les extractions qui peuvent être effectuées
   * @param cheminProjet string : le chemin d'enregistrement de l'analyse aquarium
   * @return une liste de configurations d'extractions, et s'il y a lieu une erreur
 **/
-func ListeExtractionsHtml(cheminProjet string) ([]ParametresExtraction, error) {
-	if len(listeExtractionsEnAttente) > 0 || progressionExtraction > 0 {
-		return listeExtractionsEnAttente, nil
+func ListeExtractionsHtml(cheminProjet string) (map[string]ExtractionMachine, error) {
+	if len(listeExtractions) > 0 || progressionExtraction["chargement"] == "101" {
+		return listeExtractions, nil
 	}
 	var configAnalyse config.AquaConfig
 	configAnalyse, err := config.GetAquaConfig(cheminProjet)
 	if err != nil {
-		return listeExtractionsEnAttente, err
+		return listeExtractions, err
 	}
 	for idMachine, machine := range configAnalyse.Machines {
 		configMachine, err := config.GetConfigurationMachine(cheminProjet, idMachine, machine)
 		if err != nil {
-			return listeExtractionsEnAttente, err
+			return listeExtractions, err
 		}
+		var listeExtractionsMachine map[string]ParametresExtraction = map[string]ParametresExtraction{}
 		for _, extraction := range configMachine.DetailsExtraction {
 			// Récupérer la description de l’extraction
 			infosExtraction, err := config.GetInfosSommairesExtraction(cheminProjet, extraction.Id)
 			if err != nil {
-				return listeExtractionsEnAttente, err
+				return listeExtractions, err
 			}
-			var parametresExtraction ParametresExtraction = ParametresExtraction{IdMachine: idMachine, DetailsConfigExtraction: extraction, NomMachine: machine.Nom, InfosExtraction: infosExtraction}
-			listeExtractionsEnAttente = append(listeExtractionsEnAttente, parametresExtraction)
+			var parametresExtraction ParametresExtraction = ParametresExtraction{Chemins: extraction.Chemins, InfosExtraction: infosExtraction}
+			listeExtractionsMachine[extraction.Id] = parametresExtraction
 		}
+		listeExtractions[idMachine] = ExtractionMachine{ConfigMachine: machine, ListeExtractions: listeExtractionsMachine}
 	}
-	return listeExtractionsEnAttente, nil
+	return listeExtractions, nil
 }
 
-func LancerExtractions(cheminProjet string) error {
-	for len(listeExtractionsEnAttente) > 0 {
-		err := Extraction(listeExtractionsEnAttente[0].DetailsConfigExtraction, cheminProjet, listeExtractionsEnAttente[0].IdMachine)
+func LancerExtractions(cheminProjet string, ordreExtractions []map[string]string) error {
+	for _, idExtractionMachine := range ordreExtractions {
+		progressionExtraction["idMachine"] = idExtractionMachine["idMachine"]
+		progressionExtraction["idExtraction"] = idExtractionMachine["idExtraction"]
+		progressionExtraction["chargement"] = "0"
+		err := Extraction(idExtractionMachine["idExtraction"], cheminProjet, idExtractionMachine["idMachine"])
 		if err != nil {
 			return err
 		}
 	}
+	progressionExtraction["idMachine"] = ""
+	progressionExtraction["idExtraction"] = ""
 	return nil
 }
 
@@ -134,10 +138,10 @@ func LancerExtractions(cheminProjet string) error {
   * @cheminProjet string : le chemin d'enregistrement du projet
   * @return : une erreur s'il y a lieu
 **/
-func Extraction(detailsExtraction config.DetailsConfigExtraction, cheminProjet string, idMachine string) error {
+func Extraction(idExtraction string, cheminProjet string, idMachine string) error {
 	var probleme error
 	// On récupère la configuration de l’extraction
-	configExtr, err := config.GetConfigExtraction(cheminProjet, detailsExtraction.Id)
+	configExtr, err := config.GetConfigExtraction(cheminProjet, idExtraction)
 	if err != nil {
 		return err
 	}
@@ -147,9 +151,9 @@ func Extraction(detailsExtraction config.DetailsConfigExtraction, cheminProjet s
 		return err
 	}
 	// On liste les fichiers concernés par cette extraction
-	listeFichiersAExtraire, probleme := config.ListeFichiersExtraction(detailsExtraction.Chemins, cheminProjet, idMachine, false)
+	listeFichiersAExtraire, probleme := config.ListeFichiersExtraction(listeExtractions[idMachine].ListeExtractions[idExtraction].Chemins, cheminProjet, idMachine, false)
 	// On met la progression à 0 (début de l'extraction)
-	progressionExtraction = 0
+	progressionExtraction["chargement"] = "0"
 	// On crée la table qui sera utilisée par l'extracteur
 	err = creerTableExtraction(cheminProjet, configExtr)
 	if err != nil {
@@ -169,7 +173,7 @@ func Extraction(detailsExtraction config.DetailsConfigExtraction, cheminProjet s
 			probleme = extractionDossier(cheminProjet, dossierAExtraire, idMachine, configExtr, &i, nbFichiers)
 		}
 	}
-	progressionExtraction = 101
+	progressionExtraction["chargement"] = "101"
 	return probleme
 }
 
@@ -203,7 +207,7 @@ func CreationBaseAnalyse(cheminProjet string) error {
  ** @param cheminProjet string : le chemin de l'analyse aquarium
  ** @param idExtraction string : l'identifiant de l'extraction
 **/
-func ProgressionExtraction(cheminProjet string, idMachine string, idExtraction string) float32 {
+func ProgressionExtraction(cheminProjet string) map[string]string {
 	return progressionExtraction
 }
 
@@ -293,21 +297,16 @@ func extrationAchive7z(cheminProjet string, configArchive config.DossierAExtrair
 			continue
 		}
 		defer fichier.Close()
-		// Copie du contenu du fichier dans un tampon, pour pouvoir l'ouvrir avec l'extracteur de registres
-		var tampon bytes.Buffer
-		if _, err := io.Copy(&tampon, fichier); err != nil {
-			log.Println("Format de fichier non supporté : ", err.Error())
-		}
 		var source string = strings.Replace(filepath.Join(configArchive.Chemin, archive.File[numFichier].Name), cheminProjet, "", 1)
 		extracteur, ok := liste_extracteurs[configExtraction.Extracteur]
 		if !ok {
 			return errors.New("L’extracteur « " + configExtraction.Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
 		}
-		extracteur.Extraction(cheminProjet, tampon, source, configExtraction, idMachine)
-		fichier.Close()
+		extracteur.Extraction(cheminProjet, fichier, source, configExtraction, idMachine)
 		// On change la progression du chargement
 		*i++
-		progressionExtraction = float32(*i) / float32(total) * 100
+		progressionExtraction["chargement"] = fmt.Sprintf("%f", (float32(*i) / float32(total) * 100))
+		fichier.Close()
 	}
 	return nil
 }
@@ -325,15 +324,11 @@ func extractionDossier(cheminProjet string, configDossier config.DossierAExtrair
 			continue
 		}
 		defer fichier.Close()
-		var tampon bytes.Buffer
-		if _, err := io.Copy(&tampon, fichier); err != nil {
-			log.Println("Format de fichier non supporté : ", err.Error())
-		}
 		extracteur, ok := liste_extracteurs[configExtraction.Extracteur]
 		if !ok {
 			return errors.New("L’extracteur « " + configExtraction.Extracteur + " » n'existe pas. Vérifiez le fichier de configuration.")
 		}
-		extracteur.Extraction(cheminProjet, tampon, strings.Replace(cheminFichier, cheminProjet, "", 1), configExtraction, idMachine)
+		extracteur.Extraction(cheminProjet, fichier, strings.Replace(cheminFichier, cheminProjet, "", 1), configExtraction, idMachine)
 		fichier.Close()
 	}
 	return nil

@@ -75,46 +75,66 @@ func AjoutEvenementDansBDD(cheminProjet string, extracteur string, horodatage ti
 	return err
 }
 
-func DecoderBytes(donnees []byte, encodage string) interface{} {
+func GetFonctionDecodageBytes(encodage string) func([]byte) interface{} {
 	switch encodage {
 	case "littleEndian64":
-		return binary.LittleEndian.Uint64(donnees)
-	case "filetime":
-		if binary.LittleEndian.Uint64(donnees) == 0 {
-			return "n/a"
+		return func(donnees []byte) interface{} {
+			return binary.LittleEndian.Uint64(donnees)
 		}
-		return FileTimeVersGo(donnees)
+	case "filetime":
+		return func(donnees []byte) interface{} {
+			if binary.LittleEndian.Uint64(donnees) == 0 {
+				return "n/a"
+			}
+			return FileTimeVersGo(donnees)
+		}
+
 	default:
-		return DecoderString(string(donnees), encodage)
+		fonctionDecodage := GetFonctionDecodageString(encodage)
+		return func(donnees []byte) interface{} {
+			return fonctionDecodage(string(donnees))
+		}
 	}
 }
 
-func DecoderString(donnees string, encodage string) interface{} {
+func GetFonctionDecodageString(encodage string) func(string) interface{} {
 	detailsEncodage := strings.Split(encodage, "[aqua_sep]")
 	switch detailsEncodage[0] {
 	case "utf16":
-		return Utf16LEToUtf8(donnees)
-	case "filetime":
-		date, err := strconv.ParseInt(donnees, 10, 64)
-		if err != nil {
-			log.Printf("Erreur de conversion de l'horodatage : %s, erreur : %v\n", donnees, err)
-			return "[AQUA] Erreur dans l’extraction de la date au format filetime suivante :" + donnees
+		return func(donnees string) interface{} {
+			return Utf16LEToUtf8(donnees)
 		}
-		return FiletimeFromIntVersGo(date)
+	case "filetime":
+		return func(donnees string) interface{} {
+			date, err := strconv.ParseInt(donnees, 10, 64)
+			if err != nil {
+				log.Printf("Erreur de conversion de l'horodatage : %s, erreur : %v\n", donnees, err)
+				return "[AQUA] Erreur dans l’extraction de la date au format filetime suivante :" + donnees
+			}
+			return FiletimeFromIntVersGo(date)
+		}
 	case "date":
 		if len(detailsEncodage) < 2 {
-			return "[AQUA] Date non extraite : " + donnees
-		} else {
-			date, err := time.Parse(detailsEncodage[1], donnees)
-			if err != nil {
-				return "[AQUA] Erreur dans l’extraction de la date " + donnees + " : " + err.Error()
+			return func(donnees string) interface{} {
+				return "[AQUA] Date non extraite : " + donnees
 			}
-			return date
+		} else {
+			return func(donnees string) interface{} {
+				date, err := time.Parse(detailsEncodage[1], donnees)
+				if err != nil {
+					return "[AQUA] Erreur dans l’extraction de la date " + donnees + " : " + err.Error()
+				}
+				return date
+			}
 		}
 	case "string":
-		return donnees
+		return func(donnees string) interface{} {
+			return donnees
+		}
 	default:
-		return "[AQUA] Impossible de décoder « " + donnees + " ». Encodage non reconnu"
+		return func(donnees string) interface{} {
+			return "[AQUA] Impossible de décoder « " + donnees + " ». Encodage non reconnu"
+		}
 	}
 }
 

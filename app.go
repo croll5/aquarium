@@ -78,6 +78,7 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
+	runtime.WindowMaximise(ctx)
 	a.ctx = ctx
 }
 
@@ -259,7 +260,7 @@ func (a *App) ListeMachinesAnalysees() map[string]config.AquaConfigMachine {
 
 /* Fonction renvoyant la liste des éléments pouvant être extraits de l'ORC
  */
-func (a *App) ListeExtractionsPossibles() []extraction.ParametresExtraction {
+func (a *App) ListeExtractionsPossibles() map[string]extraction.ExtractionMachine {
 	extractions, err := extraction.ListeExtractionsHtml(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)
@@ -267,9 +268,13 @@ func (a *App) ListeExtractionsPossibles() []extraction.ParametresExtraction {
 	return extractions
 }
 
+func (a *App) LancerExtraction(ordreExtractions []map[string]string) {
+	extraction.LancerExtractions(chemin_projet, ordreExtractions)
+}
+
 /* Fonction permettant de connaitre le pourcentage de progression d'une extraction*/
-func (a *App) ProgressionExtraction(idMachine string, idExtracteur string) float32 {
-	return extraction.ProgressionExtraction(chemin_projet, idMachine, idExtracteur)
+func (a *App) ProgressionExtraction() map[string]string {
+	return extraction.ProgressionExtraction(chemin_projet)
 }
 
 /* Fonction permettant de lancer l'extraction de la table chronologie */

@@ -6,6 +6,7 @@ import (
 	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"regexp"
 	"strings"
@@ -14,23 +15,75 @@ import (
 const SEPARATEUR_ENCODAGE = "|aqua_encodage:"
 const INDICATEUR_CONCATENATION = "[aqua_concat]"
 
+var fonctionsTraitementContenuColonne map[string]func(dicChamps map[string]string, cheminFichier string, idMachine string) interface{} = map[string]func(map[string]string, string, string) interface{}{}
+
 type Journaux struct{}
 
-func (jr Journaux) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
+func (jr Journaux) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
 	var listeEvenements []string = []string{decoderFichier(fichier, configExtraction.Complement["encodage"])}
 	if configExtraction.Complement["separateur"] != "" {
 		listeEvenements = getListeDesEvenements(listeEvenements[0], configExtraction.Complement["separateur"])
-
 	}
 	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
 	for _, table := range configExtraction.Table {
 		var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(table.Nom, table.GetNomsColonnes())
 		for _, evenement := range listeEvenements {
-			ajouterEvenementDansRequete(&requeteInsertion, cheminFichierAExtraire, evenement, configExtraction.Complement["symbole_association"], configExtraction.Complement["separateur_champs"], table, configExtraction, idMachine)
+			ajouterEvenementDansRequete(&requeteInsertion, cheminFichierAExtraire, evenement, table, configExtraction, idMachine)
 		}
 		requeteInsertion.Executer()
 	}
 	return nil
+}
+
+func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFichier string, idMachine string) interface{} {
+	// Si la fonction existe déjà, on l’utilise
+	fonctionTraitement, existe := fonctionsTraitementContenuColonne[contenuColonne]
+	if existe {
+		return fonctionTraitement(dicChamps, cheminFichier, idMachine)
+	}
+	log.Println("Extraction du contenu ", contenuColonne)
+	// On commence par séparer la clé de l’encodage
+	parametresColonne := strings.Split(contenuColonne, SEPARATEUR_ENCODAGE)
+	// S’il n’y a pas d’encodage, on met « string »
+	if len(parametresColonne) < 2 {
+		parametresColonne = []string{parametresColonne[0], "string"}
+	}
+	// Et on regarde à quoi correspond la clé
+	if contenuColonne == "aqua_source" {
+		fonctionTraitement = func(champs map[string]string, cheminFichier, idMachine string) interface{} {
+			return cheminFichier
+		}
+	} else if contenuColonne == config.AQUA_MACHINE {
+		fonctionTraitement = func(champs map[string]string, cheminFichier, idMachine string) interface{} {
+			return idMachine
+		}
+	} else {
+		fonctionDecodage := utilitaires.GetFonctionDecodageString(parametresColonne[1])
+		if strings.Contains(parametresColonne[0], INDICATEUR_CONCATENATION) {
+			cles := strings.Split(parametresColonne[0], INDICATEUR_CONCATENATION)
+			fonctionTraitement = func(dicChamps map[string]string, cheminFichier, idMachine string) interface{} {
+				resultat := ""
+				for i := 0; i < len(cles)-1; i++ {
+					resultat = resultat + dicChamps[cles[i]]
+					if i < len(cles)-2 {
+						resultat += cles[len(cles)-1]
+					}
+				}
+				return fonctionDecodage(resultat)
+			}
+		} else {
+			fonctionTraitement = func(dicChamps map[string]string, cheminFichier, idMachine string) interface{} {
+				val, ok := dicChamps[parametresColonne[0]]
+				if !ok {
+					return "[AQUA_ERR] - Impossible d’extraire la clé" + parametresColonne[0]
+				}
+				return val
+			}
+		}
+	}
+	// On choisit la fonction utilisée en fonction de l’encodage
+	fonctionsTraitementContenuColonne[contenuColonne] = fonctionTraitement
+	return fonctionTraitement(dicChamps, cheminFichier, idMachine)
 }
 
 func getListeDesEvenements(fichier string, separateur string) []string {
@@ -125,7 +178,6 @@ func extraireChampsEvenement(evenement string, configExtraction config.ConfigExt
 
 func extraireValeursRegex(donnees string, regex string) map[string]string {
 	var resultat map[string]string = map[string]string{}
-	log.Println(regex)
 	rex, err := regexp.Compile(regex)
 	if err != nil {
 		resultat["0"] = "[AQUA] Erreur dans l’extraction de l’expression régulière : " + err.Error()
@@ -139,7 +191,7 @@ func extraireValeursRegex(donnees string, regex string) map[string]string {
 	return resultat
 }
 
-func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, cheminFichierAExtraire string, evenement string, symboleAssociation string, separateurChamps string, configTable config.ConfigTableBDD, configExtraction config.ConfigExtraction, idMachine string) error {
+func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, cheminFichierAExtraire string, evenement string, configTable config.ConfigTableBDD, configExtraction config.ConfigExtraction, idMachine string) error {
 	if evenement == "" {
 		return nil
 	}
@@ -149,39 +201,23 @@ func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, c
 	dictChamps := extraireChampsEvenement(evenement, configExtraction)
 	var valeursAAjouter []interface{} = make([]interface{}, 0)
 	for _, colonne := range configTable.Colonnes {
-		nomColonne := strings.Split(colonne.Contenu, SEPARATEUR_ENCODAGE)[0]
-		if dictChamps[nomColonne] == "" {
-			if nomColonne == "aqua_source" {
-				valeursAAjouter = append(valeursAAjouter, cheminFichierAExtraire)
-			} else if nomColonne == config.AQUA_MACHINE {
-				valeursAAjouter = append(valeursAAjouter, idMachine)
-			} else if strings.Contains(colonne.Contenu, INDICATEUR_CONCATENATION) {
-				valeur := ajouterConcatenation(colonne.Contenu, dictChamps)
-				valeursAAjouter = append(valeursAAjouter, valeurDecodee(valeur, colonne.Contenu))
-			} else {
-				valeursAAjouter = append(valeursAAjouter, "[AQUA] Erreur : Clé introuvable")
-			}
-		} else {
-			valeursAAjouter = append(valeursAAjouter, valeurDecodee(dictChamps[nomColonne], colonne.Contenu))
-		}
+		valeursAAjouter = append(valeursAAjouter, valeurDecodee(colonne.Contenu, dictChamps, cheminFichierAExtraire, idMachine))
 	}
 	requeteInstertion.AjouterDansRequete(valeursAAjouter...)
 	return nil
 }
 
-func decoderFichier(fichier bytes.Buffer, encodage string) string {
+func decoderFichier(fichier io.Reader, encodage string) string {
+	// Copie du contenu du fichier dans un tampon, pour pouvoir l'ouvrir avec l'extracteur de registres
+	var tampon bytes.Buffer
+	if _, err := io.Copy(&tampon, fichier); err != nil {
+		log.Println("Format de fichier non supporté : ", err.Error())
+	}
 	switch encodage {
 	case "utf16":
-		return utilitaires.Utf16LEToUtf8(fichier.String())
+		return utilitaires.Utf16LEToUtf8(tampon.String())
 	}
-	return fichier.String()
-}
-
-func valeurDecodee(valeur string, cle string) interface{} {
-	if strings.Contains(cle, SEPARATEUR_ENCODAGE) {
-		return utilitaires.DecoderString(valeur, strings.Split(cle, SEPARATEUR_ENCODAGE)[1])
-	}
-	return valeur
+	return tampon.String()
 }
 
 func ajouterConcatenation(cle string, dictChamps map[string]string) string {

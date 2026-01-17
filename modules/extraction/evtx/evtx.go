@@ -40,6 +40,7 @@ import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
 	"bytes"
+	"io"
 	"log"
 
 	"github.com/0xrawsec/golang-evtx/evtx"
@@ -100,9 +101,14 @@ Fonction qui, à partir d'un fichier evtx zippé, ajoute tous ses évènements �
 @param cheminTemp : le chemin vers un répertoire temporaire
 @param fichierSource : le chemin du fichier evtx à extraire
 */
-func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier bytes.Buffer, fichierSource string, configExtraction config.ConfigExtraction, idMachine string) error {
+func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, fichier io.Reader, fichierSource string, configExtraction config.ConfigExtraction, idMachine string) error {
+	// On copie le contenu du fichier dans un tampon
+	var tampon bytes.Buffer
+	if _, err := io.Copy(&tampon, fichier); err != nil {
+		log.Println("Format de fichier non supporté : ", err.Error())
+	}
 	// On ouvre le tampon avec la bibliothèque evtx
-	readerAt := bytes.NewReader(tamponFichier.Bytes())
+	readerAt := bytes.NewReader(tampon.Bytes())
 	var fichierEvtx evtx.File
 	fichierEvtx, err := evtx.New(readerAt)
 	if err != nil {
@@ -140,7 +146,7 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier 
 // ------------------------- FONCTIONS GLOBALES ------------------------- //
 
 /* Fonction d'extraction des fichiers evtx */
-func (e Evtx) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
+func (e Evtx) Extraction(cheminProjet string, fichier io.Reader, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
 	err := e.extraireEvenementsDepuisTampon(cheminProjet, fichier, nomFichier, configExtraction, idMachine)
 	return err
 }

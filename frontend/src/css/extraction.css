@@ -53,7 +53,8 @@ termes.
 .pct_chargement {
    position: absolute;
    inset: 0;
-   background: linear-gradient(to right, var(--or-3) 93%, var(--bleu-5) 100%);
+   background: var(--bleu-4);
+   transition: 0.25s;
 }
 
 .texte_extractions {

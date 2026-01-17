@@ -9,6 +9,9 @@
         <colonne type="TEXT">message</colonne>
         <colonne type="TEXT">machine</colonne>
     </chronologie>
+    <arborescence>
+        <requete></requete>
+    </arborescence>
     <extraction id="getthis">
         <chemin>
             <dossier>*</dossier>
@@ -18,6 +21,13 @@
         <chemin>
             <dossier>*</dossier>
             <fichier>GetThis.csv</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="ntfs_info">
+        <chemin>
+            <dossier>*Little.7z*</dossier>
+            <archive>NTFSInfo_detail.7z</archive>
+            <fichier>NTFSInfo*.csv</fichier>
         </chemin>
     </extraction>
     <extraction id="evtx">
