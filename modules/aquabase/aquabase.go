@@ -64,6 +64,11 @@ type RequeteInsertion struct {
 	bdd           *Aquabase
 }
 
+type ResultatRequete struct {
+	requete  *sql.Rows
+	colonnes []string
+}
+
 type InfosBDD struct {
 	bdd     *sql.DB
 	tickets *aquaticket.Distributeur
@@ -734,7 +739,49 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 	return results
 }
 
-func (adb Aquabase) SelectFrom(sqlQuery string) []map[string]interface{} {
+func (adb Aquabase) ExecuterRequeteSQL(requete string) (ResultatRequete, error) {
+	var resultatRequete ResultatRequete = ResultatRequete{}
+	infosBDD, err := adb.Login()
+	if err != nil {
+		return resultatRequete, err
+	}
+	requeteSQL, err := infosBDD.bdd.Prepare(requete)
+	if err != nil {
+		return resultatRequete, err
+	}
+	resultatSQL, err := requeteSQL.Query()
+	if err != nil {
+		return resultatRequete, err
+	}
+	resultatRequete.requete = resultatSQL
+	colonnes, err := resultatSQL.Columns()
+	if err != nil {
+		return resultatRequete, err
+	}
+	resultatRequete.colonnes = colonnes
+	return resultatRequete, nil
+}
+
+func (rest ResultatRequete) Suivant() (map[string]interface{}, bool) {
+	var dictResultat map[string]interface{} = map[string]interface{}{}
+	if !rest.requete.Next() {
+		rest.requete.Close()
+		return dictResultat, false
+	} else {
+		var resultat []interface{} = make([]interface{}, len(rest.colonnes))
+		var pointeursResultats []interface{} = make([]interface{}, len(rest.colonnes))
+		for i := range pointeursResultats {
+			pointeursResultats[i] = &resultat[i]
+		}
+		rest.requete.Scan(pointeursResultats...)
+		for i := range resultat {
+			dictResultat[rest.colonnes[i]] = resultat[i]
+		}
+	}
+	return dictResultat, true
+}
+
+func (adb Aquabase) SelectFrom(requeteSQL string, args ...any) []map[string]interface{} {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
@@ -743,7 +790,7 @@ func (adb Aquabase) SelectFrom(sqlQuery string) []map[string]interface{} {
 	// SQL Request
 	var results []map[string]interface{}
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
-		rows, err := infosBdd.bdd.Query(sqlQuery)
+		rows, err := infosBdd.bdd.Query(requeteSQL, args...)
 		if err != nil {
 			return errors.New("SelectFrom(): querying table data")
 		}
@@ -761,7 +808,7 @@ func (adb Aquabase) SelectFrom(sqlQuery string) []map[string]interface{} {
 				columnPointers[i] = &columnValues[i]
 			}
 			if err := rows.Scan(columnPointers...); err != nil {
-				return errors.New("SelectFrom(): scanning row: " + sqlQuery)
+				return errors.New("SelectFrom(): scanning row: " + requeteSQL)
 			}
 			rowMap := make(map[string]interface{})
 			for i, colName := range columns {
@@ -770,7 +817,7 @@ func (adb Aquabase) SelectFrom(sqlQuery string) []map[string]interface{} {
 			results = append(results, rowMap)
 		}
 		if err := rows.Err(); err != nil {
-			return errors.New("SelectFrom(): during rows iteration: " + sqlQuery)
+			return errors.New("SelectFrom(): during rows iteration: " + requeteSQL)
 		}
 		return nil
 	})

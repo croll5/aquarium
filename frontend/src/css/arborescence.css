@@ -50,10 +50,10 @@ termes.
     font-weight: bolder;
 }
 
-#extraction_arborescence{
+/* #extraction_arborescence{
     display: none;
     text-align: center;
-}
+} */
 
 #patientez{
     display: none;

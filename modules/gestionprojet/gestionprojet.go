@@ -55,8 +55,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const DOSSIER_ANALYSE = "analyse"
-
 func IsDirEmpty(name string) (bool, error) {
 	f, err := os.Open(name)
 	if err != nil {
@@ -90,7 +88,7 @@ func CreationArborescence(chemin *string, configuration config.AquaConfig) error
 		return err
 	}
 	// Création du dossier d’analyse
-	os.MkdirAll(filepath.Join(*chemin, DOSSIER_ANALYSE), 0766)
+	os.MkdirAll(filepath.Join(*chemin, config.DOSSIER_ANALYSE), 0766)
 	copieFichiersAAnalyser(*chemin, configuration)
 	// Création de la base de données qui contiendra la chronologie des évènements
 	extraction.CreationBaseAnalyse(*chemin)
@@ -112,7 +110,7 @@ func CreationDossierModele(chemin string) error {
 		log.Println(err)
 		return errors.New("Le dossier " + chemin + " n'est pas vide.")
 	}
-	os.MkdirAll(filepath.Join(chemin, DOSSIER_ANALYSE), 0766)
+	os.MkdirAll(filepath.Join(chemin, config.DOSSIER_ANALYSE), 0766)
 	fichier, err := os.Create(filepath.Join(chemin, "modele.aqua"))
 	if err != nil {
 		log.Println(err)

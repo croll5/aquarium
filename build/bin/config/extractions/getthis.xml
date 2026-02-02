@@ -8,7 +8,8 @@
         <colonne type="TEXT" contenu="aqua_source">source</colonne>
         <colonne type="TEXT" contenu="SampleName">chemin_copie</colonne>
         <colonne type="TEXT" contenu="FullName">nom_fichier</colonne>
-        <colonne type="TEXT" contenu="MD5">MD5</colonne>
+        <colonne type="TEXT" contenu="MD5">md5</colonne>
+        <colonne type="TEXT" contenu="SHA1">sha1</colonne>
         <colonne type="DATETIME" contenu="CreationDate">date_creation</colonne>
         <colonne type="DATETIME" contenu="LastModificationDate">derniere_modif</colonne>
         <colonne type="DATETIME" contenu="LastAccessDate">dernier_acces</colonne>

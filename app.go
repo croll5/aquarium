@@ -231,21 +231,6 @@ func (a *App) ValidationCreationProjet(nomAnalyste string, description string) b
 	return true
 }
 
-/*
-	Fonction permettant de valider la création d'un nouveau modèle
-
-@return : vrai si et seulement la validation a fonctionné
-*/
-func (a *App) ValidationCreationModele(nomModele string, description string, supprimerOrc bool) bool {
-	err := gestionprojet.EcritureFichierModeleAqua(nomModele, description, time.Now(), chemin_projet)
-	if err != nil {
-		a.signalerErreur(err)
-		return false
-	}
-	a.ExtraireArborescence(false)
-	return true
-}
-
 /***************************************************************************************/
 /************************* Extraction FUNCTIONS PAGE **********************************/
 /***************************************************************************************/
@@ -297,41 +282,11 @@ func (a *App) ExtractionChronologie() bool {
 @param cheminDossier : le chemin du dossier duquel on veut connaître les enfants
 @return : la liste des enfants
 */
-func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.MetaDonnees {
-	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier)
+func (a *App) ArborescenceMachineAnalysee(cheminDossier []string, idMachine string) []arborescence.MetaDonnees {
+	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier, idMachine)
 	if err != nil {
 		a.signalerErreur(err)
 	}
-	return res
-}
-
-func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
-	var cheminModele = ""
-	var err error
-	if avecModele {
-		cheminModele, err = runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-			Title:   "Choisissez le modele",
-			Filters: []runtime.FileFilter{{DisplayName: "Modèles aqua", Pattern: "modele.aqua"}},
-		})
-		if err != nil || cheminModele == "" {
-			runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-				Type:    runtime.ErrorDialog,
-				Message: "Vous devez choisir un fichier modele.aqua. \nSi vous n'avez pas de modèle, il est possible d'en créer un en vous rendant sur la page d'accueil.\nSi vous ne souhaitez pas utiliser de modèle, décochez l'option « Comparer l'arborescence avec celle d'un modèle. »",
-			})
-			return arborescence.Arborescence{}
-		}
-	}
-	res, err := arborescence.ExtraireArborescence(chemin_projet, filepath.Dir(cheminModele))
-
-	if err != nil {
-		a.signalerErreur(err)
-	}
-
-	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-		Type:    runtime.InfoDialog,
-		Title:   "Extraction terminée",
-		Message: "L'extraction de l'arborescence s'est terminée avec succès !",
-	})
 	return res
 }
 

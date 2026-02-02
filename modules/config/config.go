@@ -12,6 +12,9 @@ import (
 )
 
 var DOSSIER_FICHIERS_A_ANALYSER = "fichiers"
+
+const DOSSIER_ANALYSE = "analyse"
+
 var AQUA_MACHINE = "aqua_machine"
 var DOSSIER_EXTRACTIONS = "extractions"
 var EXTENSION_XML = ".xml"
@@ -60,6 +63,12 @@ type DetailsConfigExtraction struct {
 type ConfigurationXML struct {
 	Chronologie       ConfigTableBDD            `xml:"chronologie"`
 	DetailsExtraction []DetailsConfigExtraction `xml:"extraction"`
+	Arborescence      ConfigArborescence        `xml:"arborescence"`
+}
+
+type ConfigArborescence struct {
+	RequeteSQL        string `xml:"requete"`
+	SeparateurDossier string `xml:"separateur_dossiers"`
 }
 
 type DossierAExtraire struct {

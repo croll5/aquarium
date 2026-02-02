@@ -10,7 +10,8 @@
         <colonne type="TEXT">machine</colonne>
     </chronologie>
     <arborescence>
-        <requete></requete>
+        <requete>SELECT ntfs_info.id AS idSource, getthis.id AS idCopie, (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) AS chemin_fichier FROM ntfs_info LEFT JOIN getthis ON getthis.nom_fichier = (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) WHERE ntfs_info.aqua_machine="[AQUA_MACHINE]"</requete>
+        <separateur_dossiers>\</separateur_dossiers>
     </arborescence>
     <extraction id="getthis">
         <chemin>
