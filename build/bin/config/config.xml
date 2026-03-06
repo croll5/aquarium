@@ -10,7 +10,8 @@
         <colonne type="TEXT">machine</colonne>
     </chronologie>
     <arborescence>
-        <requete>SELECT ntfs_info.id AS idSource, getthis.id AS idCopie, (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) AS chemin_fichier FROM ntfs_info LEFT JOIN getthis ON getthis.nom_fichier = (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) WHERE ntfs_info.aqua_machine="[AQUA_MACHINE]"</requete>
+        <requete_creation>SELECT ntfs_info.id AS idSource, getthis.id AS idCopie, (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) AS chemin_fichier FROM ntfs_info LEFT JOIN getthis ON getthis.nom_fichier = (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) WHERE ntfs_info.aqua_machine="[AQUA_MACHINE]"</requete_creation>
+        <requete_metadonnees>SELECT nom_fichier AS "Nom", emplacement || "\" || nom_fichier AS "Chemin complet", date_creation AS "Date de création", dernier_acces AS "Date de dernier accès", derniere_modification AS "Date de dernière modification", source AS "Chemin source" FROM ntfs_info WHERE id=?</requete_metadonnees>
         <separateur_dossiers>\</separateur_dossiers>
     </arborescence>
     <extraction id="getthis">

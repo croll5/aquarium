@@ -67,8 +67,9 @@ type ConfigurationXML struct {
 }
 
 type ConfigArborescence struct {
-	RequeteSQL        string `xml:"requete"`
-	SeparateurDossier string `xml:"separateur_dossiers"`
+	RequeteCreation    string `xml:"requete_creation"`
+	RequeteMetadonnees string `xml:"requete_metadonnees"`
+	SeparateurDossier  string `xml:"separateur_dossiers"`
 }
 
 type DossierAExtraire struct {

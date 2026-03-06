@@ -78,8 +78,18 @@ var AQUA_MACHINE = "[AQUA_MACHINE]"
 var cacheArbo Arborescence
 
 var nomArboEnCache = ""
+var enCoursDextraction bool = false
+
+func ExtractionEnCours() bool {
+	return enCoursDextraction
+}
+
+func ArborescenceEnCache() string {
+	return nomArboEnCache
+}
 
 func ExtraireArborescence(cheminProjet string, cheminModele string, idMachine string) error {
+	enCoursDextraction = true
 	var cache Arborescence = Arborescence{}
 	// On cherche la configuration du projet
 	configAnalyse, err := config.GetAquaConfig(cheminProjet)
@@ -93,7 +103,7 @@ func ExtraireArborescence(cheminProjet string, cheminModele string, idMachine st
 	}
 	// On commence par lister les fichiers
 	var abd *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	requeteSQL := strings.ReplaceAll(configMachine.Arborescence.RequeteSQL, AQUA_MACHINE, idMachine)
+	requeteSQL := strings.ReplaceAll(configMachine.Arborescence.RequeteCreation, AQUA_MACHINE, idMachine)
 	resultatRequete, err := abd.ExecuterRequeteSQL(requeteSQL)
 	if err != nil {
 		return err
@@ -119,10 +129,20 @@ func ExtraireArborescence(cheminProjet string, cheminModele string, idMachine st
 	err = enregistrerArborescenceJson(&cache, filepath.Join(cheminProjet, config.DOSSIER_ANALYSE, DOSSIER_ARBO, idMachine)+".json")
 	cacheArbo = cache
 	nomArboEnCache = idMachine
+	enCoursDextraction = false
 	return err
 }
 
 func RecupEnfantsArbo(cheminProjet string, cheminDossier []string, idMachine string) ([]MetaDonnees, error) {
+	// On commence par récupérer la configuration de la machine
+	aquaConfigMachine, err := config.GetAquaConfig(cheminProjet)
+	if err != nil {
+		return []MetaDonnees{}, err
+	}
+	configAnalyse, err := config.GetConfigurationMachine(cheminProjet, idMachine, aquaConfigMachine.Machines[idMachine])
+	if err != nil {
+		return []MetaDonnees{}, err
+	}
 	// Si l'arborescence en cache ne correspond pas, on l’extrait à nouveau
 	if idMachine != nomArboEnCache {
 		// On essaie d’ouvrir le fichier de l’arborescence
@@ -132,7 +152,7 @@ func RecupEnfantsArbo(cheminProjet string, cheminDossier []string, idMachine str
 			if err != nil {
 				return []MetaDonnees{}, err
 			}
-			return getContenuDossier(cheminProjet, cheminDossier)
+			return getContenuDossier(cheminProjet, cheminDossier, configAnalyse.Arborescence)
 		}
 		// Si l’arborescence existe déjà, on la charge dans le cache
 		err = json.Unmarshal(contenuFichierArbo, &cacheArbo)
@@ -142,7 +162,7 @@ func RecupEnfantsArbo(cheminProjet string, cheminDossier []string, idMachine str
 		}
 		nomArboEnCache = idMachine
 	}
-	return getContenuDossier(cheminProjet, cheminDossier)
+	return getContenuDossier(cheminProjet, cheminDossier, configAnalyse.Arborescence)
 }
 
 /* ------------------------------------ Fonctions internes ------------------------------------ */
@@ -201,7 +221,7 @@ func ajouterFichierDansArbo(infosFichier map[string]interface{}, configArbo conf
 	return nil
 }
 
-func getContenuDossier(cheminProjet string, cheminDossier []string) ([]MetaDonnees, error) {
+func getContenuDossier(cheminProjet string, cheminDossier []string, configArborescence config.ConfigArborescence) ([]MetaDonnees, error) {
 	var positionDansArborescence *Arborescence = &cacheArbo
 	var existe bool
 	for _, dossier := range cheminDossier {
@@ -220,13 +240,13 @@ func getContenuDossier(cheminProjet string, cheminDossier []string) ([]MetaDonne
 	// On ouvre la base de données
 	adb := aquabase.InitDB_Extraction(cheminProjet)
 	for _, fichier := range positionDansArborescence.Fichiers {
-		resultat := adb.SelectFrom("SELECT nom_fichier, sha1 AS empreinte FROM ntfs_info WHERE id=?", fichier.Source)
+		resultat := adb.SelectFrom(configArborescence.RequeteMetadonnees, fichier.Source)
 		if len(resultat) < 1 {
 			return []MetaDonnees{}, errors.ErrUnsupported
 		}
-		switch resultat[0]["nom_fichier"].(type) {
+		switch resultat[0]["Nom"].(type) {
 		case string:
-			metaDonnees[i] = MetaDonnees{Nom: resultat[0]["nom_fichier"].(string), IdSource: fichier.Source, IdCopie: fichier.Copie}
+			metaDonnees[i] = MetaDonnees{Nom: resultat[0]["Nom"].(string), IdSource: fichier.Source, IdCopie: fichier.Copie}
 		default:
 			return []MetaDonnees{}, errors.ErrUnsupported
 		}

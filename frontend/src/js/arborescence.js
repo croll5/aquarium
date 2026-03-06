@@ -35,6 +35,37 @@ termes.
 */
 
 remplir_select_machines();
+affichage_si_extraction_en_cours();
+
+function affichage_si_extraction_en_cours(){
+    parent.window.go.main.App.ExtractionEnCours().then(resultat =>{
+        if(resultat){
+            document.getElementById("selection_arborescence").style.display = "none";
+            let patientez = document.getElementById("patientez");
+            afficher_salle_d_attente(patientez);
+            let verifPasExtrait = setInterval(function(){
+                parent.window.go.main.App.ExtractionEnCours().then(reponse =>{
+                    if(!reponse){
+                        clearInterval(verifPasExtrait);
+                        parent.window.go.main.App.ArborescenceEnCache().then(arbo =>{
+                            document.getElementById("choix_arborescence").value = arbo;
+                            if(arbo != "" && arbo != null){
+                                extraire_arborescence();
+                            }
+                        });
+                    }
+                });
+            }, 1000);
+        } else{
+            parent.window.go.main.App.ArborescenceEnCache().then(arbo =>{
+                document.getElementById("choix_arborescence").value = arbo;
+                if(arbo != "" && arbo != null){
+                    extraire_arborescence();
+                }
+            });
+        }
+    })
+}
 
 function remplir_select_machines(){
     let select_machine = document.getElementById("choix_arborescence")
@@ -48,56 +79,98 @@ function remplir_select_machines(){
     })
 }
 
-function extraire_arborescence(){
-    // On commence par regarder quelle arborescence il faut afficher
+async function extraire_arborescence(){
+    // On commence ensuite par regarder quelle arborescence il faut afficher
     let idMachine = document.getElementById("choix_arborescence").value;
+    document.getElementById("selection_arborescence").style.display = "none";
+    // On affiche au besoin la salle d’attente
+    let patientez = document.getElementById("patientez");
+    parent.window.go.main.App.ArborescenceEnCache().then(resultat =>{
+        if(resultat != idMachine){
+            afficher_salle_d_attente(patientez);
+        }
+    });
     // On supprime tout ce qu’il y a dans l’arborescence actuelle
     let div_arborescence = document.getElementById("arborescence");
     div_arborescence.innerHTML = "";
     // On affiche la racine de l’arborescence
-    ajouter_contenu_dossier(div_arborescence, [], idMachine).then(() => {
-        document.getElementById("document_pour_patienter").style.display = "none";
-    })
+    await ajouter_contenu_dossier(div_arborescence, [], idMachine);
+    patientez.style.display = "none";
+    document.getElementById("selection_arborescence").style.display = "inline";
 }
 
 async function ajouter_contenu_dossier(emplacement, chemin, idMachine){
-    let copieEmplacement = emplacement.cloneNode(true);
-    emplacement.replaceWith(copieEmplacement);
-    emplacement = copieEmplacement;
-    emplacement.open = true;
-    parent.window.go.main.App.ArborescenceMachineAnalysee(chemin,idMachine).then(resultat => {
-        for(let fichier of resultat){
-            if(fichier["ADesEnfants"]){
-                let dossier = document.createElement("details");
-                dossier.classList.add("dossier_arborescence");
-                let nomDossier = document.createElement("summary");
-                nomDossier.textContent = fichier["Nom"];
-                dossier.appendChild(nomDossier);
-                const cheminFichier = chemin.concat([fichier["Nom"]]);
-                dossier.addEventListener("click", function(ev) {ajouter_contenu_dossier(dossier, cheminFichier, idMachine)});
-                emplacement.appendChild(dossier);
-            }else{
-                let affichage_fichier = document.createElement("p");
-                affichage_fichier.textContent = fichier["Nom"];
-                affichage_fichier.classList.add("fichier_arborescence");
-                ajouter_infos_fichier(affichage_fichier, fichier);
-                emplacement.appendChild(affichage_fichier);
+    return new Promise(fini =>{
+        let copieEmplacement = emplacement.cloneNode(true);
+        emplacement.replaceWith(copieEmplacement);
+        emplacement = copieEmplacement;
+        emplacement.open = true;
+        parent.window.go.main.App.ArborescenceMachineAnalysee(chemin,idMachine).then(resultat => {
+            for(let fichier of resultat){
+                if(fichier["ADesEnfants"]){
+                    let dossier = document.createElement("details");
+                    dossier.classList.add("dossier_arborescence");
+                    let nomDossier = document.createElement("summary");
+                    nomDossier.textContent = fichier["Nom"];
+                    dossier.appendChild(nomDossier);
+                    const cheminFichier = chemin.concat([fichier["Nom"]]);
+                    dossier.addEventListener("click", function(ev) {ajouter_contenu_dossier(dossier, cheminFichier, idMachine)});
+                    emplacement.appendChild(dossier);
+                }else{
+                    let affichage_fichier = document.createElement("p");
+                    affichage_fichier.textContent = fichier["Nom"];
+                    affichage_fichier.classList.add("fichier_arborescence");
+                    ajouter_infos_fichier(affichage_fichier, fichier, idMachine);
+                    emplacement.appendChild(affichage_fichier);
+                }
             }
-        }
+            fini();
+        })
     })
+    
 }
 
-function ajouter_infos_fichier(emplacement, donnees_fichier) {
+function ajouter_infos_fichier(emplacement, donnees_fichier, idMachine) {
     let details = document.createElement("button");
     details.textContent = "🪪";
     details.classList.add("bouton_invisible");
-    details.addEventListener("click", function(event){alert("Métadonnées de " + donnees_fichier["IdSource"])});
+    details.addEventListener("click", function(event){afficher_metadonnees_fichier(donnees_fichier["IdSource"], idMachine)});
     emplacement.appendChild(details);
     if(donnees_fichier["IdCopie"] != 0){
         let visualiser = document.createElement("button");
         visualiser.textContent = "🔍";
         visualiser.classList.add("bouton_invisible");
-        visualiser.addEventListener("click", function(event){alert("Visualisation de " + donnees_fichier["IdCopie"])});
+        visualiser.addEventListener("click", function(event){alert("⌛ La fonctionalité de visualisation de fichiers n’a pas encore été implémentée. \nVous pouvez télécharger la mise à jour sur https://github.com/croll5/aquarium. Peut-être y sera-t-elle implémentée ? 🙃")});
         emplacement.appendChild(visualiser);
     }
+}
+
+function afficher_metadonnees_fichier(idFichier, idMachine) {
+    parent.window.go.main.App.DetailsFichierArborescence(idFichier, idMachine).then(resultat => {
+        console.log(resultat);
+        if(resultat.length < 1){
+            return
+        }
+        // On remplit la popup avec les informations sur le fichier
+        let table = document.getElementById("table_metadonnees")
+        table.innerHTML = "";
+        for(let [nom_donnee, donnee] of Object.entries(resultat[0])){
+            let ligneInfo = document.createElement("tr");
+            let nom = document.createElement("td");
+            nom.textContent = nom_donnee;
+            ligneInfo.appendChild(nom);
+            let valeur = document.createElement("td");
+            valeur.textContent = donnee;
+            ligneInfo.appendChild(valeur);
+            table.appendChild(ligneInfo);
+            console.log(nom_donnee + " : " + donnee);
+        }
+        document.getElementById("fond_popup").style.display = "block"
+        document.getElementById("popup_infos_fichier").style.display = "block";
+    })
+}
+
+function fermer_popup(idPopup){
+    document.getElementById(idPopup).style.display = "none";
+    document.getElementById("fond_popup").style.display = "none"
 }

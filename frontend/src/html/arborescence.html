@@ -43,19 +43,22 @@ termes.
     <link rel="stylesheet" href="../templates/bibliotheque.css">
     <link rel="stylesheet" href="../templates/commun_clair.css">
     <link rel="stylesheet" href="../css/arborescence.css">
+    <script src="../templates/bibliotheque.js"></script>
     <script src="../js/arborescence.js" async></script>
-    <script src="../templates/bibliotheque.js" async></script>
 </head>
 <body id="body_arbo">
     
     <h1>Arborescence de la machine analysée</h1>
-    <p id="patientez">🫧 L'extraction est en cours. Vous pouvez patienter en salle d'attente 🫧</p>
-    <div id="selection_arborescence">
+    <div id="selection_arborescence" class="contenuDetails">
         <select id="choix_arborescence" class="input_clair" onchange="extraire_arborescence()">
             <option value="" disabled selected>--- Arborescence à afficher ---</option>
         </select>
     </div>
-    <iframe src="../assets/documents/MONTAUBAN_Albane_Memoire_M2.pdf" frameborder="0" id="document_pour_patienter"></iframe>
+    <!-- Bloc « salle d’attente » -->
+    <div id="patientez">
+        <p>🫧 Chargement de l’arborescence en cours... 🫧<br>
+        Pour vous permettre de patienter, nous vous offrons ce document scientifique 🐬</p>
+    </div>
     <!--Légende des indicateurs de légitimité-->
     <div id="legende" style="display: none;">
         <h3>Choix des indicateurs de légitimité à afficher</h3>
@@ -66,9 +69,14 @@ termes.
         <input type="checkbox" id="affiche_ok" onchange="affichage_legitimite('affiche_ok', 'legitimite_ok')" checked>
         <label for="affiche_ok">Fichiers présents dans le modèle avec la même empreinte (😇)</label><br>
     </div>
-    <h3>Arborescence</h3>
     <div id="arborescence">
         <!--On va ajouter les fichiers d'arborescence ici-->
+    </div>
+    <div class="fond-popup" id="fond_popup"></div>
+    <div class="cadre-popup" id="popup_infos_fichier">
+        <button class="bouton_fermer" onclick="fermer_popup('popup_infos_fichier')">×</button>
+        <h2>Métadonnées du fichier</h2>
+        <table id="table_metadonnees"></table>
     </div>
 </body>
 </html>

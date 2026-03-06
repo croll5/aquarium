@@ -290,6 +290,22 @@ func (a *App) ArborescenceMachineAnalysee(cheminDossier []string, idMachine stri
 	return res
 }
 
+func (a *App) ExtractionEnCours() bool {
+	return arborescence.ExtractionEnCours()
+}
+
+func (a *App) ArborescenceEnCache() string {
+	return arborescence.ArborescenceEnCache()
+}
+
+func (a *App) DetailsFichierArborescence(idFichier int64, idMachine string) []map[string]interface{} {
+	resultat, err := arborescence.DetailsFichier(chemin_projet, idFichier, idMachine)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
 /***************************************************************************************/
 /************************* DB_INFO PAGE ************************************************/
 /***************************************************************************************/

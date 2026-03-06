@@ -172,3 +172,14 @@ function creer_tableau_depuis_dico(dico, divOuMettreTableau, afficherFiltres, fi
 
     divOuMettreTableau.appendChild(table);
 }
+
+let nb_documents = 35;
+
+function afficher_salle_d_attente(emplacement){
+    // Récupérer un document aléatoire
+    let num_doc = Math.floor(Math.random() * nb_documents);
+    let iframe = document.createElement("iframe");
+    iframe.src = "../assets/documents/" +  num_doc + ".pdf";
+    emplacement.appendChild(iframe);
+    emplacement.style.display = "inline";
+}
