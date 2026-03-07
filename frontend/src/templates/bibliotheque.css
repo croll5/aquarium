@@ -166,6 +166,16 @@ button.onglet_selectionne:hover{
     background-color: var(--or-6);
 }
 
+.fermer_onglet{
+    font-weight: bold;
+    padding: 0;
+}
+
+.fermer_onglet:hover{
+    color: #d00;
+    cursor: pointer;
+}
+
 .code{
     border: solid, 1px;
     border-color: var(--bleu-5);

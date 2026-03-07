@@ -8,6 +8,7 @@ require (
 	github.com/0xrawsec/golang-evtx v1.2.9
 	github.com/bodgit/sevenzip v1.6.1
 	github.com/go-gota/gota v0.12.0
+	github.com/pkg/errors v0.9.1
 	github.com/wailsapp/wails/v2 v2.10.2
 	modernc.org/sqlite v1.39.0
 	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
@@ -41,7 +42,6 @@ require (
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/lo v1.51.0 // indirect

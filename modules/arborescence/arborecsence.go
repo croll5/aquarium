@@ -40,11 +40,12 @@ import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
 	"encoding/json"
-	"errors"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const NOM_CHEMIN_FICHIER string = "chemin_fichier"
@@ -240,15 +241,18 @@ func getContenuDossier(cheminProjet string, cheminDossier []string, configArbore
 	// On ouvre la base de données
 	adb := aquabase.InitDB_Extraction(cheminProjet)
 	for _, fichier := range positionDansArborescence.Fichiers {
-		resultat := adb.SelectFrom(configArborescence.RequeteMetadonnees, fichier.Source)
+		resultat, err := adb.SelectFrom(configArborescence.RequeteMetadonnees, fichier.Source)
+		if err != nil {
+			return []MetaDonnees{}, errors.WithStack(err)
+		}
 		if len(resultat) < 1 {
-			return []MetaDonnees{}, errors.ErrUnsupported
+			return []MetaDonnees{}, errors.WithStack(errors.Errorf("Résultat vide"))
 		}
 		switch resultat[0]["Nom"].(type) {
 		case string:
 			metaDonnees[i] = MetaDonnees{Nom: resultat[0]["Nom"].(string), IdSource: fichier.Source, IdCopie: fichier.Copie}
 		default:
-			return []MetaDonnees{}, errors.ErrUnsupported
+			return []MetaDonnees{}, errors.WithStack(errors.Errorf("Résultat vide"))
 		}
 		i++
 	}

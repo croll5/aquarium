@@ -40,7 +40,6 @@ import (
 	"aquarium/modules/aquaframe"
 	"aquarium/modules/aquaticket"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -48,6 +47,7 @@ import (
 	"strings"
 
 	"github.com/go-gota/gota/dataframe"
+	"github.com/pkg/errors"
 )
 
 /** Structure jouant le role d'interface avec la database
@@ -93,7 +93,7 @@ func GetInfosBDD(chemin string) (InfosBDD, error) {
 	distributeur := aquaticket.NouveauDistributeur()
 	basesDeDonnees[chemin] = InfosBDD{bdd: bdd, tickets: &distributeur}
 	if err != nil {
-		return InfosBDD{}, err
+		return InfosBDD{}, errors.WithStack(err)
 	}
 	return basesDeDonnees[chemin], nil
 }
@@ -112,7 +112,7 @@ func GetInfosBaseExtraction(cheminProjet string) (InfosBDD, error) {
 func FermerBDD(cheminBDD string) error {
 	err := basesDeDonnees[cheminBDD].bdd.Close()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	delete(basesDeDonnees, cheminBDD)
 	return nil
@@ -125,7 +125,7 @@ func FermerToutesLesBDD() error {
 		err := FermerBDD(cle)
 		if err != nil {
 			log.Println("[ERROR] Erreur dans la fermeture de la table ", cle, " : ", err)
-			probleme = err
+			probleme = errors.WithStack(err)
 		} else {
 			log.Println("[INFO] Table ", cle, " fermée avec succès.")
 		}
@@ -232,7 +232,7 @@ func (adb Aquabase) CreateTableIfNotExist1(tableName string, tableColumns []stri
 	// Open or create the sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return fmt.Errorf("CreateTableIfNotExist1(): %w", err)
+		return errors.WithStack(err)
 	}
 	// Check the table existance
 	var name string
@@ -260,8 +260,7 @@ func (adb Aquabase) CreateTableIfNotExist1(tableName string, tableColumns []stri
 		return err
 	})
 	if err != nil {
-		fmt.Println("Error= " + err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	fmt.Println("Create table '" + tableName + "' in " + adb.dbName)
 	return err
@@ -271,7 +270,7 @@ func (adb Aquabase) CreateTableIfNotExist2(tableName string, tableColumns map[st
 	// Open or create the sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return fmt.Errorf("CreateTableIfNotExist(): %w", err)
+		return errors.WithStack(err)
 	}
 	// Check the table existence
 	var name string
@@ -298,9 +297,7 @@ func (adb Aquabase) CreateTableIfNotExist2(tableName string, tableColumns map[st
 		return err
 	})
 	if err != nil {
-		log.Println("[ERR] - Problème dans l'exécution de la requête", query)
-		fmt.Println("Error= " + err.Error())
-		return err
+		return errors.WithStack(err)
 	}
 	fmt.Println("Create table '" + tableName + "' in " + adb.dbName)
 	return err
@@ -320,8 +317,7 @@ func (adb Aquabase) DropTable(table string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		fmt.Println("adb.WARNING: DropTable failed: " + table)
-		return err
+		return errors.WithStack(err)
 	}
 	// Drop the table
 	queryDrop := fmt.Sprintf(`DROP TABLE IF EXISTS '%s'`, table)
@@ -340,7 +336,7 @@ func (adb Aquabase) RemoveFromWhere(table string, where string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return fmt.Errorf("SaveDf(): %w", err)
+		return errors.WithStack(err)
 	}
 	// SLQ query
 	queryDelete := fmt.Sprintf(`DELETE FROM '%s' WHERE %s`, table, where)
@@ -349,7 +345,7 @@ func (adb Aquabase) RemoveFromWhere(table string, where string) error {
 		return err
 	})
 	if err != nil {
-		return fmt.Errorf("Delete values failed: %w", err)
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -371,13 +367,13 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return fmt.Errorf("SaveDf(): %w", err)
+		return errors.WithStack(err)
 	}
 	// Start a transaction
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		tx, err := infosBdd.bdd.Begin()
 		if err != nil {
-			return fmt.Errorf("ERROR: exportDfToDB() [Can't start a transaction]: %w", err)
+			return errors.WithStack(err)
 		}
 		// Prepare the query insertion
 		queryAdd := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
@@ -387,7 +383,7 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 		stmt, err := tx.Prepare(queryAdd)
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("ERROR: exportDfToDB() [Can't Prepare query]: %w", err)
+			return errors.WithStack(err)
 		}
 		defer stmt.Close()
 		// Add rows in the table
@@ -399,13 +395,16 @@ func (adb Aquabase) SaveDf(df dataframe.DataFrame, tableName string) error {
 			_, err = stmt.Exec(values...)
 			if err != nil {
 				tx.Rollback()
-				return fmt.Errorf("ERROR: exportDfToDB() [Can't add data]: %w", err)
+				return errors.WithStack(err)
 			}
 		}
 		// Commit the transaction
 		err = tx.Commit()
 		return err
 	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return err
 }
 
@@ -416,13 +415,13 @@ func (adb Aquabase) InsertOrReplace(tableName string, columns []string, values [
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return fmt.Errorf("InsertOrReplace(): %w", err)
+		return errors.WithStack(err)
 	}
 	// Start a transaction
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		tx, err := infosBdd.bdd.Begin()
 		if err != nil {
-			return fmt.Errorf("ERROR: exportDfToDB() [Can't start a transaction]: %w", err)
+			return errors.WithStack(err)
 		}
 		// Prepare the query insertion
 		query := fmt.Sprintf("INSERT OR REPLACE INTO %s (", tableName)
@@ -451,19 +450,19 @@ func (adb Aquabase) InsertOrReplace(tableName string, columns []string, values [
 		stmt, err := tx.Prepare(query)
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("ERROR: exportDfToDB() [Can't Prepare query]: %w", err)
+			return errors.WithStack(err)
 		}
 		defer stmt.Close()
 		_, err = stmt.Exec(values...)
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("ERROR: exportDfToDB() [Can't Execute query]: %w", err)
+			return errors.WithStack(err)
 		}
 		tx.Commit()
 		return nil
 	})
 	if err != nil {
-		fmt.Println("Erreur lors de l'insertion ou de la mise à jour:", err)
+		return errors.WithStack(err)
 	}
 	return err
 }
@@ -498,7 +497,7 @@ func (requete *RequeteInsertion) Executer() error {
 	}
 	infosBdd, err := requete.bdd.Login()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// Préparation des instesions
 	var texteRequete string = "INSERT INTO " + requete.nomTable + "("
@@ -508,14 +507,14 @@ func (requete *RequeteInsertion) Executer() error {
 		// Création de la transaction
 		tx, err := infosBdd.bdd.Begin()
 		if err != nil {
-			return fmt.Errorf("ERROR: requete.Executer() impossible de creer la transaction : %w", err)
+			return errors.WithStack(err)
 		}
 		// Prepare the query insertion
 
 		stmt, err := tx.Prepare(texteRequete)
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("ERROR: requete.Executer() [Can't Prepare query]: %w", err)
+			return errors.WithStack(err)
 		}
 		defer stmt.Close()
 		// Add rows in the table
@@ -523,14 +522,20 @@ func (requete *RequeteInsertion) Executer() error {
 			_, err = stmt.Exec(ligne...)
 			if err != nil {
 				tx.Rollback()
-				return fmt.Errorf("ERROR: exportDfToDB() [Can't add data]: %w", err)
+				return errors.WithStack(err)
 			}
 		}
 		// Commit the transaction
 		err = tx.Commit()
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		return err
 	})
 	requete.valeurs = make([][]interface{}, 0)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return err
 }
 
@@ -540,7 +545,7 @@ func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, colonnesTable
 	if viderTableAvant {
 		err := abase.RemoveFromWhere(nomTable, "1=1")
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	var requeteInsertion string = strings.Join(requetes, " UNION ")
@@ -548,40 +553,17 @@ func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, colonnesTable
 	log.Println("[INFO] - Exécution de la requête ", requeteInsertion)
 	infosBDD, err := abase.Login()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
 		_, err := infosBDD.bdd.Exec(requeteInsertion)
 		return err
 	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return err
 }
-
-/*func (abase *Aquabase) EnregistrerTableDepuisMap(requeteSQL string, numLignes []map[string]string, nomTableDest string) error {
-	// On commence par créer la table résultat
-	var requeteCreation string = fmt.Sprintf("CREATE TABLE %s AS SELECT *, 'numLigne' FROM (%s) WHERE 1=0;", nomTableDest, requeteSQL)
-	log.Println("[INFO] - Exécution de la requête ", requeteCreation)
-	infosBDD, err := abase.Login()
-	if err != nil {
-		return err
-	}
-	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
-		_, err := infosBDD.bdd.Exec(requeteCreation)
-		return err
-	})
-	if err != nil {
-		return err
-	}
-	// On ajoute ensuite les valeurs dans la table
-	var numerosLignes string = strings.Trim(strings.Replace(fmt.Sprint(numLignes), " ", ",", -1), "[]")
-	var requeteInsertionValeurs string = fmt.Sprintf("WITH TableNumerotee AS ( SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS Numero FROM (%s) ) INSERT INTO %s SELECT * FROM TableNumerotee WHERE Numero IN (%s);", requeteSQL, nomTableDest, numerosLignes)
-	log.Println("[INFO] - Exécution de la requête ", requeteInsertionValeurs)
-	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
-		_, err := infosBDD.bdd.Exec(requeteInsertionValeurs)
-		return err
-	})
-	return err
-}*/
 
 /* ---------------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------------- */
@@ -593,11 +575,11 @@ func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, colonnesTable
  * @return : dict of all table with the text "Columns: %d - Rows: %d"
  * Exemple: listTable := GetAllTableNames()
  */
-func (adb Aquabase) GetAllTableNames() map[string]string {
+func (adb Aquabase) GetAllTableNames() (map[string]string, error) {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return map[string]string{"Error": "Can't connect to database"}
+		return map[string]string{}, errors.WithStack(err)
 	}
 	// Request the list of tables in the DB
 	tables := make(map[string]string)
@@ -605,7 +587,7 @@ func (adb Aquabase) GetAllTableNames() map[string]string {
 		rows, err := infosBdd.bdd.Query("SELECT name FROM sqlite_master WHERE type='table'")
 		if err != nil {
 			tables["Error"] = "GetAllTableNames(): Can't get tables list"
-			return err
+			return errors.WithStack(err)
 		}
 		defer rows.Close()
 		// For each table
@@ -613,7 +595,7 @@ func (adb Aquabase) GetAllTableNames() map[string]string {
 			var tableName string
 			if err := rows.Scan(&tableName); err != nil {
 				tables["Error"] = "GetAllTableNames(): scanning table name"
-				return err
+				return errors.WithStack(err)
 			}
 			// Get number of columns
 			var columnCount int
@@ -621,7 +603,7 @@ func (adb Aquabase) GetAllTableNames() map[string]string {
 			columnRows, err := infosBdd.bdd.Query(columnQuery)
 			if err != nil {
 				tables["Error"] = "GetAllTableNames(): querying column info for table" + tableName
-				return err
+				return errors.WithStack(err)
 			}
 			for columnRows.Next() {
 				columnCount++
@@ -633,16 +615,17 @@ func (adb Aquabase) GetAllTableNames() map[string]string {
 			err = infosBdd.bdd.QueryRow(rowQuery).Scan(&rowCount)
 			if err != nil {
 				tables["Error"] = "GetAllTableNames(): querying row count for table" + tableName
-				return err
+				return errors.WithStack(err)
 			}
 			tables[tableName] = fmt.Sprintf("Columns: %d - Rows: %d", columnCount, rowCount)
 		}
 		if err := rows.Err(); err != nil {
 			tables["Error"] = "GetAllTableNames(): during rows iteration"
+			return errors.WithStack(err)
 		}
 		return err
 	})
-	return tables
+	return tables, err
 }
 
 /** Simple SQL Selector with a limit size
@@ -651,7 +634,7 @@ func (adb Aquabase) GetAllTableNames() map[string]string {
  * @return : indexed dict contaning all rows data in a dict
  * Exemple: listTable := SelectAllFrom("getThis", 10)
  */
-func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interface{} {
+func (adb Aquabase) SelectAllFrom(table string, limit int) ([]map[string]interface{}, error) {
 	// Open sqliteDB
 
 	query := fmt.Sprintf("SELECT * FROM %s LIMIT %d", table, limit)
@@ -660,29 +643,32 @@ func (adb Aquabase) SelectAllFrom(table string, limit int) []map[string]interfac
 	return adb.ResultatRequeteSQL(query)
 }
 
-func (adb *Aquabase) RecupererValeursTable(nomTable string, colonnes []string, debut int, taille int) []map[string]interface{} {
+func (adb *Aquabase) RecupererValeursTable(nomTable string, colonnes []string, debut int, taille int) ([]map[string]interface{}, error) {
 	var stringColonnes string = strings.Join(colonnes, ", ")
 	var requete string = fmt.Sprintf("SELECT %s FROM %s LIMIT %d OFFSET %d", stringColonnes, nomTable, taille, debut)
 	log.Println("Exécution de la requête ", requete)
 	return adb.ResultatRequeteSQL(requete)
 }
 
-func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} {
+func (adb Aquabase) ResultatRequeteSQL(requete string) ([]map[string]interface{}, error) {
 	var results []map[string]interface{}
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return []map[string]interface{}{{"Erreur": "SelectAllFrom(): Can't connect to database"}}
+		return []map[string]interface{}{{}}, errors.WithStack(err)
 	}
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		rows, err := infosBdd.bdd.Query(requete)
 		if err != nil {
-			return errors.New("ResultatRequeteSQL(): querying table data")
+			infosErreur := make(map[string]interface{})
+			infosErreur["erreur"] = fmt.Sprintf("%+v", err)
+			results = append(results, infosErreur)
+			return errors.WithStack(err)
 		}
 		defer rows.Close()
 		// Take columns
 		columns, err := rows.Columns()
 		if err != nil {
-			return errors.New("ResultatRequeteSQL(): getting columns")
+			return errors.WithStack(err)
 		}
 		// Create the dataframe
 		for rows.Next() {
@@ -692,7 +678,7 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 				columnPointers[i] = &columnValues[i]
 			}
 			if err := rows.Scan(columnPointers...); err != nil {
-				return errors.New("SelectAllFrom(): scanning row: " + err.Error())
+				return errors.WithStack(err)
 			}
 
 			rowMap := make(map[string]interface{})
@@ -702,7 +688,7 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 			results = append(results, rowMap)
 		}
 		if err := rows.Err(); err != nil {
-			return errors.New("SelectAllFrom(): during rows iteration: " + err.Error())
+			return errors.WithStack(err)
 		}
 		return err
 	})
@@ -715,9 +701,12 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 			if len(partiesRequete) >= 2 {
 				var nomTable string = strings.Split(strings.TrimSpace(partiesRequete[1]), " ")[0]
 				if adb.EstTableVide(nomTable) {
-					return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}
+					return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}, nil
 				}
-				colonnesTable := adb.SelectAllFrom(nomTable, 1)
+				colonnesTable, err := adb.SelectAllFrom(nomTable, 1)
+				if err != nil {
+					return results, errors.WithStack(err)
+				}
 				for cles := range colonnesTable[0] {
 					ligne[cles] = ""
 				}
@@ -731,32 +720,29 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) []map[string]interface{} 
 		results = append(results, ligne)
 	}
 	if len(results) == 0 {
-		return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}
+		return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}, nil
 	}
-	if err != nil {
-		return []map[string]interface{}{{"Error": err.Error()}}
-	}
-	return results
+	return results, err
 }
 
 func (adb Aquabase) ExecuterRequeteSQL(requete string) (ResultatRequete, error) {
 	var resultatRequete ResultatRequete = ResultatRequete{}
 	infosBDD, err := adb.Login()
 	if err != nil {
-		return resultatRequete, err
+		return resultatRequete, errors.WithStack(err)
 	}
 	requeteSQL, err := infosBDD.bdd.Prepare(requete)
 	if err != nil {
-		return resultatRequete, err
+		return resultatRequete, errors.WithStack(err)
 	}
 	resultatSQL, err := requeteSQL.Query()
 	if err != nil {
-		return resultatRequete, err
+		return resultatRequete, errors.WithStack(err)
 	}
 	resultatRequete.requete = resultatSQL
 	colonnes, err := resultatSQL.Columns()
 	if err != nil {
-		return resultatRequete, err
+		return resultatRequete, errors.WithStack(err)
 	}
 	resultatRequete.colonnes = colonnes
 	return resultatRequete, nil
@@ -781,24 +767,24 @@ func (rest ResultatRequete) Suivant() (map[string]interface{}, bool) {
 	return dictResultat, true
 }
 
-func (adb Aquabase) SelectFrom(requeteSQL string, args ...any) []map[string]interface{} {
+func (adb Aquabase) SelectFrom(requeteSQL string, args ...any) ([]map[string]interface{}, error) {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		return []map[string]interface{}{{"Error": "SelectFrom(): Can't connect to database"}}
+		return []map[string]interface{}{{}}, errors.WithStack(err)
 	}
 	// SQL Request
 	var results []map[string]interface{}
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		rows, err := infosBdd.bdd.Query(requeteSQL, args...)
 		if err != nil {
-			return errors.New("SelectFrom(): querying table data")
+			return errors.WithStack(err)
 		}
 		defer rows.Close()
 		// Take columns
 		columns, err := rows.Columns()
 		if err != nil {
-			return errors.New("SelectFrom(): getting columns")
+			return errors.WithStack(err)
 		}
 		// Create the dataframe
 		for rows.Next() {
@@ -808,7 +794,7 @@ func (adb Aquabase) SelectFrom(requeteSQL string, args ...any) []map[string]inte
 				columnPointers[i] = &columnValues[i]
 			}
 			if err := rows.Scan(columnPointers...); err != nil {
-				return errors.New("SelectFrom(): scanning row: " + requeteSQL)
+				return errors.WithStack(err)
 			}
 			rowMap := make(map[string]interface{})
 			for i, colName := range columns {
@@ -817,14 +803,14 @@ func (adb Aquabase) SelectFrom(requeteSQL string, args ...any) []map[string]inte
 			results = append(results, rowMap)
 		}
 		if err := rows.Err(); err != nil {
-			return errors.New("SelectFrom(): during rows iteration: " + requeteSQL)
+			return errors.WithStack(err)
 		}
 		return nil
 	})
 	if err != nil {
-		return []map[string]interface{}{{}}
+		return []map[string]interface{}{{}}, errors.WithStack(err)
 	}
-	return results
+	return results, err
 }
 
 func (adb Aquabase) EstTableVide(table string) bool {
@@ -836,21 +822,20 @@ func (adb Aquabase) EstResultatVide(requete string) (bool, error) {
 	infosBdd, err := GetInfosBDD(adb.dbPath)
 	if err != nil {
 		log.Println("[ERROR] Problème dans l'ouverture de la base : ", err)
-		return true, err
+		return true, errors.WithStack(err)
 	}
 	var contientDonnees bool
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		resultat, err := infosBdd.bdd.Query(requete)
 		if err != nil {
-			log.Println("[ERROR] Problème dans la récupération des informations de la table : ", err)
-			return err
+			return errors.WithStack(err)
 		}
 		defer resultat.Close()
 		contientDonnees = resultat.Next()
 		return nil
 	})
 	if err != nil {
-		return true, err
+		return true, errors.WithStack(err)
 	}
 	return !contientDonnees, nil
 }
@@ -877,17 +862,17 @@ func (adb *Aquabase) TailleRequeteSQL(requete string) int {
 	return nbLignes
 }
 
-func (adb *Aquabase) GetListeTablesDansBDD() []string {
+func (adb *Aquabase) GetListeTablesDansBDD() ([]string, error) {
 	var requete string = "SELECT name FROM sqlite_master WHERE type='table'"
 	infosBDD, err := adb.Login()
 	if err != nil {
-		return []string{"ERREUR : " + err.Error()}
+		return []string{}, errors.WithStack(err)
 	}
 	var listeTables []string
 	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
 		resultat, err := infosBDD.bdd.Query(requete)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		for resultat.Next() {
 			var nomTable string
@@ -904,9 +889,9 @@ func (adb *Aquabase) GetListeTablesDansBDD() []string {
 		}
 	}
 	if err != nil {
-		return []string{"ERREUR : " + err.Error()}
+		return []string{}, errors.WithStack(err)
 	}
-	return listeTablesNettoyee
+	return listeTablesNettoyee, err
 }
 
 /* -------------------------- FONCTIONS ANNEXES -------------------------- */
@@ -925,14 +910,12 @@ func nettoyage(entree string) string {
 /* ---------------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------------- */
 
-func (adb Aquabase) SelectFrom0(sqlQuery string) *aquaframe.Aquaframe {
-	df_error := aquaframe.Aquaframe{Table: dataframe.New()}
+func (adb Aquabase) SelectFrom0(sqlQuery string) (*aquaframe.Aquaframe, error) {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 
 	if err != nil {
-		df_error.Error = errors.New("adb.WARNING - SelectFrom failed connexion: " + err.Error())
-		return &df_error
+		return nil, errors.WithStack(err)
 	}
 	// SQL Request
 	//var df dataframe.DataFrame
@@ -940,20 +923,19 @@ func (adb Aquabase) SelectFrom0(sqlQuery string) *aquaframe.Aquaframe {
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		rows, err := infosBdd.bdd.Query(sqlQuery)
 		if err != nil {
-			return errors.New("adb.WARNING - SelectFrom failed querying: " + err.Error())
+			return errors.WithStack(err)
 		}
 		defer rows.Close()
 		df = aquaframe.RowsToAquaframe(rows)
 		if df == nil {
-			return errors.New("adb.WARNING - SelectFrom failed create dataframe")
+			return errors.WithStack(err)
 		}
 		return nil
 	})
 	if err != nil {
-		df_error.Error = errors.New("adb.WARNING - SelectFrom execution error: " + err.Error())
-		return &df_error
+		return nil, errors.WithStack(err)
 	}
-	return df
+	return df, err
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -966,14 +948,13 @@ func (adb Aquabase) PragmaTable(tableName string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
-		return nil
+		return errors.WithStack(err)
 	}
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		query := fmt.Sprintf("PRAGMA table_info(%s);", tableName)
 		rows, err := infosBdd.bdd.Query(query)
 		if err != nil {
-			return fmt.Errorf("Erreur lors de l'exécution de la requête PRAGMA: %w", err)
+			return errors.WithStack(err)
 		}
 		defer rows.Close()
 		found := false
@@ -985,30 +966,28 @@ func (adb Aquabase) PragmaTable(tableName string) error {
 			var dflt_value sql.NullString
 			err = rows.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
 			if err != nil {
-				return fmt.Errorf("Erreur lors de la lecture des résultats: %w", err)
+				return errors.WithStack(err)
 			}
-			fmt.Printf("cid: %d, name: %s, type: %s, notnull: %d, dflt_value: %v, pk: %d\n", cid, name, ctype, notnull, dflt_value, pk)
 		}
 		if !found {
 			fmt.Println("Aucun informations trouvé pour la table", tableName)
 		}
 		return err
 	})
-	return err
+	return errors.WithStack(err)
 }
 
 func (adb Aquabase) PragmaIndexList(tableName string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
-		return nil
+		return errors.WithStack(err)
 	}
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		query := fmt.Sprintf("PRAGMA index_list(%s);", tableName)
 		rows, err := infosBdd.bdd.Query(query)
 		if err != nil {
-			return fmt.Errorf("Erreur lors de l'exécution de la requête PRAGMA: %w", err)
+			return errors.WithStack(err)
 		}
 		defer rows.Close()
 		found := false
@@ -1019,7 +998,7 @@ func (adb Aquabase) PragmaIndexList(tableName string) error {
 			var unique, partial int
 			err = rows.Scan(&seq, &name, &unique, &origin, &partial)
 			if err != nil {
-				return fmt.Errorf("erreur lors de la lecture des résultats: %w", err)
+				return errors.WithStack(err)
 			}
 			fmt.Printf("seq: %d, name: %s, unique: %d, origin: %s, partial: %d\n", seq, name, unique, origin, partial)
 		}
@@ -1035,14 +1014,13 @@ func (adb Aquabase) PragmaIndexInfo(indexName string) error {
 	// Open sqliteDB
 	infosBdd, err := adb.Login()
 	if err != nil {
-		fmt.Println("adb.WARNING - SelectFrom failed connexion: " + err.Error())
-		return nil
+		return errors.WithStack(err)
 	}
 	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
 		query := fmt.Sprintf("PRAGMA index_info(%s);", indexName)
 		rows, err := infosBdd.bdd.Query(query)
 		if err != nil {
-			return fmt.Errorf("Erreur lors de l'exécution de la requête PRAGMA: %w", err)
+			return errors.WithStack(err)
 		}
 		defer rows.Close()
 
@@ -1053,7 +1031,7 @@ func (adb Aquabase) PragmaIndexInfo(indexName string) error {
 			var name string
 			err = rows.Scan(&seqno, &cid, &name)
 			if err != nil {
-				return fmt.Errorf("Erreur lors de la lecture des résultats: %w", err)
+				return errors.WithStack(err)
 			}
 			fmt.Printf("seqno: %d, cid: %d, name: %s\n", seqno, cid, name)
 		}

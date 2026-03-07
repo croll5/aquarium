@@ -16,5 +16,5 @@ func DetailsFichier(cheminProjet string, idFichier int64, idMachine string) ([]m
 		return []map[string]interface{}{}, err
 	}
 	adb := aquabase.InitDB_Extraction(cheminProjet)
-	return adb.SelectFrom(confMachine.Arborescence.RequeteMetadonnees, idFichier), nil
+	return adb.SelectFrom(confMachine.Arborescence.RequeteMetadonnees, idFichier)
 }

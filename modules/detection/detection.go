@@ -45,6 +45,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 /* VARIABLES LOCALES */
@@ -83,7 +85,10 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 
 	// Execution la requête SQL
 	var adb = aquabase.InitDB_Extraction(cheminProjet)
-	df := adb.SelectFrom0(detailsRegle.SQL)
+	df, err := adb.SelectFrom0(detailsRegle.SQL)
+	if err != nil {
+		return 0, err
+	}
 	isError := df.Table.Nrow() > 0
 
 	// Renseignement de la table sql des regles
@@ -107,11 +112,14 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 
 	// Renvoi 2 si le dataframe n'est pas vide sinon 1
 	if isError {
-		id_frame := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
+		id_frame, err := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
+		if err != nil {
+			return 0, err
+		}
 		id_value := id_frame.Strloc(0, 0)
 
 		table_name := "error_" + id_value
-		err := adb_rules.DropTable(table_name)
+		err = adb_rules.DropTable(table_name)
 		if err != nil {
 			return 0, err
 		}
@@ -216,7 +224,7 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 	// Helper function to handle the rule logic
 	var probleme error = nil
 	var reglesEnErreur []string = []string{}
-	handleRule := func(rule string, isGlobal int, path string) {
+	handleRule := func(rule string, isGlobal int, path string) error {
 		state := 0
 		var err error
 		if lancerRegles {
@@ -233,7 +241,10 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			// Cherche si la regle a deja été executé avant
 			adb_rules := aquabase.InitDB_Rules(cheminProjet)
 			query := fmt.Sprintf("SELECT isError FROM regles WHERE name=\"%s\"", rule)
-			df := adb_rules.SelectFrom0(query)
+			df, err := adb_rules.SelectFrom0(query)
+			if err != nil {
+				return err
+			}
 			if df.Table.Nrow() > 0 {
 				value, _ := df.Intloc(0, 0)
 				if value == 1 {
@@ -247,14 +258,21 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			"isGlobal": isGlobal,
 			"state":    state,
 		}
+		return nil
 	}
 	// Merge both list in a list of dict with parameters of each rule
 	// Une regle créé par l'user et prioritaire par rapport à une regle de base
 	for _, rule := range listeRegles_global {
-		handleRule(rule, 1, path_global)
+		err := handleRule(rule, 1, path_global)
+		if err != nil {
+			return listeRegles, reglesEnErreur, errors.WithStack(err)
+		}
 	}
 	for _, rule := range listeRegles_local {
-		handleRule(rule, 0, path_local)
+		err := handleRule(rule, 0, path_local)
+		if err != nil {
+			return listeRegles, reglesEnErreur, errors.WithStack(err)
+		}
 	}
 	return listeRegles, reglesEnErreur, probleme
 }
@@ -283,9 +301,15 @@ func ResultatRegleDetection(cheminProjet string, nomRegle string) (int, error) {
 
 func ResultatSQL(cheminProjet string, ruleName string) ([]map[string]interface{}, error) {
 	adb_rules := aquabase.InitDB_Rules(cheminProjet)
-	id_frame := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
+	id_frame, err := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
+	if err != nil {
+		return []map[string]interface{}{}, err
+	}
 	id_value := id_frame.Strloc(0, 0)
-	df := adb_rules.SelectFrom0("SELECT * FROM error_" + id_value)
+	df, err := adb_rules.SelectFrom0("SELECT * FROM error_" + id_value)
+	if err != nil {
+		return df.ToMap(), errors.WithStack(err)
+	}
 	return df.ToMap(), nil
 }
 
@@ -319,10 +343,10 @@ func SuppressionRegleDetection(cheminProjet string, nomRegle string) error {
 
 func StatutReglesDetection(cheminProjet string) ([]map[string]interface{}, error) {
 	adb_rules := aquabase.InitDB_Rules(cheminProjet)
-	df := adb_rules.SelectFrom0("SELECT * FROM regles")
-	if df.Error != nil {
+	df, err := adb_rules.SelectFrom0("SELECT * FROM regles")
+	if df.Error != nil || err != nil {
 		fmt.Println("Table 'regle' inexistante ou erreur")
-		return []map[string]interface{}{}, nil
+		return []map[string]interface{}{}, err
 	}
 	return df.ToMap(), nil
 }

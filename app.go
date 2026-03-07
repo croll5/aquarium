@@ -311,13 +311,21 @@ func (a *App) DetailsFichierArborescence(idFichier int64, idMachine string) []ma
 /***************************************************************************************/
 func (a *App) Get_db_info() map[string]string {
 	adb := aquabase.InitDB_Extraction(chemin_projet)
-	return adb.GetAllTableNames()
+	resultat, err := adb.GetAllTableNames()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 func (a *App) Get_header_table(tableName string, limitJS string) []map[string]interface{} {
 	limit, _ := strconv.Atoi(limitJS)
 	adb := aquabase.InitDB_Extraction(chemin_projet)
-	return adb.SelectAllFrom(tableName, limit)
+	resultat, err := adb.SelectAllFrom(tableName, limit)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 /***************************************************************************************/
@@ -400,11 +408,15 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 /*************************** Chronologie FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
-func (app *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
+func (a *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
 	requete = fmt.Sprintf("%s LIMIT %d OFFSET %d", requete, taille, debut)
 	log.Println("[INFO] - Execution depuis JS de la requete ", requete)
 	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
-	return base.ResultatRequeteSQL(requete)
+	resultat, err := base.ResultatRequeteSQL(requete)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 func (app *App) TailleRequeteSQLExtraction(requete string) int {
@@ -412,9 +424,13 @@ func (app *App) TailleRequeteSQLExtraction(requete string) int {
 	return base.TailleRequeteSQL(requete)
 }
 
-func (app *App) GetListeTablesExtraction() []string {
+func (a *App) GetListeTablesExtraction() []string {
 	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(chemin_projet)
-	return base.GetListeTablesDansBDD()
+	resultat, err := base.GetListeTablesDansBDD()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 /***************************************************************************************/
@@ -449,20 +465,32 @@ func (app *App) AjouterEtapeDansRapport(requeteSQL string, lignesAEnregistrer []
 	}
 }
 
-func (app *App) ListePistesRapport() []map[string]interface{} {
+func (a *App) ListePistesRapport() []map[string]interface{} {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
-	return rprt.GetPistes()
+	resultat, err := rprt.GetPistes()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
-func (app *App) ListeEtapesRapport(idPiste int) []rapport.EtapeAnalyse {
+func (a *App) ListeEtapesRapport(idPiste int) []rapport.EtapeAnalyse {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
-	return rprt.GetEtapesPiste(idPiste)
+	resultat, err := rprt.GetEtapesPiste(idPiste)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
-func (app *App) DonneesTableRapport(nomTable string) []map[string]interface{} {
+func (a *App) DonneesTableRapport(nomTable string) []map[string]interface{} {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
 	log.Println(nomTable)
-	return rprt.GetDonnesTableSauvegardee(nomTable)
+	resultat, err := rprt.GetDonnesTableSauvegardee(nomTable)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 /***************************************************************************************/
