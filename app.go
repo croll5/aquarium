@@ -102,7 +102,7 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Call this function when a bug appear
 func (a *App) signalerErreur(erreur error) {
-	log.Println("ERR | Erreur non traitée : ", erreur)
+	log.Printf("%+v\n", erreur)
 	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 		Type:    runtime.ErrorDialog,
 		Title:   "Erreur dans l'écriture du projet",

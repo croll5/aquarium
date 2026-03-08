@@ -38,15 +38,14 @@ package avlogs
 
 import (
 	"bytes"
-	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/bodgit/sevenzip"
+	"github.com/pkg/errors"
 
 	"aquarium/modules/aquabase"
 )
@@ -57,27 +56,29 @@ var colonnesTableAVLog []string = []string{"timestamp", "eventType", "source", "
 
 type AvLog struct{}
 
-func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requete *aquabase.RequeteInsertion) {
+func traiterInfosLog(line string, dejaFait *map[string]bool, source string, requete *aquabase.RequeteInsertion) error {
 	fields := strings.Split(line, ",") // Assuming CSV format
 	if len(fields) < 4 {
-		log.Println("Invalid log entry:", line)
-		return
+		return errors.WithStack(errors.Errorf("Invalid log entry:%s", line))
 	}
 
 	timestamp, eventType, severity, description := fields[0], fields[1], fields[2], fields[3]
 	if _, exists := (*dejaFait)[line]; exists {
-		return // Skip duplicate entries
+		return nil // Skip duplicate entries
 	}
 
 	layout := "2006-01-02T15:04:05.00Z"
 	parsedTime, err := time.Parse(layout, timestamp)
 	if err != nil {
-		log.Println("Invalid timestamp format:", timestamp)
-		return
+		return errors.WithStack(err)
 	}
 
-	requete.AjouterDansRequete(parsedTime.String(), eventType, severity, description, source)
+	err = requete.AjouterDansRequete(parsedTime.String(), eventType, severity, description, source)
 	(*dejaFait)[line] = true
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 func (a AvLog) Description() string {
@@ -90,7 +91,7 @@ func (a AvLog) Extraction(cheminProjet string) error {
 	logFilePath := filepath.Join(cheminProjet, "collecteORC", "General", "TextLogs.7z")
 	r, err := sevenzip.OpenReader(logFilePath)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer r.Close()
 
@@ -103,10 +104,10 @@ func (a AvLog) Extraction(cheminProjet string) error {
 		ra, err := fileAV.Open()
 		defer ra.Close()
 		if err != nil {
-			return fmt.Errorf("failed to decompress log file: %w", err)
+			return errors.WithStack(err)
 		}
 		if _, err := io.Copy(&buffer, ra); err != nil {
-			return fmt.Errorf("failed to read log file: %w", err)
+			return errors.WithStack(err)
 		}
 	}
 
@@ -123,7 +124,10 @@ func (a AvLog) Extraction(cheminProjet string) error {
 
 func (av AvLog) CreationTable(cheminProjet string) error {
 	aqua := aquabase.InitDB_Extraction(cheminProjet)
-	aqua.CreateTableIfNotExist1("av_log", colonnesTableAVLog, true)
+	err := aqua.CreateTableIfNotExist1("av_log", colonnesTableAVLog, true)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
 
@@ -158,5 +162,3 @@ func (a AvLog) DetailsEvenement(idEvt int) string {
 func (a AvLog) SQLChronologie() string {
 	return "SELECT id, \"av_log\", \"av_log\", source, timestamp, \"Event: \" || eventType || \" (User: \" || user || \"), Description: \" || description FROM av_log"
 }
-
-//end of the code

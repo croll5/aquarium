@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type AquaConfig struct {
@@ -59,24 +61,24 @@ func GetAquaConfig(cheminProjet string) (AquaConfig, error) {
 	// Ouverture du fichier de configuration
 	fichier, err := os.Open(filepath.Join(cheminProjet, ANALYSE_AQUA))
 	if err != nil {
-		return AquaConfig{}, err
+		return AquaConfig{}, errors.WithStack(err)
 	}
 	defer fichier.Close()
 	// Lecture des données du fichier
 	donneesAqua, err := io.ReadAll(fichier)
 	if err != nil {
-		return AquaConfig{}, err
+		return AquaConfig{}, errors.WithStack(err)
 	}
 	// Interprétation du contenu du fichier
 	var aquaConfig AquaConfig
 	err = json.Unmarshal(donneesAqua, &aquaConfig)
-	return aquaConfig, err
+	return aquaConfig, errors.WithStack(err)
 }
 
 func ListeMachinesAnalysees(cheminProjet string) (map[string]AquaConfigMachine, error) {
 	aquaconfig, err := GetAquaConfig(cheminProjet)
 	if err != nil {
-		return map[string]AquaConfigMachine{}, err
+		return map[string]AquaConfigMachine{}, errors.WithStack(err)
 	}
 	return aquaconfig.Machines, nil
 }
@@ -88,16 +90,19 @@ func EnregistrerAquaConfig(cheminProjet string, config AquaConfig) error {
 	if err != nil {
 		fichier, err = os.Create(filepath.Join(cheminProjet, ANALYSE_AQUA))
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	defer fichier.Close()
 	// Génération des données
 	donnees, err := json.Marshal(config)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// Enregistrement des données
 	_, err = fichier.Write(donnees)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return err
 }

@@ -75,11 +75,11 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	donneesFichier, err := os.ReadFile(cheminRegle)
 	if err != nil {
 		log.Println("WARN | Le fichier de règle "+cheminRegle+" n'existe pas ou n'a pas pu être ouvert : ", err.Error())
-		return 0, err
+		return 0, errors.WithStack(err)
 	}
 	err = json.Unmarshal(donneesFichier, &detailsRegle)
 	if err != nil {
-		return 0, err
+		return 0, errors.WithStack(err)
 	}
 	ruleName := strings.Replace(filepath.Base(cheminRegle), ".json", "", -1)
 
@@ -87,7 +87,7 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	var adb = aquabase.InitDB_Extraction(cheminProjet)
 	df, err := adb.SelectFrom0(detailsRegle.SQL)
 	if err != nil {
-		return 0, err
+		return 0, errors.WithStack(err)
 	}
 	isError := df.Table.Nrow() > 0
 
@@ -102,11 +102,11 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	}
 	err = adb_rules.CreateTableIfNotExist2(tableName, tableColumns, true)
 	if err != nil {
-		return 0, err
+		return 0, errors.WithStack(err)
 	}
 	err = adb_rules.InsertOrReplace(tableName, colName, []interface{}{ruleName, isError})
 	if err != nil {
-		return 0, err
+		return 0, errors.WithStack(err)
 	}
 	//fmt.Println(adb_rules.SelectFrom0("SELECT * FROM regles"))
 
@@ -114,22 +114,22 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	if isError {
 		id_frame, err := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
 		if err != nil {
-			return 0, err
+			return 0, errors.WithStack(err)
 		}
 		id_value := id_frame.Strloc(0, 0)
 
 		table_name := "error_" + id_value
 		err = adb_rules.DropTable(table_name)
 		if err != nil {
-			return 0, err
+			return 0, errors.WithStack(err)
 		}
 		err = adb_rules.CreateTableIfNotExist1(table_name, df.Table.Names(), false)
 		if err != nil {
-			return 0, err
+			return 0, errors.WithStack(err)
 		}
 		err = adb_rules.SaveDf(df.Table, table_name)
 		if err != nil {
-			return 0, err
+			return 0, errors.WithStack(err)
 		}
 		return 2, nil
 	}
@@ -168,7 +168,7 @@ func searchDetectionRules(rulesPath string, args ...string) ([]string, error) {
 	// Open in kernel the folder
 	fichiersRegles, err := os.ReadDir(rulesPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	// Catch all json file in a list
 	for _, fichierRegle := range fichiersRegles {
@@ -216,10 +216,10 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 	listeRegles_local, error_local := searchDetectionRules(path_local)
 	listeRegles_global, error_global := searchDetectionRules(path_global)
 	if error_local != nil {
-		return nil, nil, error_local
+		return nil, nil, errors.WithStack(error_local)
 	}
 	if error_global != nil {
-		return nil, nil, error_global
+		return nil, nil, errors.WithStack(error_global)
 	}
 	// Helper function to handle the rule logic
 	var probleme error = nil
@@ -232,8 +232,7 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			state, err = lancerRegle(cheminProjet, path_rule)
 			if err != nil {
 				state = 0
-				probleme = err
-				log.Println("detection.go => lancerRegle(", rule, ") : ", err)
+				probleme = errors.WithStack(err)
 			} else if state == 0 {
 				reglesEnErreur = append(reglesEnErreur, rule)
 			}
@@ -243,7 +242,7 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			query := fmt.Sprintf("SELECT isError FROM regles WHERE name=\"%s\"", rule)
 			df, err := adb_rules.SelectFrom0(query)
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 			if df.Table.Nrow() > 0 {
 				value, _ := df.Intloc(0, 0)
@@ -274,6 +273,9 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			return listeRegles, reglesEnErreur, errors.WithStack(err)
 		}
 	}
+	if probleme != nil {
+		return listeRegles, reglesEnErreur, errors.WithStack(probleme)
+	}
 	return listeRegles, reglesEnErreur, probleme
 }
 
@@ -286,9 +288,12 @@ func DetailsRegleDetection(cheminProjet string, nomRegle string) (Regle, error) 
 	donneesFichier, err := os.ReadFile(filepath.Join(path, nomRegle+".json"))
 	if err != nil {
 		log.Println("WARN DetailsRegleDetection() | Le fichier de règle n'existe pas ou n'a pas pu être ouvert : ", err.Error())
-		return Regle{}, err
+		return Regle{}, errors.WithStack(err)
 	}
 	err = json.Unmarshal(donneesFichier, &donneesRegle)
+	if err != nil {
+		return donneesRegle, errors.WithStack(err)
+	}
 	return donneesRegle, err
 }
 
@@ -296,14 +301,18 @@ func ResultatRegleDetection(cheminProjet string, nomRegle string) (int, error) {
 	// Search where the rule is saved
 	path, _ := getRulePathFolder(cheminProjet, nomRegle)
 	// Execute the SQL request
-	return lancerRegle(cheminProjet, filepath.Join(path, nomRegle+".json"))
+	resultat, err := lancerRegle(cheminProjet, filepath.Join(path, nomRegle+".json"))
+	if err != nil {
+		return 1, errors.WithStack(err)
+	}
+	return resultat, err
 }
 
 func ResultatSQL(cheminProjet string, ruleName string) ([]map[string]interface{}, error) {
 	adb_rules := aquabase.InitDB_Rules(cheminProjet)
 	id_frame, err := adb_rules.SelectFrom0("SELECT id FROM regles WHERE name='" + ruleName + "'")
 	if err != nil {
-		return []map[string]interface{}{}, err
+		return []map[string]interface{}{}, errors.WithStack(err)
 	}
 	id_value := id_frame.Strloc(0, 0)
 	df, err := adb_rules.SelectFrom0("SELECT * FROM error_" + id_value)
@@ -318,16 +327,13 @@ func SuppressionRegleDetection(cheminProjet string, nomRegle string) error {
 	path_local := filepath.Join(cheminProjet, "regles_detection")
 	exist, _ := searchDetectionRules(path_local, nomRegle)
 	if len(exist) != 1 {
-		fmt.Println("Annulation de suppression de la regle: " + nomRegle)
 		return nil
 	}
 	// Delete the rule.json data
 	err := os.Remove(filepath.Join(path_local, nomRegle+".json"))
 	if err != nil {
-		log.Println("WARN | Le fichier de règle n'a pas pu être supprimé : ", err.Error())
-		return err
+		return errors.WithStack(err)
 	}
-	fmt.Println("Suppression de la regle: " + nomRegle)
 	// Delete all data about this rule from regles.db
 	adb_rules := aquabase.InitDB_Rules(cheminProjet)
 	err = adb_rules.DropTable(nomRegle)
@@ -336,7 +342,7 @@ func SuppressionRegleDetection(cheminProjet string, nomRegle string) error {
 	}
 	err = adb_rules.RemoveFromWhere("regles", "name='"+nomRegle+"'")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -345,8 +351,7 @@ func StatutReglesDetection(cheminProjet string) ([]map[string]interface{}, error
 	adb_rules := aquabase.InitDB_Rules(cheminProjet)
 	df, err := adb_rules.SelectFrom0("SELECT * FROM regles")
 	if df.Error != nil || err != nil {
-		fmt.Println("Table 'regle' inexistante ou erreur")
-		return []map[string]interface{}{}, err
+		return []map[string]interface{}{}, errors.WithStack(err)
 	}
 	return df.ToMap(), nil
 }
@@ -356,40 +361,40 @@ func NewDetectionRule(chemin_projet string, json_rule string) error {
 	// Conversion de la chaîne JSON en une structure Go
 	var regle map[string]interface{}
 	if err := json.Unmarshal([]byte(json_rule), &regle); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// Récupération du nom à partir du JSON
 	nom, ok := regle["nom"].(string)
 	if !ok {
-		return fmt.Errorf("Json without the variable: nom")
+		return errors.WithStack(errors.Errorf("Le fichier json ne contient pas la variable « nom »"))
 	}
 	nameBeforeModification, ok := regle["nameBeforeModification"].(string)
 	if !ok {
-		return fmt.Errorf("Json without the variable: nameBeforeModification")
+		return errors.WithStack(fmt.Errorf("Le fichier json ne contient pas la variable « nameBeforeModification »"))
 	}
 	//Verification que la regle n'existe pas déjà
 	rulePathFolder, _ := getRulePathFolder(chemin_projet, nom)
 	if len(rulePathFolder) != 0 && nom != nameBeforeModification {
-		return fmt.Errorf("The name '" + nom + "' is already used")
+		return fmt.Errorf("Le nom « %s » est déjà utilisé.", nom)
 	}
 	// Suppression du champ json nameBeforeModification et du json avec l'ancien nom
 	if nameBeforeModification != "" {
 		err := SuppressionRegleDetection(chemin_projet, nameBeforeModification)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	delete(regle, "nameBeforeModification")
 	// Conversion de la structure Go en JSON formaté
 	data, err := json.MarshalIndent(regle, "", "  ")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// Création du chemin complet du fichier avec le nom du JSON
 	chemin_complet := filepath.Join(chemin_regles, nom+".json")
 	// Écriture des données JSON dans un fichier
 	if err := os.WriteFile(chemin_complet, data, 0644); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }

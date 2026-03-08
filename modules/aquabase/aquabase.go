@@ -926,7 +926,10 @@ func (adb Aquabase) SelectFrom0(sqlQuery string) (*aquaframe.Aquaframe, error) {
 			return errors.WithStack(err)
 		}
 		defer rows.Close()
-		df = aquaframe.RowsToAquaframe(rows)
+		df, err = aquaframe.RowsToAquaframe(rows)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 		if df == nil {
 			return errors.WithStack(err)
 		}
