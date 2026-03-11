@@ -45,12 +45,13 @@ import (
 	"bufio"
 	"encoding/csv"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
 	_ "modernc.org/sqlite"
+
+	"github.com/pkg/errors"
 )
 
 type Csv struct{}
@@ -60,22 +61,7 @@ type Csv struct{}
 /* ******************************************************************** */
 
 func (gt Csv) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
-	// var df dataframe.DataFrame
-	// var err error
-	// // On lit les données du fichier CSV
-	// df = dataframe.ReadCSV(&fichier)
-	// if err != nil {
-	// 	return err
-	// }
-	// for _, table := range configExtraction.Table {
-	// 	err = exportDfToDb(df, cheminProjet, cheminFichierAExtraire, table.Nom, table.Colonnes, idMachine)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// On initialise la requête
-
+	// on initialise la requête
 	colonnesTable := configExtraction.Table[0].Colonnes
 	adb := aquabase.InitDB_Extraction(cheminProjet)
 	var nomsColonnesTables []string = make([]string, len(colonnesTable))
@@ -84,12 +70,11 @@ func (gt Csv) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAE
 	}
 	requeteInsertion := adb.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomsColonnesTables)
 	scanner := bufio.NewReader(fichier)
-	csv.NewReader(scanner)
 	// On lit le fichier CSV
 	lecteurCSV := csv.NewReader(scanner)
 	enTete, err := lecteurCSV.Read()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	fonctionTraitement := getFonctionTraitementLigne(enTete, colonnesTable, cheminFichierAExtraire, idMachine)
 	for i := 0; err == nil; i++ {
@@ -100,18 +85,14 @@ func (gt Csv) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAE
 		if i > 0 && i%100_000 == 0 {
 			requeteInsertion.Executer()
 			requeteInsertion = adb.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomsColonnesTables)
-			log.Println(i)
 		}
 		requeteInsertion.AjouterDansRequete(fonctionTraitement(ligne)...)
 	}
-	return requeteInsertion.Executer()
-	// for i := range fichier.Bytes() {
-	// 	if i%10000 == 0 {
-	// 		log.Println(i)
-	// 	}
-	// }
-
-	return nil
+	err = requeteInsertion.Executer()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 /* **************************************************************************** */
@@ -131,15 +112,16 @@ func getFonctionTraitementLigne(enTete []string, colonnesTable []config.ConfigCo
 			}
 		}
 		if !trouve {
-			if colonne.Contenu == "aqua_source" {
+			switch colonne.Contenu {
+			case "aqua_source":
 				fonctionsTraitement[i] = func(valeurs []string) interface{} {
 					return source
 				}
-			} else if colonne.Contenu == config.AQUA_MACHINE {
+			case config.AQUA_MACHINE:
 				fonctionsTraitement[i] = func(valeurs []string) interface{} {
 					return idMachine
 				}
-			} else {
+			default:
 				fonctionsTraitement[i] = func(valeurs []string) interface{} {
 					return "[AQUA_ERR] Colonne " + colonne.Contenu + " non trouvée"
 				}
@@ -182,10 +164,14 @@ func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, t
 		}
 		err := requeteInsertion.AjouterDansRequete(valeursAAjouter...)
 		if err != nil {
-			log.Println(err)
+			return errors.WithStack(err)
 		}
 	}
-	return requeteInsertion.Executer()
+	err := requeteInsertion.Executer()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 /* ******************************************************************** */

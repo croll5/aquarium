@@ -48,6 +48,7 @@ import (
 	"time"
 
 	"github.com/bodgit/sevenzip"
+	"github.com/pkg/errors"
 )
 
 /*
@@ -64,14 +65,17 @@ func AjoutEvenementDansBDD(cheminProjet string, extracteur string, horodatage ti
 	bd, err := sql.Open("sqlite", filepath.Join(cheminProjet, "analyse", "extractions.db"))
 	//log.Println(filepath.Join(cheminProjet, "analyse", "extractions.db"))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer bd.Close()
 	requete, err := bd.Prepare("INSERT INTO chronologie(extracteur, horodatage, source, message) VALUES (?, ?, ?, ?)")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	_, err = requete.Exec(extracteur, horodatage, source, message)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return err
 }
 
@@ -165,7 +169,7 @@ func Utf16LEToUtf8(s string) string {
 func ExtraireFichierDepuis7z(file *sevenzip.File, destination string) error {
 	rc, err := file.Open()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer rc.Close()
 
@@ -173,14 +177,14 @@ func ExtraireFichierDepuis7z(file *sevenzip.File, destination string) error {
 	os.MkdirAll(filepath.Join(destination, filepath.Dir(file.Name)), 0755)
 	fichierExtrait, err := os.Create(filepath.Join(destination, file.Name))
 	if err != nil {
-		log.Println("ERROR | Problème dans la création du fichier de copie : ", err.Error())
+		return errors.WithStack(err)
 	}
 	defer fichierExtrait.Close()
 
 	_, err = io.Copy(fichierExtrait, rc)
 	if err != nil {
-		log.Println("ERROR | Problème dans l'extraction de l'ORC : ", err.Error())
+		return errors.WithStack(err)
 	}
 
-	return nil
+	return err
 }

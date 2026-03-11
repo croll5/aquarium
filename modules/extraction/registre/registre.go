@@ -42,15 +42,14 @@ import (
 	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"io"
 	"log"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"www.velocidex.com/golang/regparser"
+
+	"github.com/pkg/errors"
 )
 
 /* VARIABLES GLOBALES */
@@ -105,15 +104,18 @@ func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aq
 			}
 		}
 	}
-	requete.AjouterDansRequete(listeContenuColonnes...)
-	return nil
+	err := requete.AjouterDansRequete(listeContenuColonnes...)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 func (s Registre) Extraction(cheminProjet string, fichier io.Reader, source string, configExtraction config.ConfigExtraction, idMachine string) error {
 	// On copie dans un fichier
 	var tampon bytes.Buffer
 	if _, err := io.Copy(&tampon, fichier); err != nil {
-		log.Println("Format de fichier non supporté : ", err.Error())
+		return errors.WithStack(err)
 	}
 	readerAt := bytes.NewReader(tampon.Bytes())
 	// Ouverture du fichier comme fichier et clés de registres
@@ -122,7 +124,7 @@ func (s Registre) Extraction(cheminProjet string, fichier io.Reader, source stri
 		return err
 	}
 	if err != nil {
-		log.Println("Format de fichier non supporté : ", err.Error())
+		return errors.WithStack(err)
 	}
 	// On récupère les colonnes de la table
 	var nomColonnesTable []string = []string{}
@@ -134,9 +136,10 @@ func (s Registre) Extraction(cheminProjet string, fichier io.Reader, source stri
 	var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomColonnesTable)
 	// Ouverture de la clé de registre contenant les comptes personnels
 	if configExtraction.Complement["registre"] == "" {
-		return errors.New("[AQUA_ERR] - Problème de configuration de l’extracteur" + configExtraction.Nom + " : valeur conplémentaire « registe non définie ».")
+		return errors.WithStack(errors.New("[AQUA_ERR] - Problème de configuration de l’extracteur" + configExtraction.Nom + " : valeur conplémentaire « registe non définie »."))
 	}
 	cleDeBase := registre.OpenKey(configExtraction.Complement["registre"])
+	var probleme error
 	if configExtraction.Complement["parcourir_enfants"] == "oui" {
 		var enfants []*regparser.CM_KEY_NODE = cleDeBase.Subkeys()
 		var listeExclusions []string = strings.Split(configExtraction.Complement["exclusions"], ";")
@@ -151,18 +154,31 @@ func (s Registre) Extraction(cheminProjet string, fichier io.Reader, source stri
 			if pasCetteCle {
 				continue
 			}
-			traiterCle(cleEnfant, source, &requeteInsertion, configExtraction, idMachine)
+			err = traiterCle(cleEnfant, source, &requeteInsertion, configExtraction, idMachine)
+			if err != nil {
+				probleme = errors.WithStack(err)
+			}
 		}
 	} else {
-		traiterCle(cleDeBase, source, &requeteInsertion, configExtraction, idMachine)
+		err = traiterCle(cleDeBase, source, &requeteInsertion, configExtraction, idMachine)
+		if err != nil {
+			probleme = errors.WithStack(err)
+		}
 	}
-	return requeteInsertion.Executer()
+	err = requeteInsertion.Executer()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return probleme
 }
 
 func (s Registre) CreationTable(cheminProjet string) error {
 	aqua := aquabase.InitDB_Extraction(cheminProjet)
-	aqua.CreateTableIfNotExist1("sam", colonnesTableSam, true)
-	return nil
+	err := aqua.CreateTableIfNotExist1("sam", colonnesTableSam, true)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 func (s Registre) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
@@ -173,23 +189,6 @@ func (s Registre) PourcentageChargement(cheminProjet string, verifierTableVide b
 		}
 	}
 	return pourcentageChargement
-}
-
-func (s Registre) PrerequisOK(cheminCollecte string) bool {
-	dossierSAM, err := os.ReadDir(filepath.Join(cheminCollecte, "SAM"))
-	if err != nil {
-		return false
-	}
-	for _, fichier := range dossierSAM {
-		if fichier.Name() == "SAM.7z" {
-			return true
-		}
-	}
-	return false
-}
-
-func (s Registre) DetailsEvenement(idEvt int) string {
-	return "Pas d'informations supplémentaires"
 }
 
 func (s Registre) SQLChronologie() string {

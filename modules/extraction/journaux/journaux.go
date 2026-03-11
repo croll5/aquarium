@@ -10,6 +10,8 @@ import (
 	"log"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const SEPARATEUR_ENCODAGE = "|aqua_encodage:"
@@ -25,14 +27,18 @@ func (jr Journaux) Extraction(cheminProjet string, fichier io.Reader, cheminFich
 		listeEvenements = getListeDesEvenements(listeEvenements[0], configExtraction.Complement["separateur"])
 	}
 	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+	var probleme error
 	for _, table := range configExtraction.Table {
 		var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(table.Nom, table.GetNomsColonnes())
 		for _, evenement := range listeEvenements {
 			ajouterEvenementDansRequete(&requeteInsertion, cheminFichierAExtraire, evenement, table, configExtraction, idMachine)
 		}
-		requeteInsertion.Executer()
+		err := requeteInsertion.Executer()
+		if err != nil {
+			probleme = errors.WithStack(err)
+		}
 	}
-	return nil
+	return probleme
 }
 
 func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFichier string, idMachine string) interface{} {
@@ -49,15 +55,16 @@ func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFic
 		parametresColonne = []string{parametresColonne[0], "string"}
 	}
 	// Et on regarde à quoi correspond la clé
-	if contenuColonne == "aqua_source" {
+	switch contenuColonne {
+	case "aqua_source":
 		fonctionTraitement = func(champs map[string]string, cheminFichier, idMachine string) interface{} {
 			return cheminFichier
 		}
-	} else if contenuColonne == config.AQUA_MACHINE {
+	case config.AQUA_MACHINE:
 		fonctionTraitement = func(champs map[string]string, cheminFichier, idMachine string) interface{} {
 			return idMachine
 		}
-	} else {
+	default:
 		fonctionDecodage := utilitaires.GetFonctionDecodageString(parametresColonne[1])
 		if strings.Contains(parametresColonne[0], INDICATEUR_CONCATENATION) {
 			cles := strings.Split(parametresColonne[0], INDICATEUR_CONCATENATION)
@@ -203,8 +210,11 @@ func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, c
 	for _, colonne := range configTable.Colonnes {
 		valeursAAjouter = append(valeursAAjouter, valeurDecodee(colonne.Contenu, dictChamps, cheminFichierAExtraire, idMachine))
 	}
-	requeteInstertion.AjouterDansRequete(valeursAAjouter...)
-	return nil
+	err := requeteInstertion.AjouterDansRequete(valeursAAjouter...)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 func decoderFichier(fichier io.Reader, encodage string) string {
