@@ -70,6 +70,9 @@ termes.
     --or-4 : #F1D46B;
     --or-5 : #F6E4A4;
     --or-6 : #FCF5DC;
+    /* Les autres couleurs */
+    --rouge-cramoisi : #900;
+    --rouge-normal : #d00;
 }
 
 body{
@@ -158,7 +161,7 @@ button.onglet:hover{
 
 button.onglet_selectionne{
     background-color: var(--or-6);
-    color: #000000;
+    color: black;
 }
 
 button.onglet_selectionne:hover{
@@ -172,7 +175,7 @@ button.onglet_selectionne:hover{
 }
 
 .fermer_onglet:hover{
-    color: #d00;
+    color: var(--rouge-normal);
     cursor: pointer;
 }
 
@@ -200,7 +203,7 @@ button.onglet_selectionne:hover{
     padding-left: 20px;
     padding-right: 20px;
     font-size: large;
-    background-color: #c40000;
+    background-color: var(--rouge-normal);
     font-weight: bold;
     color: white;
     position: absolute;
@@ -210,7 +213,7 @@ button.onglet_selectionne:hover{
 }
 
 .bouton_fermer:hover{
-    background-color: #940000;
+    background-color: var(--rouge-cramoisi);
     cursor: pointer;
 }
 
@@ -311,10 +314,11 @@ input[type="checkbox"] {
     top: calc(10% - 5px);
     left: calc(15% - 5px);
     z-index: 5;
-    box-shadow: 0 0 20px #000000;
+    box-shadow: 0 0 20px black;
     padding: 10px;
     overflow: overlay;
     scrollbar-width: none;
+    border-radius: 7px;
 }
 
 .fond-popup{
@@ -326,4 +330,11 @@ input[type="checkbox"] {
     left: 0;
     background-color: #000000a0;
     z-index: 4;
+}
+
+.bandeau_erreur{
+    background-color: var(--rouge-cramoisi);
+    color: white;
+    padding: 12px;
+    display: none;
 }

@@ -51,6 +51,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -60,6 +62,8 @@ import (
 )
 
 var chemin_projet string
+
+const DOSSIER_ERREURS = "erreurs"
 
 // App struct
 type App struct {
@@ -102,12 +106,40 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Call this function when a bug appear
 func (a *App) signalerErreur(erreur error) {
-	log.Printf("%+v\n", erreur)
-	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-		Type:    runtime.ErrorDialog,
-		Title:   "Erreur dans l'écriture du projet",
-		Message: "Félicitation ! Vous venez de trouver un bogue dans le logiciel Aquarium !\n C'est cadeau : \n " + erreur.Error(),
-	})
+	// Récupérer l’horodatage
+	nomFichierErreur := time.Now().Format("2006010215040599999_erreur.txt")
+	// Informer l’utilisateur de l’erreur
+	runtime.WindowExecJS(a.ctx, fmt.Sprintf("signaler_erreur('%s','%s')", nomFichierErreur, url.QueryEscape(fmt.Sprintf("%+v", erreur))))
+	// Récupérer le chemin d'enregistrement de l’erreur
+	cheminErreurs := filepath.Join(chemin_projet, DOSSIER_ERREURS)
+	if chemin_projet == "" {
+		cheminExecutable, err := os.Executable()
+		if err != nil {
+			a.alerterEnregistrementErreurImpossible()
+			return
+		}
+		cheminErreurs = filepath.Join(filepath.Dir(cheminExecutable), DOSSIER_ERREURS)
+	}
+	// Créer le dossier des erreur s’il n’existe pas
+	err := os.MkdirAll(cheminErreurs, os.ModeAppend)
+	if err != nil {
+		a.alerterEnregistrementErreurImpossible()
+		return
+	}
+	// Enregistrer le contenu de l’erreur
+	fichierErr, err := os.Create(filepath.Join(cheminErreurs, nomFichierErreur))
+	if err != nil {
+		a.alerterEnregistrementErreurImpossible()
+		return
+	}
+	_, err = fichierErr.Write([]byte(fmt.Sprintf("%+v", erreur)))
+	if err != nil {
+		a.alerterEnregistrementErreurImpossible()
+	}
+}
+
+func (a *App) alerterEnregistrementErreurImpossible() {
+	runtime.WindowExecJS(a.ctx, "details_erreur()")
 }
 
 /***************************************************************************************/

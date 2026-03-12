@@ -169,8 +169,3 @@ function afficher_metadonnees_fichier(idFichier, idMachine) {
         document.getElementById("popup_infos_fichier").style.display = "block";
     })
 }
-
-function fermer_popup(idPopup){
-    document.getElementById(idPopup).style.display = "none";
-    document.getElementById("fond_popup").style.display = "none"
-}

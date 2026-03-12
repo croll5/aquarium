@@ -75,3 +75,16 @@ header{
     text-align: left;
 }
 
+#details_erreur{
+    font-size: xx-large;
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 12px;
+}
+
+#texte_details_erreur{
+    line-height: 30px;
+    overflow: overlay;
+    height: 80%;
+}
