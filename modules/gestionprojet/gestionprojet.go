@@ -37,6 +37,7 @@ termes.
 package gestionprojet
 
 import (
+	"aquarium/modules/config"
 	"aquarium/modules/extraction"
 	"aquarium/modules/extraction/utilitaires"
 	"aquarium/modules/rapport"
@@ -75,20 +76,20 @@ func IsDirEmpty(name string) (bool, error) {
   - Fonction qui crée l'arborescence de base de l'analyse
     @chemin : le chemin dans lequel on veut créer le projet
 */
-func CreationArborescence(chemin *string) bool {
-	// Création d'un fichier .aqua contenant les infos essentielles du projet
+func CreationArborescence(chemin *string, configuration config.AquaConfig) error {
+	// Si le dossier d'enregistrement n’est pas vide, on en crée un nouveau
 	estvide, err := IsDirEmpty(*chemin)
 	if err != nil || !estvide {
 		*chemin = filepath.Join(*chemin, time.Now().Format("20060102150405")+" - analyse aquarium")
 		log.Println(*chemin)
 	}
-	os.MkdirAll(filepath.Join(*chemin, "analyse"), 0766)
-	fichier, err := os.Create(filepath.Join(*chemin, "analyse.aqua"))
+	err = config.EnregistrerAquaConfig(*chemin, configuration)
 	if err != nil {
-		log.Println(err)
-		return false
+		return err
 	}
-	defer fichier.Close()
+	// Création du dossier d’analyse
+	os.MkdirAll(filepath.Join(*chemin, config.DOSSIER_ANALYSE), 0766)
+	copieFichiersAAnalyser(*chemin, configuration)
 	// Création de la base de données qui contiendra la chronologie des évènements
 	extraction.CreationBaseAnalyse(*chemin)
 	// Création de la table des informations spécifiques au rapport
@@ -96,7 +97,7 @@ func CreationArborescence(chemin *string) bool {
 	rprt.CreerTables()
 	// Creation d'un dossier contenant les règles de detection de l'utilisateur
 	os.MkdirAll(filepath.Join(*chemin, "regles_detection"), 0766)
-	return true
+	return nil
 }
 
 func CreationDossierModele(chemin string) error {
@@ -109,7 +110,7 @@ func CreationDossierModele(chemin string) error {
 		log.Println(err)
 		return errors.New("Le dossier " + chemin + " n'est pas vide.")
 	}
-	os.MkdirAll(filepath.Join(chemin, "analyse"), 0766)
+	os.MkdirAll(filepath.Join(chemin, config.DOSSIER_ANALYSE), 0766)
 	fichier, err := os.Create(filepath.Join(chemin, "modele.aqua"))
 	if err != nil {
 		log.Println(err)
@@ -152,6 +153,11 @@ func ExtractArchive7z(archive string, destination string) error {
 		return err
 	}
 	defer r.Close()
+
+	err = os.MkdirAll(destination, os.ModeAppend)
+	if err != nil {
+		return err
+	}
 
 	for _, f := range r.File {
 		if err = utilitaires.ExtraireFichierDepuis7z(f, destination); err != nil {
@@ -204,5 +210,56 @@ func EcritureFichierModeleAqua(nomModele string, description string, dateCreatio
 		log.Println("Problème dans l'écriture des données aqua : ", err.Error())
 		return err
 	}
+	return nil
+}
+
+func copieFichiersAAnalyser(cheminProjet string, configuration config.AquaConfig) error {
+	for id_machine, machine := range configuration.Machines {
+		if machine.AAnalyser {
+			cheminDestination := filepath.Join(cheminProjet, config.DOSSIER_FICHIERS_A_ANALYSER, id_machine)
+			os.MkdirAll(cheminDestination, os.ModeAppend)
+			for _, cheminFichier := range machine.Fichiers {
+				cheminFichierDest := filepath.Join(cheminDestination, filepath.Base(cheminFichier))
+				err := ExtractArchive7z(cheminFichier, cheminFichierDest)
+				if err != nil {
+					log.Println(err)
+					err = copierFichier(cheminFichier, cheminFichierDest)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func copierFichier(src, dst string) error {
+	// Open the source file
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	// Create the destination file
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destinationFile.Close()
+
+	// Copy the content
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// Flush file metadata to disk
+	err = destinationFile.Sync()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

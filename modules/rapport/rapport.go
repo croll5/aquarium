@@ -134,12 +134,15 @@ func (rapport *Rapport) CreerTables() error {
 
 /* FONCION D4AFFICHAGE DU RAPPORT */
 
-func (rapport *Rapport) GetPistes() []map[string]interface{} {
+func (rapport *Rapport) GetPistes() ([]map[string]interface{}, error) {
 	return rapport.bdd.ResultatRequeteSQL("SELECT * FROM pistes ORDER BY id")
 }
 
-func (rapport *Rapport) GetEtapesPiste(idPiste int) []EtapeAnalyse {
-	var listeEtapes []map[string]interface{} = rapport.bdd.ResultatRequeteSQL("SELECT * FROM etapes WHERE idPiste=" + strconv.Itoa(idPiste))
+func (rapport *Rapport) GetEtapesPiste(idPiste int) ([]EtapeAnalyse, error) {
+	listeEtapes, err := rapport.bdd.ResultatRequeteSQL("SELECT * FROM etapes WHERE idPiste=" + strconv.Itoa(idPiste))
+	if err != nil {
+		return []EtapeAnalyse{}, err
+	}
 	var listeEtapesAnalyse []EtapeAnalyse = []EtapeAnalyse{}
 	for _, valeur := range listeEtapes {
 		//var lignesTable []map[string]interface{} = rapport.bdd.SelectAllFrom(, 10000000)
@@ -147,9 +150,9 @@ func (rapport *Rapport) GetEtapesPiste(idPiste int) []EtapeAnalyse {
 		var etapeAnalyse EtapeAnalyse = EtapeAnalyse{RequeteSQL: valeur["requeteSQL"], Commentaire: valeur["commentaire"], NomTable: fmt.Sprintf("enregistrement_%v", valeur["id"])}
 		listeEtapesAnalyse = append(listeEtapesAnalyse, etapeAnalyse)
 	}
-	return listeEtapesAnalyse
+	return listeEtapesAnalyse, err
 }
 
-func (rapport *Rapport) GetDonnesTableSauvegardee(nomTable string) []map[string]interface{} {
+func (rapport *Rapport) GetDonnesTableSauvegardee(nomTable string) ([]map[string]interface{}, error) {
 	return rapport.bdd.SelectAllFrom(nomTable, 1000000)
 }

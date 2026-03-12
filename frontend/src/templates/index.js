@@ -39,13 +39,11 @@ function change_onglet(destination, id_onglet){
     // On met tous les autres onglets à la couleur standard
     let onglets = document.getElementsByClassName("onglet");
     for (const onglet of onglets) {
-        onglet.style.backgroundColor = "#856B0D";
-        onglet.style.color = "#fff";
+        onglet.classList.remove("onglet_selectionne");
     }
     // On met l'onglet sur lequel on va à la couleur de la page
     let onglet_courant = parent.document.getElementById(id_onglet);
-    onglet_courant.style.backgroundColor = "#FCF5DC";
-    onglet_courant.style.color = "#000";
+    onglet_courant.classList.add("onglet_selectionne");
 }
 
 function accueil(){
@@ -56,3 +54,17 @@ function accueil(){
 var contrastes = false;
 var dyslexie = false;
 var non_aux_bubulles = false;
+
+function signaler_erreur(fichierErreur, detailsErreur){
+    document.getElementById("texte_details_erreur").textContent = decodeURIComponent(detailsErreur).replaceAll("+"," ")
+    document.getElementById("nom_fichier_erreur").textContent = fichierErreur;
+    document.getElementById("bandeau_erreur").style.display = "inline";
+    setTimeout(() =>{
+        document.getElementById("bandeau_erreur").style.display = "none";
+    }, 10000);
+}
+
+function details_erreur(){
+    document.getElementById("fond_popup").style.display = "block";
+    document.getElementById("popup_erreur").style.display = "block";
+}

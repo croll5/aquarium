@@ -70,6 +70,9 @@ termes.
     --or-4 : #F1D46B;
     --or-5 : #F6E4A4;
     --or-6 : #FCF5DC;
+    /* Les autres couleurs */
+    --rouge-cramoisi : #900;
+    --rouge-normal : #d00;
 }
 
 body{
@@ -122,6 +125,18 @@ body{
     border-style: dashed;
 }
 
+.selecteur_fichier_clair{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--or-5);
+    padding: 5px;
+}
+
+.selecteur_fichier_clair p{
+    padding-left: 5px;
+}
+
 div.champ{
     padding: 10px;
     text-align: left;
@@ -144,6 +159,26 @@ button.onglet:hover{
     background-color: var(--or-2);
 }
 
+button.onglet_selectionne{
+    background-color: var(--or-6);
+    color: black;
+}
+
+button.onglet_selectionne:hover{
+    cursor: default;
+    background-color: var(--or-6);
+}
+
+.fermer_onglet{
+    font-weight: bold;
+    padding: 0;
+}
+
+.fermer_onglet:hover{
+    color: var(--rouge-normal);
+    cursor: pointer;
+}
+
 .code{
     border: solid, 1px;
     border-color: var(--bleu-5);
@@ -163,17 +198,49 @@ button.onglet:hover{
     font-weight: bolder;
 }
 
+.bouton_fermer{
+    padding: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: large;
+    background-color: var(--rouge-normal);
+    font-weight: bold;
+    color: white;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: none;
+}
+
+.bouton_fermer:hover{
+    background-color: var(--rouge-cramoisi);
+    cursor: pointer;
+}
+
 .bouton_mi_tons{
     background-color: var(--bleu-5);
     border: solid;
     border-color: var(--bleu-3);
     border-width: 1px;
+    margin: 7px;
+    transition: 0.5s;
 }
 
 .bouton_mi_tons:hover{
     cursor: pointer;
+    transform: scale(1.02);
+}
+
+.element_deplace {
+    opacity: 0.6;
     background-color: var(--bleu-3);
     color: white;
+}
+
+ul.liste_triable{
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 table th, td{
@@ -236,4 +303,38 @@ input[type="checkbox"] {
     height: 20px;
     width: 20px;
     accent-color: var(--or-3);
+}
+
+.cadre-popup{
+    display: none;
+    position:fixed;
+    width: 70%;
+    height: 80%;
+    background-color: var(--or-6);
+    top: calc(10% - 5px);
+    left: calc(15% - 5px);
+    z-index: 5;
+    box-shadow: 0 0 20px black;
+    padding: 10px;
+    overflow: overlay;
+    scrollbar-width: none;
+    border-radius: 7px;
+}
+
+.fond-popup{
+    display: none;
+    position: fixed;
+    width: 100%;
+    height: 120%;
+    top: 0;
+    left: 0;
+    background-color: #000000a0;
+    z-index: 4;
+}
+
+.bandeau_erreur{
+    background-color: var(--rouge-cramoisi);
+    color: white;
+    padding: 12px;
+    display: none;
 }

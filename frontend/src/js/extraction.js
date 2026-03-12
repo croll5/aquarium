@@ -38,33 +38,42 @@ parent.window.go.main.App.ListeExtractionsPossibles().then(resultat =>{
     console.log(resultat);
     let div_possibilites = document.getElementById("possibilites_extractions");
     // Pour chaque extracteur possible, on l'ajoute sur la page
+    for (let [cle, valeur] of Object.entries(resultat)){
+        let details_machine = document.createElement("details");
+        let nom_machine = document.createElement("summary");
+        nom_machine.textContent = valeur["ConfigMachine"]["nom"];
+        div_possibilites.appendChild(details_machine);
+        details_machine.appendChild(nom_machine);
+        ajouter_extractions_machine(details_machine, valeur["ListeExtractions"], cle);
+    }
+})
+
+function ajouter_extractions_machine(div_machine, resultat, idMachine){
     for (let [cle, valeur] of Object.entries(resultat)) {
         let paragraphe = document.createElement('p');
         paragraphe.innerText = "🫧" + valeur["Description"] + "🫧";
         if(valeur["Progression"] >= 100){
             paragraphe.innerText += " ✅";
-            paragraphe.className = "non_cliquable"
+            paragraphe.className = "non_cliquable";
         }else if(valeur["Progression"] >= 0){
-            ajouter_chargement(paragraphe, valeur["Progression"], cle)
+            ajouter_chargement(paragraphe, valeur["Progression"], cle, idMachine);
         }else{
-            
-            paragraphe.className = "liste_options"
-            paragraphe.onclick = function() { extraire_elements(cle) };
+            paragraphe.className = "liste_options";
+            paragraphe.onclick = function() { extraire_elements(cle, idMachine) };
         }
         paragraphe.id = cle;
-        
-        div_possibilites.appendChild(paragraphe);
+        div_machine.appendChild(paragraphe);
     }
-})
-
-function extraire_elements(module_id){
-    let paragraphe = document.getElementById(module_id);
-    parent.window.go.main.App.ExtraireElements(module_id, paragraphe.value);
-    paragraphe.onclick = "";
-    ajouter_chargement(paragraphe, 0, module_id)
 }
 
-function ajouter_chargement(paragraphe, valeur_initiale, module_id){
+function extraire_elements(module_id, id_machine){
+    let paragraphe = document.getElementById(module_id);
+    parent.window.go.main.App.ExtraireElements(module_id, paragraphe.value, id_machine);
+    paragraphe.onclick = "";
+    ajouter_chargement(paragraphe, 0, module_id, id_machine);
+}
+
+function ajouter_chargement(paragraphe, valeur_initiale, module_id, id_machine){
     let progression = document.createElement("progress");
     progression.max = 100;
     progression.value = valeur_initiale;
@@ -73,32 +82,33 @@ function ajouter_chargement(paragraphe, valeur_initiale, module_id){
     let annuler = document.createElement("button");
     annuler.innerText = "❌";
     annuler.className = "bouton_invisible";
-    annuler.onclick = function() { annuler_extraction(module_id) };
+    annuler.onclick = function() { annuler_extraction(module_id, id_machine) };
     let maj = setInterval(function(){
-        parent.window.go.main.App.ProgressionExtraction(module_id).then(pourcentageExtraction =>{
-        progression.value = pourcentageExtraction;
-        if (progression.value >= 100){
-            paragraphe.removeChild(progression);
-            paragraphe.removeChild(annuler);
-            paragraphe.textContent = paragraphe.textContent.replace("- chargement... ", "✅");
-            clearInterval(maj);
-            paragraphe.className = "non_cliquable";
-        }
+        parent.window.go.main.App.ProgressionExtraction(id_machine, module_id).then(pourcentageExtraction =>{
+            progression.value = pourcentageExtraction;
+            console.log(pourcentageExtraction)
+            if (progression.value >= 100){
+                progression.remove();
+                annuler.remove();
+                paragraphe.textContent = paragraphe.textContent.replace("- chargement... ", "✅");
+                clearInterval(maj);
+                paragraphe.className = "non_cliquable";
+            }
         })
     },50);
     paragraphe.appendChild(annuler);
 }
 
-function annuler_extraction(idExtracteur){
+function annuler_extraction(idExtracteur, idMachine){
     if(confirm("Voulez-vous vraiment annuler l'extraction de " + idExtracteur + " ?")){
-        parent.window.go.main.App.AnnulerExtraction(idExtracteur).then(succes =>{
+        parent.window.go.main.App.AnnulerExtraction(idMachine, idExtracteur).then(succes =>{
             if(succes) {
                 alert("L'extraction a bien été annulée 🥲");
                 let paragraphe = document.getElementById(idExtracteur);
                 paragraphe.onclick = function() { extraire_elements(idExtracteur) };
                 let enfant = paragraphe.lastElementChild;
                 while (enfant) {
-                    paragraphe.removeChild(enfant);
+                    enfant.remove();
                     enfant = paragraphe.lastElementChild;
                 }
                 paragraphe.innerHTML = paragraphe.innerText.replace("- chargement...", "");

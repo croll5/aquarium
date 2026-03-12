@@ -49,7 +49,7 @@ termes.
 <body>
     <h1>Chonologie des évènements</h1>
     <details id="changement_requete">
-        <summary>Visualisation d'une autre table</summary>
+        <summary id="titre_changement_requete">Visualisation d'une autre table</summary>
         <div class="contenuDetails toutEnUn">
             <div>
                 <button class="bouton_sombre" onclick="changer_type_recherche()">↕</button>
@@ -81,7 +81,7 @@ termes.
             </div>
             <div class="champ">
                 <label for="commentaire_analyste">Commentaire sur les lignes sélectionnées</label><br>
-                <textarea name="commentaire" id="commentaire_analyste" class="input_clair"></textarea>
+                <textarea name="commentaire" id="commentaire_analyste" class="input_clair" autocomplete="off"></textarea>
             </div>
             <div class="champ">
                 <button class="bouton_sombre" onclick="enregistrer_table_dans_rapport()">Enregistrer</button>

@@ -43,38 +43,40 @@ termes.
     <link rel="stylesheet" href="../templates/bibliotheque.css">
     <link rel="stylesheet" href="../templates/commun_clair.css">
     <link rel="stylesheet" href="../css/arborescence.css">
+    <script src="../templates/bibliotheque.js"></script>
     <script src="../js/arborescence.js" async></script>
-    <script src="../templates/bibliotheque.js" async></script>
 </head>
 <body id="body_arbo">
     
     <h1>Arborescence de la machine analysée</h1>
-    <p id="patientez">🫧 L'extraction est en cours. Vous pouvez patienter en salle d'attente 🫧</p>
-    <!--Menu permttant à l'utilisateur de lancer une extraction de l'arborescence-->
-    <div id="extraction_arborescence">
-        <p>L'arborescence n'a pas encore été extraite de la capture ORC. Appuyez sur le bouton "Extraire" pour le faire.</p>
-        <input type="checkbox" id="avec_modele" checked>
-        <label for="avec_modele">Comparer l'arborescence avec celle d'un modèle. <br>
-            <i>Un modèle peut être créé à partir de la collecte ORC d'une machine non susceptible d'être compromise depuis la page d'accueil</i>
-        </label>
-        <p>⚠️ Attention : cette extration peut prendre un certain temps.</p>
-        <button class="bouton_sombre" onclick="extraire_arborescence()">Extraire</button>
+    <div id="selection_arborescence" class="contenuDetails">
+        <select id="choix_arborescence" class="input_clair" onchange="extraire_arborescence()">
+            <option value="" disabled selected>--- Arborescence à afficher ---</option>
+        </select>
     </div>
-    <div id="affichage_arbo">
-        <!--Légende des indicateurs de légitimité-->
-        <div id="legende">
-            <h3>Choix des indicateurs de légitimité à afficher</h3>
-            <input type="checkbox" id="affiche_inconnu" onchange="affichage_legitimite('affiche_inconnu', 'legitimite_aucune')" checked>
-            <label for="affiche_inconnu">Fichiers non présents dans le modèle (😵)</label><br>
-            <input type="checkbox" id="affiche_suspect" onchange="affichage_legitimite('affiche_suspect', 'legitimite_suspect')" checked>
-            <label for="affiche_suspect">Fichiers présents dans le modèle avec une empreinte différente (🥴)</label><br>
-            <input type="checkbox" id="affiche_ok" onchange="affichage_legitimite('affiche_ok', 'legitimite_ok')" checked>
-            <label for="affiche_ok">Fichiers présents dans le modèle avec la même empreinte (😇)</label><br>
-        </div>
-        <h3>Arborescence</h3>
-        <div id="arborescence">
-            <!--On va ajouter les fichiers d'arborescence ici-->
-        </div>
+    <!-- Bloc « salle d’attente » -->
+    <div id="patientez">
+        <p>🫧 Chargement de l’arborescence en cours... 🫧<br>
+        Pour vous permettre de patienter, nous vous offrons ce document scientifique 🐬</p>
+    </div>
+    <!--Légende des indicateurs de légitimité-->
+    <div id="legende" style="display: none;">
+        <h3>Choix des indicateurs de légitimité à afficher</h3>
+        <input type="checkbox" id="affiche_inconnu" onchange="affichage_legitimite('affiche_inconnu', 'legitimite_aucune')" checked>
+        <label for="affiche_inconnu">Fichiers non présents dans le modèle (😵)</label><br>
+        <input type="checkbox" id="affiche_suspect" onchange="affichage_legitimite('affiche_suspect', 'legitimite_suspect')" checked>
+        <label for="affiche_suspect">Fichiers présents dans le modèle avec une empreinte différente (🥴)</label><br>
+        <input type="checkbox" id="affiche_ok" onchange="affichage_legitimite('affiche_ok', 'legitimite_ok')" checked>
+        <label for="affiche_ok">Fichiers présents dans le modèle avec la même empreinte (😇)</label><br>
+    </div>
+    <div id="arborescence">
+        <!--On va ajouter les fichiers d'arborescence ici-->
+    </div>
+    <div class="fond-popup" id="fond_popup"></div>
+    <div class="cadre-popup" id="popup_infos_fichier">
+        <button class="bouton_fermer" onclick="fermer_popup('popup_infos_fichier')">×</button>
+        <h2>Métadonnées du fichier</h2>
+        <table id="table_metadonnees"></table>
     </div>
 </body>
 </html>

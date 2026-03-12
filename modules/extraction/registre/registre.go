@@ -42,13 +42,14 @@ import (
 	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"encoding/binary"
+	"io"
 	"log"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"www.velocidex.com/golang/regparser"
+
+	"github.com/pkg/errors"
 )
 
 /* VARIABLES GLOBALES */
@@ -58,16 +59,17 @@ var colonnesTableSam []string = []string{"horodatage", "idCompte", "nomCompte", 
 
 type Registre struct{}
 
-func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aquabase.RequeteInsertion, configExtraction config.ConfigExtraction) error {
-	log.Println(cleDeRegistre.Name())
+func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aquabase.RequeteInsertion, configExtraction config.ConfigExtraction, idMachine string) error {
 	var listeContenuColonnes []interface{} = make([]interface{}, 0)
 	// On parcourt les colonnes à ajouter
 	for _, configColonne := range configExtraction.Table[0].Colonnes {
 		switch configColonne.Contenu {
 		case "nomCle":
 			listeContenuColonnes = append(listeContenuColonnes, cleDeRegistre.Name())
-		case "source":
+		case "aqua_source":
 			listeContenuColonnes = append(listeContenuColonnes, source)
+		case config.AQUA_MACHINE:
+			listeContenuColonnes = append(listeContenuColonnes, idMachine)
 		default:
 			var contenu []string = strings.Split(configColonne.Contenu, ":")
 			if len(contenu) != 5 {
@@ -89,28 +91,40 @@ func traiterCle(cleDeRegistre *regparser.CM_KEY_NODE, source string, requete *aq
 			if err != nil {
 				return err
 			}
-			var DonneesCle []byte = cleDeRegistre.Values()[numCle].ValueData().Data
-			if contenu[1] == "variable" {
-				debut = int64(binary.LittleEndian.Uint32(DonneesCle[debut:debut+8])) + 0xCC
-				taille = int64(binary.LittleEndian.Uint32(DonneesCle[taille : taille+8]))
+			if len(cleDeRegistre.Values()) <= int(numCle) {
+				listeContenuColonnes = append(listeContenuColonnes, "[AUQA_ERREUR] Valeur non décodée dans la clé : "+cleDeRegistre.Name())
+			} else {
+				var DonneesCle []byte = cleDeRegistre.Values()[numCle].ValueData().Data
+				if contenu[1] == "variable" {
+					debut = int64(binary.LittleEndian.Uint32(DonneesCle[debut:debut+8])) + 0xCC
+					taille = int64(binary.LittleEndian.Uint32(DonneesCle[taille : taille+8]))
+				}
+				// On ajoute les valeurs de la clé à la table
+				listeContenuColonnes = append(listeContenuColonnes, utilitaires.GetFonctionDecodageBytes(contenu[4])(DonneesCle[debut:debut+taille]))
 			}
-			// On ajoute les valeurs de la clé à la table
-			listeContenuColonnes = append(listeContenuColonnes, utilitaires.DecoderBytes(DonneesCle[debut:debut+taille], contenu[4]))
 		}
 	}
-	requete.AjouterDansRequete(listeContenuColonnes...)
-	return nil
+	err := requete.AjouterDansRequete(listeContenuColonnes...)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
-func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source string, configExtraction config.ConfigExtraction) error {
-	readerAt := bytes.NewReader(fichier.Bytes())
+func (s Registre) Extraction(cheminProjet string, fichier io.Reader, source string, configExtraction config.ConfigExtraction, idMachine string) error {
+	// On copie dans un fichier
+	var tampon bytes.Buffer
+	if _, err := io.Copy(&tampon, fichier); err != nil {
+		return errors.WithStack(err)
+	}
+	readerAt := bytes.NewReader(tampon.Bytes())
 	// Ouverture du fichier comme fichier et clés de registres
 	registre, err := regparser.NewRegistry(readerAt)
 	if registre == nil {
 		return err
 	}
 	if err != nil {
-		log.Println("Format de fichier non supporté : ", err.Error())
+		return errors.WithStack(err)
 	}
 	// On récupère les colonnes de la table
 	var nomColonnesTable []string = []string{}
@@ -121,7 +135,11 @@ func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source s
 	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
 	var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomColonnesTable)
 	// Ouverture de la clé de registre contenant les comptes personnels
+	if configExtraction.Complement["registre"] == "" {
+		return errors.WithStack(errors.New("[AQUA_ERR] - Problème de configuration de l’extracteur" + configExtraction.Nom + " : valeur conplémentaire « registe non définie »."))
+	}
 	cleDeBase := registre.OpenKey(configExtraction.Complement["registre"])
+	var probleme error
 	if configExtraction.Complement["parcourir_enfants"] == "oui" {
 		var enfants []*regparser.CM_KEY_NODE = cleDeBase.Subkeys()
 		var listeExclusions []string = strings.Split(configExtraction.Complement["exclusions"], ";")
@@ -136,18 +154,31 @@ func (s Registre) Extraction(cheminProjet string, fichier bytes.Buffer, source s
 			if pasCetteCle {
 				continue
 			}
-			traiterCle(cleEnfant, source, &requeteInsertion, configExtraction)
+			err = traiterCle(cleEnfant, source, &requeteInsertion, configExtraction, idMachine)
+			if err != nil {
+				probleme = errors.WithStack(err)
+			}
 		}
 	} else {
-		traiterCle(cleDeBase, source, &requeteInsertion, configExtraction)
+		err = traiterCle(cleDeBase, source, &requeteInsertion, configExtraction, idMachine)
+		if err != nil {
+			probleme = errors.WithStack(err)
+		}
 	}
-	return requeteInsertion.Executer()
+	err = requeteInsertion.Executer()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return probleme
 }
 
 func (s Registre) CreationTable(cheminProjet string) error {
 	aqua := aquabase.InitDB_Extraction(cheminProjet)
-	aqua.CreateTableIfNotExist1("sam", colonnesTableSam, true)
-	return nil
+	err := aqua.CreateTableIfNotExist1("sam", colonnesTableSam, true)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 func (s Registre) PourcentageChargement(cheminProjet string, verifierTableVide bool) float32 {
@@ -158,23 +189,6 @@ func (s Registre) PourcentageChargement(cheminProjet string, verifierTableVide b
 		}
 	}
 	return pourcentageChargement
-}
-
-func (s Registre) PrerequisOK(cheminCollecte string) bool {
-	dossierSAM, err := os.ReadDir(filepath.Join(cheminCollecte, "SAM"))
-	if err != nil {
-		return false
-	}
-	for _, fichier := range dossierSAM {
-		if fichier.Name() == "SAM.7z" {
-			return true
-		}
-	}
-	return false
-}
-
-func (s Registre) DetailsEvenement(idEvt int) string {
-	return "Pas d'informations supplémentaires"
 }
 
 func (s Registre) SQLChronologie() string {

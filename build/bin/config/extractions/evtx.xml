@@ -3,14 +3,9 @@
     <extracteur>evtx</extracteur>
     <nom>Fichiers EVTX</nom>
     <description>Fichiers d'évènements Windows</description>
-    <chemin>
-        <dossier>General</dossier>
-        <archive>Event.7z</archive>
-        <fichier>evtx/*</fichier>
-    </chemin>
     <table nom="evtx">
         <colonne type="DATETIME" contenu="horodatage">horodatage</colonne>
-        <colonne type="TEXT" contenu="source">source</colonne>
+        <colonne type="TEXT" contenu="aqua_source">source</colonne>
         <colonne type="TEXT" contenu="message">Message</colonne>
         <colonne type="TEXT" contenu="Event/System/EventID">EventID</colonne>
         <colonne type="TEXT" contenu="Event/System/Provider/Name">ProviderName</colonne>
@@ -20,5 +15,5 @@
         <colonne type="TEXT" contenu="Event/System/Provider/Guid">Guid</colonne>
         <colonne type="TEXT" contenu="Event/System/Task">Task</colonne>
     </table>
-    <sql_chronologie>SELECT id, "evtx", "evtx", source, horodatage, "eventID : " || EventID || ", providerName : " || ProviderName FROM evtx</sql_chronologie>
+    <sql_chronologie>SELECT id, "evtx", "evtx", source, horodatage, "eventID : " || EventID || ", providerName : " || ProviderName, aqua_machine FROM evtx</sql_chronologie>
 </extraction>

@@ -4,11 +4,6 @@
     <extracteur>prefetch</extracteur> 
     <nom>Fichiers de préchargement</nom>
     <description>Fichiers de préchargement, qui contiennent des informations sur les programmes installés et leurs dernières exécutions.</description>
-    <chemin>
-        <dossier>General</dossier>
-        <archive>Artefacts.7z</archive>
-        <fichier>Prefetch/*</fichier>
-    </chemin>
     <table nom="prefetch">
         <colonne type="TEXT" contenu="aqua_source">source</colonne>
         <colonne type="TEXT" contenu="executable">executable</colonne>
@@ -27,5 +22,5 @@
         <colonne type="STRING" contenu="empreinte">empreinte</colonne>
         <colonne type="DATETIME" contenu="ressource">ressource</colonne>
     </table>
-    <sql_chronologie>SELECT id, "getthis", "creation", source, date_creation AS horodatage, "Création du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis UNION SELECT id, "getthis", "modification", source, derniere_modif as horodatage, "Dernière modification du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis  UNION SELECT id, "getthis", "acces", source, dernier_acces as horodatage, "Dernier accès au fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis</sql_chronologie>
+    <sql_chronologie></sql_chronologie>
 </extraction>

@@ -1,14 +1,23 @@
 package config
 
 import (
+	"aquarium/modules/aquabase"
 	"encoding/xml"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/bodgit/sevenzip"
+	"github.com/pkg/errors"
 )
+
+var DOSSIER_FICHIERS_A_ANALYSER = "fichiers"
+
+const DOSSIER_ANALYSE = "analyse"
+
+var AQUA_MACHINE = "aqua_machine"
+var DOSSIER_EXTRACTIONS = "extractions"
+var EXTENSION_XML = ".xml"
 
 type ConfigColonneBDD struct {
 	Nom     string `xml:",chardata"`
@@ -33,9 +42,7 @@ type ConfigExtraction struct {
 	Nom                string           `xml:"nom"`
 	Description        string           `xml:"description"`
 	Extracteur         string           `xml:"extracteur"`
-	Chemins            []ConfigChemin   `xml:"chemin"`
 	Table              []ConfigTableBDD `xml:"table"`
-	Collectes          []string         `xml:"collecte"`
 	SQLChronologie     string           `xml:"sql_chronologie"`
 	Progression        float32
 	AnnulationDemandee bool
@@ -43,11 +50,26 @@ type ConfigExtraction struct {
 	Complement         map[string]string
 }
 
+type InfosSommairesExtraction struct {
+	Description string `xml:"description"`
+	Nom         string `xml:"nom"`
+}
+
+type DetailsConfigExtraction struct {
+	Id      string         `xml:"id,attr"`
+	Chemins []ConfigChemin `xml:"chemin"`
+}
+
 type ConfigurationXML struct {
-	Chronologie   ConfigTableBDD     `xml:"chronologie"`
-	Extractions   []ConfigExtraction //`xml:"extraction"`
-	IdExtractions []string           `xml:"extraction"`
-	Collectes     []string           `xml:"collecte"`
+	Chronologie       ConfigTableBDD            `xml:"chronologie"`
+	DetailsExtraction []DetailsConfigExtraction `xml:"extraction"`
+	Arborescence      ConfigArborescence        `xml:"arborescence"`
+}
+
+type ConfigArborescence struct {
+	RequeteCreation    string `xml:"requete_creation"`
+	RequeteMetadonnees string `xml:"requete_metadonnees"`
+	SeparateurDossier  string `xml:"separateur_dossiers"`
 }
 
 type DossierAExtraire struct {
@@ -61,44 +83,115 @@ type ComplementConfigXML struct {
 	Valeur string `xml:",innerxml"`
 }
 
-func GetConfigurationProjet(cheminProjet string) (ConfigurationXML, error) {
+var cacheConfigMachines map[string]ConfigurationXML = map[string]ConfigurationXML{}
+var cacheConfigExtractions map[string]ConfigExtraction = map[string]ConfigExtraction{}
+
+func GetConfigurationMachine(cheminProjet string, idMachine string, aquaConfigMachine AquaConfigMachine) (ConfigurationXML, error) {
+	cacheConfig, existe := cacheConfigMachines[idMachine]
+	if existe {
+		return cacheConfig, nil
+	}
+	// On commence par récupérer le chemin du fichier de configuration
 	var donneesConfig ConfigurationXML
 	var cheminFichierConfigPrincipal string
-	cheminFichierConfigPrincipal, err := cheminFichierConfig(cheminProjet, "config.xml")
+	cheminFichierConfigPrincipal, err := cheminFichierConfig(cheminProjet, aquaConfigMachine.Config)
+	if err != nil {
+		return donneesConfig, errors.WithStack(err)
+	}
 	fichierConf, err := os.Open(cheminFichierConfigPrincipal)
 	if err != nil {
-		return donneesConfig, err
+		return donneesConfig, errors.WithStack(err)
 	}
 	bytesConfig, err := io.ReadAll(fichierConf)
 	if err != nil {
-		return donneesConfig, err
+		return donneesConfig, errors.WithStack(err)
+	}
+	err = xml.Unmarshal(bytesConfig, &donneesConfig)
+	// On supprime les extractions qui n’ont pas les fichiers nécessiares
+	var listeExtractions []DetailsConfigExtraction = []DetailsConfigExtraction{}
+	var problemeRencontre error
+	for _, extraction := range donneesConfig.DetailsExtraction {
+		listeDossier, err := ListeFichiersExtraction(extraction.Chemins, cheminProjet, idMachine, false)
+		if err != nil {
+			problemeRencontre = errors.WithStack(err)
+		}
+		var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
+		infosExtraction, err := GetConfigExtraction(cheminProjet, extraction.Id)
+		if err != nil {
+			problemeRencontre = errors.WithStack(err)
+			continue
+		}
+		for _, tableExtraction := range infosExtraction.Table {
+			if abase.EstTableVide(tableExtraction.Nom) {
+				if len(listeDossier) > 0 {
+					listeExtractions = append(listeExtractions, extraction)
+				}
+				break
+			}
+		}
+	}
+	donneesConfig.DetailsExtraction = listeExtractions
+	cacheConfigMachines[idMachine] = donneesConfig
+	return donneesConfig, problemeRencontre
+}
+
+func GetConfigExtraction(cheminProjet string, nomFichierConfig string) (ConfigExtraction, error) {
+	cacheConfig, existe := cacheConfigExtractions[nomFichierConfig]
+	if existe {
+		return cacheConfig, nil
+	}
+	var donneesConfig ConfigExtraction
+	var cheminConfig string
+	cheminConfig, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_EXTRACTIONS, nomFichierConfig)+EXTENSION_XML)
+	if err != nil {
+		return donneesConfig, errors.WithStack(err)
+	}
+	fichierConfig, err := os.Open(cheminConfig)
+	if err != nil {
+		return donneesConfig, errors.WithStack(err)
+	}
+	bytesConfig, err := io.ReadAll(fichierConfig)
+	if err != nil {
+		return donneesConfig, errors.WithStack(err)
 	}
 	err = xml.Unmarshal(bytesConfig, &donneesConfig)
 	if err != nil {
-		return donneesConfig, err
+		return donneesConfig, errors.WithStack(err)
 	}
-	log.Println(donneesConfig)
-	// On récupère toutes les données des extractions
-	var configExtractions []ConfigExtraction = []ConfigExtraction{}
-	for _, idConfig := range donneesConfig.IdExtractions {
-		var cheminFichierConfExtraction string
-		cheminFichierConfExtraction, err = cheminFichierConfig(cheminProjet, filepath.Join("extractions", idConfig+".xml"))
-		configExtraction, err := lireConfigExtraction(cheminFichierConfExtraction)
-		if err != nil {
-			return donneesConfig, err
-		}
-		configExtractions = append(configExtractions, configExtraction)
+	// On récupère les données complémentaires
+	var listeComplements map[string]string = map[string]string{}
+	for _, complement := range donneesConfig.ConfigComplement {
+		listeComplements[complement.Cle] = complement.Valeur
 	}
-	donneesConfig.Extractions = configExtractions
-	// On transforme le complement
-	for i, configExtration := range donneesConfig.Extractions {
-		configExtration.Complement = map[string]string{}
-		for _, donneeComplement := range configExtration.ConfigComplement {
-			configExtration.Complement[donneeComplement.Cle] = donneeComplement.Valeur
-		}
-		donneesConfig.Extractions[i] = configExtration
+	donneesConfig.Complement = listeComplements
+	cacheConfigExtractions[nomFichierConfig] = donneesConfig
+	// On ajoute le nom de la machine à la liste des colonnes
+	for i := range donneesConfig.Table {
+		donneesConfig.Table[i].Colonnes = append(donneesConfig.Table[i].Colonnes, ConfigColonneBDD{Nom: AQUA_MACHINE, Contenu: AQUA_MACHINE, Type: "TEXT"})
 	}
-	return donneesConfig, nil
+	return donneesConfig, err
+}
+
+func GetInfosSommairesExtraction(cheminProjet string, nomFichierConfig string) (InfosSommairesExtraction, error) {
+	var infosExtraction InfosSommairesExtraction
+	var cheminConfig string
+	cheminConfig, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_EXTRACTIONS, nomFichierConfig)+EXTENSION_XML)
+	if err != nil {
+		return infosExtraction, errors.WithStack(err)
+	}
+	fichierConfig, err := os.Open(cheminConfig)
+	if err != nil {
+		return infosExtraction, errors.WithStack(err)
+	}
+	bytesConfig, err := io.ReadAll(fichierConfig)
+	if err != nil {
+		return infosExtraction, errors.WithStack(err)
+	}
+	err = xml.Unmarshal(bytesConfig, &infosExtraction)
+	if err != nil {
+		return infosExtraction, errors.WithStack(err)
+	}
+	return infosExtraction, err
 }
 
 func lireConfigExtraction(cheminExtraction string) (ConfigExtraction, error) {
@@ -106,51 +199,44 @@ func lireConfigExtraction(cheminExtraction string) (ConfigExtraction, error) {
 	// On ouvre le ficher de configuration
 	fichierConfig, err := os.Open(cheminExtraction)
 	if err != nil {
-		return configExtraction, err
+		return configExtraction, errors.WithStack(err)
 	}
 	bytesConfig, err := io.ReadAll(fichierConfig)
 	if err != nil {
-		return configExtraction, err
+		return configExtraction, errors.WithStack(err)
 	}
 	err = xml.Unmarshal(bytesConfig, &configExtraction)
+	if err != nil {
+		return configExtraction, errors.WithStack(err)
+	}
 	return configExtraction, err
 }
 
-func ListeFichiersExtraction(extraction ConfigExtraction, cheminProjet string) ([]DossierAExtraire, error) {
-	// On commence par regarder quelles collectes on doit parcourir
-	var collectes []string = extraction.Collectes
+func ListeFichiersExtraction(chemins []ConfigChemin, cheminProjet string, dossierMachine string, fichierUnique bool) ([]DossierAExtraire, error) {
 	var resultat []DossierAExtraire = []DossierAExtraire{}
 	var probleme error
-	if len(extraction.Collectes) == 0 {
-		config, err := GetConfigurationProjet(cheminProjet)
+	for _, configChemin := range chemins {
+		listeDossiers, err := listeCheminsDossiersRec(configChemin.Dossiers, filepath.Join(cheminProjet, DOSSIER_FICHIERS_A_ANALYSER, dossierMachine), fichierUnique)
 		if err != nil {
-			return resultat, err
+			return resultat, errors.WithStack(err)
 		}
-		collectes = config.Collectes
-	}
-	for _, collecte := range collectes {
-		for _, configChemin := range extraction.Chemins {
-			listeDossiers, err := listeCheminsDossiersRec(configChemin.Dossiers, filepath.Join(cheminProjet, collecte))
+		for _, dossier := range listeDossiers {
+			var err error
+			var correspondances []DossierAExtraire
+			if configChemin.Archive != "" {
+				correspondances, err = listeCheminsArchives(dossier, configChemin.Archive, configChemin.Fichier, fichierUnique)
+			} else {
+				correspondances, err = listeCorrespondancesDansDossier(dossier, configChemin.Fichier)
+			}
 			if err != nil {
-				return resultat, err
+				probleme = errors.WithStack(err)
+				continue
 			}
-			for _, dossier := range listeDossiers {
-				var err error
-				var correspondances []DossierAExtraire
-				log.Println(configChemin.Archive)
-				if configChemin.Archive != "" {
-					correspondances, err = listeCheminsArchives(dossier, configChemin.Archive, configChemin.Fichier)
-				} else {
-					correspondances, err = listeCorrespondancesDansDossier(dossier, configChemin.Fichier)
-				}
-				if err != nil {
-					probleme = err
-					continue
-				}
-				resultat = append(resultat, correspondances...)
+			resultat = append(resultat, correspondances...)
+			if fichierUnique && len(correspondances) > 0 {
+				return resultat, nil
 			}
 		}
-
 	}
 
 	return resultat, probleme
@@ -167,14 +253,14 @@ func cheminFichierConfig(cheminProjet string, nomFichierConfig string) (string, 
 	}
 	emplacementExecutable, err := os.Executable()
 	if err != nil {
-		return "", err
+		return "", errors.WithStack(err)
 	}
 	return filepath.Join(filepath.Dir(emplacementExecutable), "config", nomFichierConfig), nil
 }
 
 /** Fonction qui renvoie la liste des chemins qui parcourent les dossiers donnés en argument
 **/
-func listeCheminsDossiersRec(cheminCible []string, cheminActuel string) ([]string, error) {
+func listeCheminsDossiersRec(cheminCible []string, cheminActuel string, fichierUnique bool) ([]string, error) {
 	if len(cheminCible) == 0 {
 		return []string{cheminActuel}, nil
 	} else {
@@ -183,49 +269,56 @@ func listeCheminsDossiersRec(cheminCible []string, cheminActuel string) ([]strin
 		// On ouvre le chemin actuel pour voir les dossiers qui y sont présents
 		dossiers, err := os.ReadDir(cheminActuel)
 		if err != nil {
-			return resultat, err
+			return resultat, errors.WithStack(err)
 		}
 		// On les parcours pour voir s'ils correspondent à la cible
 		for _, dossier := range dossiers {
 			correspond, err := filepath.Match(cheminCible[0], dossier.Name())
 			if err != nil {
-				probleme = err
+				probleme = errors.WithStack(err)
 				continue
 			}
 			if correspond && dossier.IsDir() {
-				nvChemins, err := listeCheminsDossiersRec(cheminCible[1:], filepath.Join(cheminActuel, dossier.Name()))
+				nvChemins, err := listeCheminsDossiersRec(cheminCible[1:], filepath.Join(cheminActuel, dossier.Name()), fichierUnique)
 				if err != nil {
-					probleme = err
+					probleme = errors.WithStack(err)
 					continue
 				}
 				resultat = append(resultat, nvChemins...)
+				if fichierUnique {
+					return resultat, nil
+				}
 			}
 		}
 		return resultat, probleme
 	}
 }
 
-func listeCheminsArchives(cheminActuel string, nomArchive string, fichierCible string) ([]DossierAExtraire, error) {
+func listeCheminsArchives(cheminActuel string, nomArchive string, fichierCible string, fichierUnique bool) ([]DossierAExtraire, error) {
 	var resultat []DossierAExtraire = []DossierAExtraire{}
 	// On parcourt le dossier dans lequel se trouve l'archive à la recherche de celle-ci
 	archives, err := os.ReadDir(cheminActuel)
 	if err != nil {
-		return resultat, err
+		return resultat, errors.WithStack(err)
 	}
+	var problemeRencontre error
 	for _, archive := range archives {
 		correspond, err := filepath.Match(nomArchive, archive.Name())
 		if err != nil {
-			return resultat, err
+			problemeRencontre = errors.WithStack(err)
 		}
 		if correspond {
 			correspondances, err := listeCorrespondancesDansArchive(filepath.Join(cheminActuel, archive.Name()), fichierCible, "avproof")
 			if err != nil {
-				return resultat, err
+				problemeRencontre = errors.WithStack(err)
 			}
 			resultat = append(resultat, correspondances)
+			if fichierUnique {
+				return resultat, nil
+			}
 		}
 	}
-	return resultat, nil
+	return resultat, problemeRencontre
 }
 
 func listeCorrespondancesDansArchive(cheminArchive string, cheminCible string, mdp string) (DossierAExtraire, error) {
@@ -234,12 +327,12 @@ func listeCorrespondancesDansArchive(cheminArchive string, cheminCible string, m
 	// On ouvre l'archive et on la parcourt
 	archive, err := sevenzip.OpenReaderWithPassword(cheminArchive, mdp)
 	if err != nil {
-		return DossierAExtraire{}, err
+		return DossierAExtraire{}, errors.WithStack(err)
 	}
 	for num, fichier := range archive.File {
 		correspond, err := filepath.Match(cheminCible, fichier.Name)
 		if err != nil {
-			probleme = err
+			probleme = errors.WithStack(err)
 			continue
 		}
 		if correspond {
@@ -255,12 +348,12 @@ func listeCorrespondancesDansDossier(cheminDossier string, nomCible string) ([]D
 	// On ouvre le dossier à explorer
 	fichiers, err := os.ReadDir(cheminDossier)
 	if err != nil {
-		return []DossierAExtraire{}, err
+		return []DossierAExtraire{}, errors.WithStack(err)
 	}
 	for numFichier, fichier := range fichiers {
 		correspond, err := filepath.Match(nomCible, fichier.Name())
 		if err != nil {
-			probleme = err
+			probleme = errors.WithStack(err)
 			continue
 		}
 		if correspond {
@@ -276,4 +369,34 @@ func (cftable ConfigTableBDD) GetNomsColonnes() []string {
 		res = append(res, colonne.Nom)
 	}
 	return res
+}
+
+func GetListeConfigurationsDisponibles() ([]string, error) {
+	// Récupération de l’emplacement de l’exécutable
+	emplacementExecutable, err := os.Executable()
+	if err != nil {
+		return []string{}, errors.WithStack(err)
+	}
+	dossierConfig := filepath.Join(filepath.Dir(emplacementExecutable), "config")
+	// Liste des fichiers du dossier
+	fichiers, err := os.ReadDir(dossierConfig)
+	if err != nil {
+		return []string{}, errors.WithStack(err)
+	}
+	// Énumération des ficheirs xml
+	var listeConfigs []string = []string{}
+	for _, fichier := range fichiers {
+		ok, _ := filepath.Match("*.xml", fichier.Name())
+		if ok {
+			listeConfigs = append(listeConfigs, fichier.Name())
+		}
+	}
+	return listeConfigs, nil
+}
+
+func ajouterColonneMachineDansTables(confTable []ConfigTableBDD) []ConfigTableBDD {
+	for i := range confTable {
+		confTable[i].Colonnes = append(confTable[i].Colonnes, ConfigColonneBDD{Nom: AQUA_MACHINE, Contenu: AQUA_MACHINE, Type: "VARCHAR(20)"})
+	}
+	return confTable
 }

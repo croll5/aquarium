@@ -43,11 +43,8 @@ function nouvelle_analyse(){
 function analyse_existante(){
     parent.window.go.main.App.OuvrirAnalyseExistante().then(resultat=>{
         if(resultat){
-            window.location.replace("../html/extraction.html")
+            window.location.replace("../html/synthese.html")
             parent.document.getElementsByTagName("header")[0].style.display = "inline";
-            let onglet_courant = parent.document.getElementById("onglet_extraction");
-            onglet_courant.style.backgroundColor = "#FCF5DC";
-            onglet_courant.style.color = "#000";
         }
     })
 }

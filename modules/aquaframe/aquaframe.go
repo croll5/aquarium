@@ -38,10 +38,10 @@ package aquaframe
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
+	"github.com/pkg/errors"
 )
 
 type Aquaframe struct {
@@ -67,12 +67,11 @@ func Df(dataframe dataframe.DataFrame) *Aquaframe {
 
 }
 
-func RowsToAquaframe(rows *sql.Rows) *Aquaframe {
+func RowsToAquaframe(rows *sql.Rows) (*Aquaframe, error) {
 	// Take column names
 	columns, err := rows.Columns()
 	if err != nil {
-		fmt.Println("adb.WARNING - SelectFrom failed getting columns" + err.Error())
-		return nil
+		return nil, errors.WithStack(err)
 	}
 	// Store data
 	var records [][]string
@@ -86,8 +85,7 @@ func RowsToAquaframe(rows *sql.Rows) *Aquaframe {
 			columnPointers[i] = &columnValues[i]
 		}
 		if err := rows.Scan(columnPointers...); err != nil {
-			fmt.Println("adb.WARNING - SelectFrom failed scanning: " + err.Error())
-			return nil
+			return nil, errors.WithStack(err)
 		}
 		row := make([]string, len(columns))
 		for i, col := range columnValues {
@@ -100,13 +98,12 @@ func RowsToAquaframe(rows *sql.Rows) *Aquaframe {
 		records = append(records, row)
 	}
 	if err := rows.Err(); err != nil {
-		fmt.Println("adb.WARNING - SelectFrom failed during rows iteration: " + err.Error())
-		return nil
+		return nil, errors.WithStack(err)
 	}
 	// Convert and return the dataframe
 	adf := Aquaframe{}
 	adf.Table = dataframe.LoadRecords(records)
-	return &adf
+	return &adf, err
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -122,7 +119,7 @@ func (adf Aquaframe) Head(nFirstRows int) *Aquaframe {
 	return &df
 }
 
-func (adf Aquaframe) AddColumn(colname string, colvalues interface{}) {
+func (adf Aquaframe) AddColumn(colname string, colvalues interface{}) error {
 	var newCol series.Series
 	// Create a Series with the good type
 	switch v := colvalues.(type) {
@@ -136,11 +133,11 @@ func (adf Aquaframe) AddColumn(colname string, colvalues interface{}) {
 		newCol = series.New(v, series.Bool, colname)
 	// Ajoutez plus de cas pour d'autres types si nécessaire
 	default:
-		fmt.Printf("Unsupported type: %T\n", v)
-		return
+		return errors.WithStack(errors.Errorf("Unsupported type : %T", v))
 	}
 	// Add the new column to the dataframe
 	adf.Table = adf.Table.CBind(dataframe.New(newCol))
+	return nil
 }
 
 func (adf Aquaframe) Strloc(r int, c int) string {

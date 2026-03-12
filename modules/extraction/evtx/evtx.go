@@ -40,9 +40,11 @@ import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
 	"bytes"
-	"log"
+	"io"
 
 	"github.com/0xrawsec/golang-evtx/evtx"
+
+	"github.com/pkg/errors"
 )
 
 type Evtx struct{}
@@ -57,13 +59,15 @@ type Evtx struct{}
 @param fichierSource : le chemin vers le fichier source
 @return : une erreur s'il y a eu des problèmes dans l'extraction des caractéristiques de l'évènement
 */
-func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aquabase.RequeteInsertion, fichierSource string, configExtraction config.ConfigExtraction) error {
+func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aquabase.RequeteInsertion, fichierSource string, configExtraction config.ConfigExtraction, idMachine string) error {
 	var listeContenuColonnes []interface{} = make([]interface{}, 0)
 	for _, colonne := range configExtraction.Table[0].Colonnes {
 		if colonne.Contenu == "horodatage" {
 			listeContenuColonnes = append(listeContenuColonnes, evenement.TimeCreated())
-		} else if colonne.Contenu == "source" {
+		} else if colonne.Contenu == "aqua_source" {
 			listeContenuColonnes = append(listeContenuColonnes, fichierSource)
+		} else if colonne.Contenu == config.AQUA_MACHINE {
+			listeContenuColonnes = append(listeContenuColonnes, idMachine)
 		} else if colonne.Contenu == "message" {
 			chemin := evtx.GoEvtxPath{"Event", "EventData"}
 			infosEvenement, err := evenement.Get(&chemin)
@@ -84,9 +88,9 @@ func ajouterGoEvtxMapDansBDD(evenement *evtx.GoEvtxMap, requeteInsertionEvtx *aq
 	}
 	err := requeteInsertionEvtx.AjouterDansRequete(listeContenuColonnes...)
 	if err != nil {
-		log.Println(err)
+		return errors.WithStack(err)
 	}
-	return nil
+	return err
 }
 
 /*
@@ -98,13 +102,18 @@ Fonction qui, à partir d'un fichier evtx zippé, ajoute tous ses évènements �
 @param cheminTemp : le chemin vers un répertoire temporaire
 @param fichierSource : le chemin du fichier evtx à extraire
 */
-func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier bytes.Buffer, fichierSource string, configExtraction config.ConfigExtraction) error {
+func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, fichier io.Reader, fichierSource string, configExtraction config.ConfigExtraction, idMachine string) error {
+	// On copie le contenu du fichier dans un tampon
+	var tampon bytes.Buffer
+	if _, err := io.Copy(&tampon, fichier); err != nil {
+		return errors.WithStack(err)
+	}
 	// On ouvre le tampon avec la bibliothèque evtx
-	readerAt := bytes.NewReader(tamponFichier.Bytes())
+	readerAt := bytes.NewReader(tampon.Bytes())
 	var fichierEvtx evtx.File
 	fichierEvtx, err := evtx.New(readerAt)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	// On récupère la liste des évènements
 	listeEvenements := fichierEvtx.FastEvents()
@@ -120,17 +129,16 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier 
 	var requeteInsertionEvtx aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("Evtx", listeColonnesEvtx)
 	for evenement := range listeEvenements {
 		// On ajoute chaque évènement à la requete
-		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource, configExtraction)
+		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource, configExtraction, idMachine)
 		if err != nil {
-			probleme = err
+			probleme = errors.WithStack(err)
 		}
 	}
 	// On exécute la requete
 	err = requeteInsertionEvtx.Executer()
 	// Si l'on n'a pas pu l'exécuter, on renvoie une erreur
 	if err != nil {
-		log.Println("ERROR - extraireEvenementDepuisFichier : ", err)
-		return err
+		return errors.WithStack(err)
 	}
 	return probleme
 }
@@ -138,11 +146,10 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, tamponFichier 
 // ------------------------- FONCTIONS GLOBALES ------------------------- //
 
 /* Fonction d'extraction des fichiers evtx */
-func (e Evtx) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction) error {
-	err := e.extraireEvenementsDepuisTampon(cheminProjet, fichier, nomFichier, configExtraction)
+func (e Evtx) Extraction(cheminProjet string, fichier io.Reader, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
+	err := e.extraireEvenementsDepuisTampon(cheminProjet, fichier, nomFichier, configExtraction, idMachine)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return err
-}
-
-func (e Evtx) Description() string {
-	return "Évènements Windows (fichier .evtx)"
 }

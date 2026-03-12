@@ -1,5 +1,5 @@
-/*
-Copyright ou © ou Copr. Cécile Rolland, (21 janvier 2025) 
+<!--
+Copyright ou © ou Copr. Cécile Rolland, (22 décembre 2025) 
 
 aquarium[@]mailo[.]com
 
@@ -32,59 +32,25 @@ sécurité de leurs systèmes et ou de leurs données et, plus généralement,
 Le fait que vous puissiez accéder à cet en-tête signifie que vous avez 
 pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
-*/
+-->
 
-body{
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    margin: 0;
-}
-
-html, body {
-    height: 100%;
-}
-
-header, footer {
-    background-color: #001D64;
-    color: #EBC331;
-    text-align: center;
-    padding: 5px;
-}
-
-footer p{
-    margin: 0;
-}
-
-footer:hover{
-    cursor: pointer;
-}
-
-main {
-    flex: 1;
-    display: flex;
-}
-
-iframe {
-    flex: 1;
-    border: none;
-}
-
-header{
-    padding-bottom: 0;
-    text-align: left;
-}
-
-#details_erreur{
-    font-size: xx-large;
-    position: absolute;
-    right: 0;
-    top: 0;
-    padding: 12px;
-}
-
-#texte_details_erreur{
-    line-height: 30px;
-    overflow: overlay;
-    height: 80%;
-}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../templates/bibliotheque.css">
+    <link rel="stylesheet" href="../templates/commun_clair.css">
+    <link rel="stylesheet" href="../css/extraction.css">
+    <script src="../js/config_analyse.js" async></script>
+    <script src="../templates/bibliotheque.js" async></script>
+</head>
+<body>
+    <h1>Configuration de l’analyse</h1>
+    <p>Vous pouvez lancer l’extraction des fichiers, qui se fera pas défaut dans l’ordre ci-dessous. <br>
+    Si cet ordre d’extraction ne vous convient pas, vous pouvez le modifier <strong>avant de lancer l’extraction</strong> en utilisant le glisser-déposer.</p>
+    <button class="bouton_sombre" onclick="lancer_extraction()" id="lancer_extraction">🚀 Lancer l’extraction</button>
+    <ul class="liste_triable" id="liste_extractions" ondragstart="debut_deplacement(event)" ondragend="fin_deplacement(event)" ondragover="deplacement(event)"></ul>
+</body>
+</html>

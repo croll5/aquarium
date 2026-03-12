@@ -38,6 +38,8 @@ package aquaticket
 
 import (
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type Distributeur struct {
@@ -68,13 +70,16 @@ func (dist *Distributeur) ExecutionQuandTicketPret(fonction func() error) error 
 	var err error
 	if dist.PeutPasser(numTicket) {
 		err = fonction()
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	} else {
 		ticker := time.NewTicker(10 * time.Millisecond)
 		for range ticker.C {
 			if dist.PeutPasser(numTicket) {
 				err = fonction()
 				ticker.Stop()
-				return err
+				return errors.WithStack(err)
 			}
 		}
 		time.Sleep(30 * time.Second)

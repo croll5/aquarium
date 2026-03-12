@@ -26,6 +26,8 @@ go.sum
 # System enviroment variables
 env
 
+# documents
 
+frontend/src/assets/documents
 
 

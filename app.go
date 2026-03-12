@@ -51,6 +51,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -60,6 +62,8 @@ import (
 )
 
 var chemin_projet string
+
+const DOSSIER_ERREURS = "erreurs"
 
 // App struct
 type App struct {
@@ -78,6 +82,7 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
+	runtime.WindowMaximise(ctx)
 	a.ctx = ctx
 }
 
@@ -101,12 +106,40 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Call this function when a bug appear
 func (a *App) signalerErreur(erreur error) {
-	log.Println("ERR | Erreur non traitée : ", erreur)
-	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-		Type:    runtime.ErrorDialog,
-		Title:   "Erreur dans l'écriture du projet",
-		Message: "Félicitation ! Vous venez de trouver un bogue dans le logiciel Aquarium !\n C'est cadeau : \n " + erreur.Error(),
-	})
+	// Récupérer l’horodatage
+	nomFichierErreur := time.Now().Format("2006010215040599999_erreur.txt")
+	// Informer l’utilisateur de l’erreur
+	runtime.WindowExecJS(a.ctx, fmt.Sprintf("signaler_erreur('%s','%s')", nomFichierErreur, url.QueryEscape(fmt.Sprintf("%+v", erreur))))
+	// Récupérer le chemin d'enregistrement de l’erreur
+	cheminErreurs := filepath.Join(chemin_projet, DOSSIER_ERREURS)
+	if chemin_projet == "" {
+		cheminExecutable, err := os.Executable()
+		if err != nil {
+			a.alerterEnregistrementErreurImpossible()
+			return
+		}
+		cheminErreurs = filepath.Join(filepath.Dir(cheminExecutable), DOSSIER_ERREURS)
+	}
+	// Créer le dossier des erreur s’il n’existe pas
+	err := os.MkdirAll(cheminErreurs, os.ModeAppend)
+	if err != nil {
+		a.alerterEnregistrementErreurImpossible()
+		return
+	}
+	// Enregistrer le contenu de l’erreur
+	fichierErr, err := os.Create(filepath.Join(cheminErreurs, nomFichierErreur))
+	if err != nil {
+		a.alerterEnregistrementErreurImpossible()
+		return
+	}
+	_, err = fichierErr.Write([]byte(fmt.Sprintf("%+v", erreur)))
+	if err != nil {
+		a.alerterEnregistrementErreurImpossible()
+	}
+}
+
+func (a *App) alerterEnregistrementErreurImpossible() {
+	runtime.WindowExecJS(a.ctx, "details_erreur()")
 }
 
 /***************************************************************************************/
@@ -135,6 +168,7 @@ func (a *App) OuvrirAnalyseExistante() bool {
 		return false
 	}
 	chemin_projet = filepath.Dir(fichier)
+	extraction.CreationBaseAnalyse(chemin_projet)
 	return true
 }
 
@@ -165,24 +199,26 @@ func (a *App) CreationDossierNouveauModele() string {
 /************************* NOUVELLE ANALYSE FUNCTIONS **********************************/
 /***************************************************************************************/
 
+func (a *App) ListeConfigurationsDisponibles() []string {
+	resultat, err := config.GetListeConfigurationsDisponibles()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
 /*
 	Fonction permettant la création d'un nouveau projet
 
 @return : le chemin vers le nouveau projet
 */
-func (a *App) CreationNouveauProjet() string {
-	// Partie création du squelette de l'analyse
-	projet, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Choix de l'emplacement de l'analyse"})
+func (a *App) CreationNouveauProjet(configuration config.AquaConfig) string {
+	// Création de l’arborescence de l’analyse
+	chemin_projet = configuration.DossierAnalyse
+	configuration.DebutAnalyse = time.Now()
+	err := gestionprojet.CreationArborescence(&chemin_projet, configuration)
 	if err != nil {
-		return ""
-	}
-	chemin_projet = projet
-	if !gestionprojet.CreationArborescence(&chemin_projet) {
-		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-			Type:    runtime.ErrorDialog,
-			Title:   "Problème dans la création de l'analyse",
-			Message: "Les fichiers d'analyse n'ont pas pu être créés. Vérifiez que le dossier sélectionné est vide et que vous avez les droits en écriture :/"})
+		a.signalerErreur(err)
 		return ""
 	}
 	return chemin_projet
@@ -227,67 +263,35 @@ func (a *App) ValidationCreationProjet(nomAnalyste string, description string) b
 	return true
 }
 
-/*
-	Fonction permettant de valider la création d'un nouveau modèle
-
-@return : vrai si et seulement la validation a fonctionné
-*/
-func (a *App) ValidationCreationModele(nomModele string, description string, supprimerOrc bool) bool {
-	err := gestionprojet.EcritureFichierModeleAqua(nomModele, description, time.Now(), chemin_projet)
-	if err != nil {
-		a.signalerErreur(err)
-		return false
-	}
-	a.ExtraireArborescence(false)
-	return true
-}
-
 /***************************************************************************************/
 /************************* Extraction FUNCTIONS PAGE **********************************/
 /***************************************************************************************/
 
+func (a *App) ListeMachinesAnalysees() map[string]config.AquaConfigMachine {
+	liste, err := config.ListeMachinesAnalysees(chemin_projet)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return liste
+}
+
 /* Fonction renvoyant la liste des éléments pouvant être extraits de l'ORC
  */
-func (a *App) ListeExtractionsPossibles() map[string]config.ConfigExtraction {
-	resultat, err := extraction.ListeExtracteursHtml(chemin_projet)
+func (a *App) ListeExtractionsPossibles() map[string]extraction.ExtractionMachine {
+	extractions, err := extraction.ListeExtractionsHtml(chemin_projet)
 	if err != nil {
 		a.signalerErreur(err)
 	}
-	return resultat
+	return extractions
 }
 
-/*
-	Fonction de permettant de lancer une extraction
-
-@param module : le nom du module à utiliser pour l'extraction
-@param description : la description du module à extraire
-*/
-func (a *App) ExtraireElements(module string, description string) {
-	err := extraction.Extraction(module, chemin_projet)
-	if err != nil {
-		log.Println("Erreur dans l’extraction du module", module, ":", err.Error())
-		a.signalerErreur(err)
-	} else {
-		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-			Type:    runtime.InfoDialog,
-			Title:   "Extraction réussie",
-			Message: "L’extraction du module " + description + " s'est terminée avec succès !",
-		})
-	}
-}
-
-/*
-	Fontion permettant d'annuler une extraction en cours
-
-@return : vrai si et seulement si l'annulation a bien fonctionné
-*/
-func (a *App) AnnulerExtraction(module string) bool {
-	return extraction.AnnulerExtraction(module)
+func (a *App) LancerExtraction(ordreExtractions []map[string]string) {
+	extraction.LancerExtractions(chemin_projet, ordreExtractions)
 }
 
 /* Fonction permettant de connaitre le pourcentage de progression d'une extraction*/
-func (a *App) ProgressionExtraction(idExtracteur string) float32 {
-	return extraction.ProgressionExtraction(chemin_projet, idExtracteur)
+func (a *App) ProgressionExtraction() map[string]string {
+	return extraction.ProgressionExtraction(chemin_projet)
 }
 
 /* Fonction permettant de lancer l'extraction de la table chronologie */
@@ -310,42 +314,28 @@ func (a *App) ExtractionChronologie() bool {
 @param cheminDossier : le chemin du dossier duquel on veut connaître les enfants
 @return : la liste des enfants
 */
-func (a *App) ArborescenceMachineAnalysee(cheminDossier []int) []arborescence.MetaDonnees {
-	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier)
+func (a *App) ArborescenceMachineAnalysee(cheminDossier []string, idMachine string) []arborescence.MetaDonnees {
+	res, err := arborescence.RecupEnfantsArbo(chemin_projet, cheminDossier, idMachine)
 	if err != nil {
 		a.signalerErreur(err)
 	}
 	return res
 }
 
-func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
-	var cheminModele = ""
-	var err error
-	if avecModele {
-		cheminModele, err = runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-			Title:   "Choisissez le modele",
-			Filters: []runtime.FileFilter{{DisplayName: "Modèles aqua", Pattern: "modele.aqua"}},
-		})
-		if err != nil || cheminModele == "" {
-			runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-				Type:    runtime.ErrorDialog,
-				Message: "Vous devez choisir un fichier modele.aqua. \nSi vous n'avez pas de modèle, il est possible d'en créer un en vous rendant sur la page d'accueil.\nSi vous ne souhaitez pas utiliser de modèle, décochez l'option « Comparer l'arborescence avec celle d'un modèle. »",
-			})
-			return arborescence.Arborescence{}
-		}
-	}
-	res, err := arborescence.ExtraireArborescence(chemin_projet, filepath.Dir(cheminModele))
+func (a *App) ExtractionEnCours() bool {
+	return arborescence.ExtractionEnCours()
+}
 
+func (a *App) ArborescenceEnCache() string {
+	return arborescence.ArborescenceEnCache()
+}
+
+func (a *App) DetailsFichierArborescence(idFichier int64, idMachine string) []map[string]interface{} {
+	resultat, err := arborescence.DetailsFichier(chemin_projet, idFichier, idMachine)
 	if err != nil {
 		a.signalerErreur(err)
 	}
-
-	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
-		Type:    runtime.InfoDialog,
-		Title:   "Extraction terminée",
-		Message: "L'extraction de l'arborescence s'est terminée avec succès !",
-	})
-	return res
+	return resultat
 }
 
 /***************************************************************************************/
@@ -353,13 +343,21 @@ func (a *App) ExtraireArborescence(avecModele bool) arborescence.Arborescence {
 /***************************************************************************************/
 func (a *App) Get_db_info() map[string]string {
 	adb := aquabase.InitDB_Extraction(chemin_projet)
-	return adb.GetAllTableNames()
+	resultat, err := adb.GetAllTableNames()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 func (a *App) Get_header_table(tableName string, limitJS string) []map[string]interface{} {
 	limit, _ := strconv.Atoi(limitJS)
 	adb := aquabase.InitDB_Extraction(chemin_projet)
-	return adb.SelectAllFrom(tableName, limit)
+	resultat, err := adb.SelectAllFrom(tableName, limit)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 /***************************************************************************************/
@@ -442,15 +440,15 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 /*************************** Chronologie FUNCTIONS PAGE ********************************/
 /***************************************************************************************/
 
-func (app *App) ValeursTableChronologie(debut int, taille int) []map[string]interface{} {
-	return extraction.ValeursTableChronologie(chemin_projet, debut, taille)
-}
-
-func (app *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
+func (a *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
 	requete = fmt.Sprintf("%s LIMIT %d OFFSET %d", requete, taille, debut)
 	log.Println("[INFO] - Execution depuis JS de la requete ", requete)
 	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
-	return base.ResultatRequeteSQL(requete)
+	resultat, err := base.ResultatRequeteSQL(requete)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 func (app *App) TailleRequeteSQLExtraction(requete string) int {
@@ -458,9 +456,13 @@ func (app *App) TailleRequeteSQLExtraction(requete string) int {
 	return base.TailleRequeteSQL(requete)
 }
 
-func (app *App) GetListeTablesExtraction() []string {
+func (a *App) GetListeTablesExtraction() []string {
 	var base *aquabase.Aquabase = aquabase.InitDB_Extraction(chemin_projet)
-	return base.GetListeTablesDansBDD()
+	resultat, err := base.GetListeTablesDansBDD()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
 /***************************************************************************************/
@@ -495,18 +497,58 @@ func (app *App) AjouterEtapeDansRapport(requeteSQL string, lignesAEnregistrer []
 	}
 }
 
-func (app *App) ListePistesRapport() []map[string]interface{} {
+func (a *App) ListePistesRapport() []map[string]interface{} {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
-	return rprt.GetPistes()
+	resultat, err := rprt.GetPistes()
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
-func (app *App) ListeEtapesRapport(idPiste int) []rapport.EtapeAnalyse {
+func (a *App) ListeEtapesRapport(idPiste int) []rapport.EtapeAnalyse {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
-	return rprt.GetEtapesPiste(idPiste)
+	resultat, err := rprt.GetEtapesPiste(idPiste)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
 }
 
-func (app *App) DonneesTableRapport(nomTable string) []map[string]interface{} {
+func (a *App) DonneesTableRapport(nomTable string) []map[string]interface{} {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
 	log.Println(nomTable)
-	return rprt.GetDonnesTableSauvegardee(nomTable)
+	resultat, err := rprt.GetDonnesTableSauvegardee(nomTable)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
+/***************************************************************************************/
+/******************************* FONCTIONS UTILITAIRES  ********************************/
+/***************************************************************************************/
+
+func (app *App) ChoisirFichier(ordre string) []string {
+	chemin, err := runtime.OpenMultipleFilesDialog(app.ctx, runtime.OpenDialogOptions{
+		Title: ordre})
+	if err != nil {
+		runtime.MessageDialog(app.ctx, runtime.MessageDialogOptions{
+			Title: "Erreur lors de l'ouverture du fichier",
+			Type:  runtime.ErrorDialog,
+		})
+	}
+	return chemin
+}
+
+func (app *App) ChoisirDossier(ordre string) string {
+	chemin, err := runtime.OpenDirectoryDialog(app.ctx, runtime.OpenDialogOptions{
+		Title: ordre})
+	if err != nil {
+		runtime.MessageDialog(app.ctx, runtime.MessageDialogOptions{
+			Title: "Erreur lors de l'ouverture du dossier",
+			Type:  runtime.ErrorDialog,
+		})
+	}
+	return chemin
 }

@@ -3,11 +3,6 @@
     <extracteur>registre</extracteur>
     <nom>Base SAM, contenant les informations utilisateurs</nom>
     <description>La base SAM contient les informations sur les comptes (date de création, dernière connexion, droits,...)</description>
-    <chemin>
-        <dossier>SAM</dossier>
-        <archive>SAM.7z</archive>
-        <fichier>*</fichier>
-    </chemin>
     <complements>
         <parametre cle="registre">SAM/Domains/Account/Users</parametre>
         <parametre cle="parcourir_enfants">oui</parametre>
@@ -18,8 +13,8 @@
         <colonne type="DATETIME" contenu="0:fixe:0x18:0x8:filetime">creationCompte</colonne>
         <colonne type="TEXT" contenu="nomCle">idCompte</colonne>
         <colonne type="TEXT" contenu="1:variable:0xC:0x10:utf16">nomCompte</colonne>
-        <colonne type="TEXT" contenu="source">source</colonne>
+        <colonne type="TEXT" contenu="aqua_source">source</colonne>
     </table>
-    <sql_chronologie>SELECT DISTINCT id, "registre", "sam", source, derniereConnexion, "Date de la dernière connexion sur le compte " || nomCompte || " (idCompte : " || idCompte || ")" FROM sam WHERE derniereConnexion != "n/a" 
-        UNION SELECT DISTINCT id, "registre", "sam", source, creationCompte, "Création du compte " || nomCompte || " (idCompte : " || idCompte || ")" FROM sam WHERE creationCompte != "n/a"</sql_chronologie>
+    <sql_chronologie>SELECT DISTINCT id, "registre", "sam", source, derniereConnexion, "Date de la dernière connexion sur le compte " || nomCompte || " (idCompte : " || idCompte || ")", aqua_machine FROM sam WHERE derniereConnexion != "n/a" 
+        UNION SELECT DISTINCT id, "registre", "sam", source, creationCompte, "Création du compte " || nomCompte || " (idCompte : " || idCompte || ")", aqua_machine FROM sam WHERE creationCompte != "n/a"</sql_chronologie>
 </extraction>

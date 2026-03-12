@@ -40,34 +40,52 @@ import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
 	"bytes"
+	"io"
 	"strings"
 
 	"www.velocidex.com/golang/go-prefetch"
+
+	"github.com/pkg/errors"
 )
 
 type Prefetch struct{}
 
-func (p Prefetch) Extraction(cheminProjet string, fichier bytes.Buffer, nomFichier string, configExtraction config.ConfigExtraction) error {
-	readerAt := bytes.NewReader(fichier.Bytes())
+func (p Prefetch) Extraction(cheminProjet string, fichier io.Reader, nomFichier string, configExtraction config.ConfigExtraction, idMachine string) error {
+	// Copie du contenu du fichier dans un tampon, pour pouvoir l'ouvrir avec l'extracteur de registres
+	var tampon bytes.Buffer
+	if _, err := io.Copy(&tampon, fichier); err != nil {
+		return errors.WithStack(err)
+	}
+	readerAt := bytes.NewReader(tampon.Bytes())
 	infosPrechargement, err := prefetch.LoadPrefetch(readerAt)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	var adb aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
+	var probleme error
 	for _, table := range configExtraction.Table {
 		var requeteInsertion aquabase.RequeteInsertion = adb.InitRequeteInsertionExtraction(table.Nom, listeColonnesTable(table))
 		if table.Condition == "" {
 			var valeurs []interface{} = make([]interface{}, 0)
 			for _, colonne := range table.Colonnes {
-				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, nomFichier))
+				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, nomFichier, idMachine))
 			}
-			requeteInsertion.AjouterDansRequete(valeurs...)
+			err = requeteInsertion.AjouterDansRequete(valeurs...)
+			if err != nil {
+				probleme = errors.WithStack(err)
+			}
 		} else {
-			extraireValeursMultiples(infosPrechargement, table, nomFichier, &requeteInsertion)
+			err = extraireValeursMultiples(infosPrechargement, table, nomFichier, &requeteInsertion, idMachine)
+			if err != nil {
+				probleme = errors.WithStack(err)
+			}
 		}
-		requeteInsertion.Executer()
+		err = requeteInsertion.Executer()
+		if err != nil {
+			probleme = errors.WithStack(err)
+		}
 	}
-	return nil
+	return probleme
 }
 
 /* FONCTIONS LOCALES */
@@ -80,7 +98,7 @@ func listeColonnesTable(table config.ConfigTableBDD) []string {
 	return nomsColonnes
 }
 
-func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.ConfigColonneBDD, source string) interface{} {
+func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.ConfigColonneBDD, source string, idMachine string) interface{} {
 	switch colonne.Contenu {
 	case "executable":
 		return fichierPrefetch.Executable
@@ -94,6 +112,8 @@ func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.Con
 		return fichierPrefetch.RunCount
 	case "aqua_source":
 		return source
+	case config.AQUA_MACHINE:
+		return idMachine
 	case "date_execution":
 		var datesExecutions []string = make([]string, len(fichierPrefetch.LastRunTimes))
 		for i, date := range fichierPrefetch.LastRunTimes {
@@ -107,19 +127,24 @@ func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.Con
 	}
 }
 
-func extraireValeursMultiples(infosPrechargement *prefetch.PrefetchInfo, table config.ConfigTableBDD, source string, requeteInsertion *aquabase.RequeteInsertion) {
+func extraireValeursMultiples(infosPrechargement *prefetch.PrefetchInfo, table config.ConfigTableBDD, source string, requeteInsertion *aquabase.RequeteInsertion, idMachine string) error {
 	var valeursARepeter = getListeValeurs(infosPrechargement, table.Condition)
+	var probleme error
 	for _, valeurARepeter := range valeursARepeter {
 		var valeurs []interface{} = make([]interface{}, 0)
 		for _, colonne := range table.Colonnes {
 			if colonne.Contenu == table.Condition {
 				valeurs = append(valeurs, valeurARepeter)
 			} else {
-				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, source))
+				valeurs = append(valeurs, getValeurColonne(infosPrechargement, colonne, source, idMachine))
 			}
 		}
-		requeteInsertion.AjouterDansRequete(valeurs...)
+		err := requeteInsertion.AjouterDansRequete(valeurs...)
+		if err != nil {
+			probleme = errors.WithStack(err)
+		}
 	}
+	return probleme
 }
 
 func getListeValeurs(fichierPrefetch *prefetch.PrefetchInfo, contenuColonne string) []interface{} {

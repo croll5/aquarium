@@ -42,14 +42,16 @@ package csv
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
-	"bytes"
-	"fmt"
-	"log"
+	"bufio"
+	"encoding/csv"
+	"io"
 	"strings"
 
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
 	_ "modernc.org/sqlite"
+
+	"github.com/pkg/errors"
 )
 
 type Csv struct{}
@@ -58,69 +60,118 @@ type Csv struct{}
 /* ********************** Csv Methods ***************************** */
 /* ******************************************************************** */
 
-func (gt Csv) Extraction(cheminProjet string, fichier bytes.Buffer, cheminFichierAExtraire string, configExtraction config.ConfigExtraction) error {
-	var df dataframe.DataFrame
-	var err error
-	// On lit les données du fichier CSV
-	df = dataframe.ReadCSV(&fichier)
+func (gt Csv) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
+	// on initialise la requête
+	colonnesTable := configExtraction.Table[0].Colonnes
+	adb := aquabase.InitDB_Extraction(cheminProjet)
+	var nomsColonnesTables []string = make([]string, len(colonnesTable))
+	for i := range colonnesTable {
+		nomsColonnesTables[i] = colonnesTable[i].Nom
+	}
+	requeteInsertion := adb.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomsColonnesTables)
+	scanner := bufio.NewReader(fichier)
+	// On lit le fichier CSV
+	lecteurCSV := csv.NewReader(scanner)
+	enTete, err := lecteurCSV.Read()
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
-	for _, table := range configExtraction.Table {
-		err = exportDfToDb(df, cheminProjet, cheminFichierAExtraire, table.Nom, table.Colonnes)
-		if err != nil {
-			return err
+	fonctionTraitement := getFonctionTraitementLigne(enTete, colonnesTable, cheminFichierAExtraire, idMachine)
+	for i := 0; err == nil; i++ {
+		ligne, err := lecteurCSV.Read()
+		if err == io.EOF {
+			break
 		}
+		if i > 0 && i%100_000 == 0 {
+			requeteInsertion.Executer()
+			requeteInsertion = adb.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomsColonnesTables)
+		}
+		requeteInsertion.AjouterDansRequete(fonctionTraitement(ligne)...)
 	}
-	return nil
+	err = requeteInsertion.Executer()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return err
 }
 
 /* **************************************************************************** */
 /* *********************** Csv Utils Methods ****************************** */
 /* **************************************************************************** */
 
-func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string, colonnesTable []config.ConfigColonneBDD) error {
+func getFonctionTraitementLigne(enTete []string, colonnesTable []config.ConfigColonneBDD, source string, idMachine string) func([]string) []interface{} {
+	var fonctionsTraitement []func(valeurs []string) interface{} = make([]func([]string) interface{}, len(colonnesTable))
+	for i, colonne := range colonnesTable {
+		trouve := false
+		for j, colonneCSV := range enTete {
+			if colonneCSV == colonne.Contenu {
+				fonctionsTraitement[i] = func(valeurs []string) interface{} {
+					return valeurs[j]
+				}
+				trouve = true
+			}
+		}
+		if !trouve {
+			switch colonne.Contenu {
+			case "aqua_source":
+				fonctionsTraitement[i] = func(valeurs []string) interface{} {
+					return source
+				}
+			case config.AQUA_MACHINE:
+				fonctionsTraitement[i] = func(valeurs []string) interface{} {
+					return idMachine
+				}
+			default:
+				fonctionsTraitement[i] = func(valeurs []string) interface{} {
+					return "[AQUA_ERR] Colonne " + colonne.Contenu + " non trouvée"
+				}
+			}
+		}
+	}
+	return func(valeurs []string) []interface{} {
+		var resultat []interface{} = make([]interface{}, len(colonnesTable))
+		for i, fonctionTraitement := range fonctionsTraitement {
+			resultat[i] = fonctionTraitement(valeurs)
+		}
+		return resultat
+	}
+}
+
+func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string, colonnesTable []config.ConfigColonneBDD, idMachine string) error {
+	// On initialise la requête
 	adb := aquabase.InitDB_Extraction(cheminProjet)
-
-	// On crée un dictionnaire des colonnes de la table
-	var nouveauNomColonne map[string]string = map[string]string{}
-	var listeContenuColonnes []string = []string{}
-	for _, colonne := range colonnesTable {
-		// La colonne source est un peu particulière car elle n'est pas dans le csv
-		if colonne.Contenu == "source" {
-			df = DfAddColumn(df, "source", filname)
+	var nomsColonnesTables []string = make([]string, len(colonnesTable))
+	for i := range colonnesTable {
+		nomsColonnesTables[i] = colonnesTable[i].Nom
+	}
+	requeteInsertion := adb.InitRequeteInsertionExtraction(tableName, nomsColonnesTables)
+	// On parcourt le dataframe
+	for _, ligneCSV := range df.Maps() {
+		var valeursAAjouter []interface{} = make([]interface{}, len(colonnesTable))
+		for i, colonne := range colonnesTable {
+			valeur, ok := ligneCSV[colonne.Contenu]
+			if !ok {
+				switch colonne.Contenu {
+				case "aqua_source":
+					valeur = filname
+				case config.AQUA_MACHINE:
+					valeur = idMachine
+				default:
+					valeur = "[AQUA_ERREUR] - Nom de colonne non reconnu"
+				}
+			}
+			valeursAAjouter[i] = valeur
 		}
-		nouveauNomColonne[colonne.Contenu] = colonne.Nom
-		listeContenuColonnes = append(listeContenuColonnes, colonne.Contenu)
-	}
-	fmt.Println("Import Csv to DB: " + filname)
-
-	// On filtre sur les colonnes qui doivent être prises
-	columns := listItemsInList(listeContenuColonnes, df.Names())
-	// Select the specified columns
-	df = df.Select(columns)
-	// On renomme les colonnes
-	for _, ancien := range df.Names() {
-		// TODO: Vérifier que le tableau a cette colonne
-		if ancien != nouveauNomColonne[ancien] {
-			df = df.Rename(nouveauNomColonne[ancien], ancien)
+		err := requeteInsertion.AjouterDansRequete(valeursAAjouter...)
+		if err != nil {
+			return errors.WithStack(err)
 		}
 	}
-	//columns := df.Names()         // For no columns filter
-	//columnSelection := df.Names() // For no columns filter
-
-	// Check the table exist
-	err := adb.CreateTableIfNotExist1(tableName, df.Names(), true)
+	err := requeteInsertion.Executer()
 	if err != nil {
-		log.Println("Erreur dans la création de la table :", err)
-		return fmt.Errorf("ERROR: exportDfToDb(_) [createTableIfNotExist]: %w", err)
+		return errors.WithStack(err)
 	}
-	// export data
-	err = adb.SaveDf(df, tableName)
-	if err != nil {
-		return fmt.Errorf("ERROR: exportDfToDb(_) [AjoutEvenementDansBDD]: %w", err)
-	}
-	return nil
+	return err
 }
 
 /* ******************************************************************** */

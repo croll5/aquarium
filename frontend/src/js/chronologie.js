@@ -34,18 +34,26 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
-let position_dans_table = 0;
-let position_debut_recuperation = 0;
-let requete = "SELECT id, extraction, horodatage, message, source FROM chronologie";
-let taille_requete = 0;
-let valeurs_filtres = new Map();
-let consignes_filtres = new Map();
-let order_by = "riendutout";
 let tableRecuperee = new Object();
-let liste_id_a_enregistrer = Array(0);
+let liste_id_a_enregistrer = new Array();
 let evenements_a_enregistrer = new Map();
 
-affichage_table(true);
+if(parent.window.parametresChronologie == undefined){
+    parent.window.parametresChronologie = {
+        position_dans_table:0,
+        position_debut_recuperation:0,
+        requete:"SELECT id, extraction, horodatage, message, source FROM chronologie",
+        taille_requete:0,
+        valeurs_filtres:new Map(),
+        consignes_filtres:new Map(),
+        order_by:"riendutout"
+    };
+    document.getElementById("titre_changement_requete").click()
+    
+}else{
+    affichage_table(true);
+}
+
 
 /* À l'affichage de la zone de recherche click-bouton, on affiche la liste des tables */
 let divChangementRequete = document.getElementById("changement_requete");
@@ -68,52 +76,55 @@ divChangementRequete.addEventListener("toggle", (event) => {
 
 function affichage_table(majTaille){
     if(majTaille){
-        liste_id_a_enregistrer = Array(0);
+        liste_id_a_enregistrer = new Array();
         evenements_a_enregistrer.clear();
     }
     let emplacement_resultat = document.getElementById("emplacement_table");
-    if(majTaille || position_dans_table > position_debut_recuperation + 995 || position_dans_table < position_debut_recuperation){
-        if(position_dans_table > position_debut_recuperation + 995 || position_dans_table < position_debut_recuperation){
-            position_debut_recuperation = Math.max(0,position_dans_table - 500);
+    if(majTaille || parent.window.parametresChronologie.position_dans_table > parent.window.parametresChronologie.position_debut_recuperation + 995 
+        || parent.window.parametresChronologie.position_dans_table < parent.window.parametresChronologie.position_debut_recuperation){
+        if(parent.window.parametresChronologie.position_dans_table > parent.window.parametresChronologie.position_debut_recuperation + 995 
+            || parent.window.parametresChronologie.position_dans_table < parent.window.parametresChronologie.position_debut_recuperation){
+            parent.window.parametresChronologie.position_debut_recuperation = Math.max(0,parent.window.parametresChronologie.position_dans_table - 500);
         }
         document.body.style.cursor = "wait";
-        parent.window.go.main.App.ResultatRequeteSQLExtraction(requete, position_debut_recuperation, 1000).then(resultat =>{
+        parent.window.go.main.App.ResultatRequeteSQLExtraction(parent.window.parametresChronologie.requete, parent.window.parametresChronologie.position_debut_recuperation, 1000).then(resultat =>{
             document.body.style.cursor = "default";
             tableRecuperee = resultat;
-            document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
+            document.getElementById("indicateur_page").textContent = parent.window.parametresChronologie.position_dans_table + "-" + (parent.window.parametresChronologie.position_dans_table+5);
             emplacement_resultat.innerHTML = "";
             console.log(resultat);
-            creer_tableau_depuis_dico(resultat.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, valeurs_filtres, consignes_filtres, order_by, position_dans_table, liste_id_a_enregistrer);
+            creer_tableau_depuis_dico(resultat.slice(parent.window.parametresChronologie.position_dans_table - parent.window.parametresChronologie.position_debut_recuperation, parent.window.parametresChronologie.position_dans_table - parent.window.parametresChronologie.position_debut_recuperation + 5), emplacement_resultat, true, parent.window.parametresChronologie.valeurs_filtres, parent.window.parametresChronologie.consignes_filtres, parent.window.parametresChronologie.order_by, parent.window.parametresChronologie.position_dans_table, liste_id_a_enregistrer);
             if (majTaille){
-                parent.window.go.main.App.TailleRequeteSQLExtraction(requete).then(nbLignes =>{
+                parent.window.go.main.App.TailleRequeteSQLExtraction(parent.window.parametresChronologie.requete).then(nbLignes =>{
                     console.log(nbLignes);
-                    taille_requete = nbLignes;
+                    parent.window.parametresChronologie.taille_requete = nbLignes;
                 });
-                document.getElementById("requete_sql").value = requete;
+                document.getElementById("requete_sql").value = parent.window.parametresChronologie.requete;
             }
         })
     }else{
         emplacement_resultat.innerHTML = "";
-        document.getElementById("indicateur_page").textContent = position_dans_table + "-" + (position_dans_table+5);
-        creer_tableau_depuis_dico(tableRecuperee.slice(position_dans_table - position_debut_recuperation, position_dans_table - position_debut_recuperation + 5), emplacement_resultat, true, valeurs_filtres, consignes_filtres, order_by, position_dans_table, liste_id_a_enregistrer);
+        document.getElementById("indicateur_page").textContent = parent.window.parametresChronologie.position_dans_table + "-" + (parent.window.parametresChronologie.position_dans_table+5);
+        creer_tableau_depuis_dico(tableRecuperee.slice(parent.window.parametresChronologie.position_dans_table - parent.window.parametresChronologie.position_debut_recuperation, parent.window.parametresChronologie.position_dans_table - parent.window.parametresChronologie.position_debut_recuperation + 5), emplacement_resultat, true, parent.window.parametresChronologie.valeurs_filtres, parent.window.parametresChronologie.consignes_filtres, parent.window.parametresChronologie.order_by, parent.window.parametresChronologie.position_dans_table, liste_id_a_enregistrer);
     }
 }
 
 function tourner_page(extremes, difference){
     if (extremes == -1){
-        position_dans_table = 0;
+        parent.window.parametresChronologie.position_dans_table = 0;
     }
     if(extremes == 1){
-        position_dans_table = taille_requete - 5;
+        parent.window.parametresChronologie.position_dans_table = parent.window.parametresChronologie.taille_requete - 5;
     }
-    position_dans_table = Math.max(0, position_dans_table + difference);
-    if (taille_requete != 0){
-        position_dans_table = Math.min(taille_requete-1, position_dans_table)
+    parent.window.parametresChronologie.position_dans_table = Math.max(0, parent.window.parametresChronologie.position_dans_table + difference);
+    if (parent.window.parametresChronologie.taille_requete != 0){
+        parent.window.parametresChronologie.position_dans_table = Math.min(parent.window.parametresChronologie.taille_requete-1, parent.window.parametresChronologie.position_dans_table)
     }
     affichage_table(false);
 }
 
 function appliquer_filtre(colonne){
+    const {requete,valeurs_filtres,consignes_filtres} = parent.window.parametresChronologie
     let valeur_filtre = document.getElementById("valeur_filtre_" + colonne).textContent;
     let consigne_filtre = document.getElementById("consigne_filtre_" + colonne).value;
     let avant_valeur = " LIKE \"%";
@@ -157,34 +168,34 @@ function appliquer_filtre(colonne){
             conditions.push(colonne + avant_valeur + valeur_filtre + apres_valeur)
         }
         if (conditions.length > 0 ){
-            requete = demi_requetes[0] + " WHERE " + conditions.join(" AND ");
+            parent.window.parametresChronologie.requete = demi_requetes[0] + " WHERE " + conditions.join(" AND ");
         }else{
-            requete = demi_requetes[0];
+            parent.window.parametresChronologie.requete = demi_requetes[0];
         }
         if (filtrage_order_by.length > 1){
-            requete += " ORDER " + filtrage_order_by[1];
+            parent.window.parametresChronologie.requete += " ORDER " + filtrage_order_by[1];
         }
     }else if (requete.includes(" ORDER ")){
         let demi_requetes = requete.split(" ORDER ");
-        requete = demi_requetes[0] + " WHERE " + colonne + avant_valeur + valeur_filtre + apres_valeur + " ORDER " + demi_requetes[1]
+        parent.window.parametresChronologie.requete = demi_requetes[0] + " WHERE " + colonne + avant_valeur + valeur_filtre + apres_valeur + " ORDER " + demi_requetes[1]
     }else{
-        requete += " WHERE " + colonne + avant_valeur + valeur_filtre + apres_valeur; 
+        parent.window.parametresChronologie.requete += " WHERE " + colonne + avant_valeur + valeur_filtre + apres_valeur; 
     }
-    position_dans_table = 0;
-    position_debut_recuperation = 0;
+    parent.window.parametresChronologie.position_dans_table = 0;
+    parent.window.parametresChronologie.position_debut_recuperation = 0;
     affichage_table(true);
 }
 
 function trier_par(colonne){
-    if (order_by != colonne){
-        order_by = colonne;
-        requete = requete.split(" ORDER ")[0];
-        requete += " ORDER BY " + colonne;
+    if (parent.window.parametresChronologie.order_by == colonne){
+        parent.window.parametresChronologie.order_by = "riendutout";
+        parent.window.parametresChronologie.requete = parent.window.parametresChronologie.requete.split(" ORDER ")[0];
         affichage_table(true);
     }
     else{
-        order_by = "riendutout";
-        requete = requete.split(" ORDER ")[0];
+        parent.window.parametresChronologie.order_by = colonne;
+        parent.window.parametresChronologie.requete = parent.window.parametresChronologie.requete.split(" ORDER ")[0];
+        parent.window.parametresChronologie.requete += " ORDER BY " + colonne;
         affichage_table(true);
     }
 }
@@ -206,35 +217,39 @@ document.getElementById("emplacement_table").focus()
 document.onkeydown = function (e) {
     switch (e.code){
         case "ArrowDown":
+            e.preventDefault();
             tourner_page(0, 1);
             break;
         case "ArrowUp":
+            e.preventDefault();
             tourner_page(0, -1);
             break;
         case "ArrowLeft":
+            e.preventDefault();
             tourner_page(0, -5);
             break;
         case "ArrowRight":
+            e.preventDefault();
             tourner_page(0, 5);
             break;
     }
 };
 
 function nouvelle_recherche_sql(){
-    valeurs_filtres.clear();
-    requete = document.getElementById("requete_sql").value;
-    position_dans_table = 0;
-    position_debut_recuperation = 0;
+    parent.window.parametresChronologie.valeurs_filtres.clear();
+    parent.window.parametresChronologie.requete = document.getElementById("requete_sql").value;
+    parent.window.parametresChronologie.position_dans_table = 0;
+    parent.window.parametresChronologie.position_debut_recuperation = 0;
     affichage_table(true);
     document.getElementById("changement_requete").removeAttribute("open");
 }
 
 function nouvelle_recherche_click_bouton(){
-    valeurs_filtres.clear();
+    parent.window.parametresChronologie.valeurs_filtres.clear();
     let selecteurTable = document.getElementById("choix_table");
-    requete = "SELECT * FROM " + selecteurTable.value;
-    position_dans_table = 0;
-    position_debut_recuperation = 0;
+    parent.window.parametresChronologie.requete = "SELECT * FROM " + selecteurTable.value;
+    parent.window.parametresChronologie.position_dans_table = 0;
+    parent.window.parametresChronologie.position_debut_recuperation = 0;
     affichage_table(true);
     document.getElementById("changement_requete").removeAttribute("open");
 }

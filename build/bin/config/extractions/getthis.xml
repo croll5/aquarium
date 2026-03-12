@@ -4,23 +4,17 @@
     <extracteur>csv</extracteur> 
     <nom>Fichiers GetThis</nom>
     <description>Fichiers GetThis, qui contiennent les métadonnées des fichiers collectés par ORC</description>
-    <chemin>
-        <dossier>*</dossier>
-        <archive>*.7z</archive>
-        <fichier>GetThis.csv</fichier>
-    </chemin>
-    <chemin>
-        <dossier>*</dossier>
-        <fichier>GetThis.csv</fichier>
-    </chemin>
     <table nom="getthis">
-        <colonne type="TEXT" contenu="source">source</colonne>
+        <colonne type="TEXT" contenu="aqua_source">source</colonne>
         <colonne type="TEXT" contenu="SampleName">chemin_copie</colonne>
         <colonne type="TEXT" contenu="FullName">nom_fichier</colonne>
-        <colonne type="TEXT" contenu="MD5">MD5</colonne>
+        <colonne type="TEXT" contenu="MD5">md5</colonne>
+        <colonne type="TEXT" contenu="SHA1">sha1</colonne>
         <colonne type="DATETIME" contenu="CreationDate">date_creation</colonne>
         <colonne type="DATETIME" contenu="LastModificationDate">derniere_modif</colonne>
         <colonne type="DATETIME" contenu="LastAccessDate">dernier_acces</colonne>
     </table>
-    <sql_chronologie>SELECT id, "getthis", "creation", source, date_creation AS horodatage, "Création du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis UNION SELECT id, "getthis", "modification", source, derniere_modif as horodatage, "Dernière modification du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis  UNION SELECT id, "getthis", "acces", source, dernier_acces as horodatage, "Dernier accès au fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")" FROM getthis</sql_chronologie>
+    <sql_chronologie>SELECT id, "getthis", "creation", source, date_creation AS horodatage, "Création du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis 
+        UNION SELECT id, "getthis", "modification", source, derniere_modif as horodatage, "Dernière modification du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis  
+        UNION SELECT id, "getthis", "acces", source, dernier_acces as horodatage, "Dernier accès au fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis</sql_chronologie>
 </extraction>
