@@ -74,7 +74,6 @@ func lancerRegle(cheminProjet string, cheminRegle string) (int, error) {
 	var detailsRegle regleSQL
 	donneesFichier, err := os.ReadFile(cheminRegle)
 	if err != nil {
-		log.Println("WARN | Le fichier de règle "+cheminRegle+" n'existe pas ou n'a pas pu être ouvert : ", err.Error())
 		return 0, errors.WithStack(err)
 	}
 	err = json.Unmarshal(donneesFichier, &detailsRegle)
@@ -222,7 +221,7 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 		return nil, nil, errors.WithStack(error_global)
 	}
 	// Helper function to handle the rule logic
-	var probleme error = nil
+	var probleme error
 	var reglesEnErreur []string = []string{}
 	handleRule := func(rule string, isGlobal int, path string) error {
 		state := 0
@@ -242,9 +241,8 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			query := fmt.Sprintf("SELECT isError FROM regles WHERE name=\"%s\"", rule)
 			df, err := adb_rules.SelectFrom0(query)
 			if err != nil {
-				return errors.WithStack(err)
-			}
-			if df.Table.Nrow() > 0 {
+				state = 0
+			} else if df.Table.Nrow() > 0 {
 				value, _ := df.Intloc(0, 0)
 				if value == 1 {
 					state = 2
@@ -257,7 +255,7 @@ func ListeReglesDetection(cheminProjet string, lancerRegles bool) (map[string]ma
 			"isGlobal": isGlobal,
 			"state":    state,
 		}
-		return nil
+		return probleme
 	}
 	// Merge both list in a list of dict with parameters of each rule
 	// Une regle créé par l'user et prioritaire par rapport à une regle de base
