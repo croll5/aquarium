@@ -136,7 +136,7 @@ function valider_creation_analyse(){
     document.getElementById("patientez").style.display = "inline";
     parent.window.go.main.App.CreationNouveauProjet(donnees_analyse).then(resultat =>{
         if (resultat != "") {
-            window.location.replace("../html/synthese.html");
+            window.location.replace("../html/config_analyse.html");
             parent.document.getElementsByTagName("header")[0].style.display = "inline";
             let onglet_courant = parent.document.getElementById("onglet_extraction");
             onglet_courant.classList.add("onglet_selectionne");
