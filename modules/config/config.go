@@ -11,13 +11,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-var DOSSIER_FICHIERS_A_ANALYSER = "fichiers"
-
-const DOSSIER_ANALYSE = "analyse"
-
-var AQUA_MACHINE = "aqua_machine"
-var DOSSIER_EXTRACTIONS = "extractions"
-var EXTENSION_XML = ".xml"
+const (
+	DOSSIER_FICHIERS_A_ANALYSER = "fichiers"
+	DOSSIER_ANALYSE             = "analyse"
+	AQUA_MACHINE                = "aqua_machine"
+	DOSSIER_EXTRACTIONS         = "extractions"
+	EXTENSION_XML               = ".xml"
+)
 
 type ConfigColonneBDD struct {
 	Nom     string `xml:",chardata"`
@@ -38,16 +38,14 @@ type ConfigChemin struct {
 }
 
 type ConfigExtraction struct {
-	Id                 string           `xml:"id"`
-	Nom                string           `xml:"nom"`
-	Description        string           `xml:"description"`
-	Extracteur         string           `xml:"extracteur"`
-	Table              []ConfigTableBDD `xml:"table"`
-	SQLChronologie     string           `xml:"sql_chronologie"`
-	Progression        float32
-	AnnulationDemandee bool
-	ConfigComplement   []ComplementConfigXML `xml:"complements>parametre"`
-	Complement         map[string]string
+	Id               string                `xml:"id"`
+	Nom              string                `xml:"nom"`
+	Description      string                `xml:"description"`
+	Extracteur       string                `xml:"extracteur"`
+	Table            []ConfigTableBDD      `xml:"table"`
+	SQLChronologie   string                `xml:"sql_chronologie"`
+	ConfigComplement []ComplementConfigXML `xml:"complements>parametre"`
+	Complement       map[string]string
 }
 
 type InfosSommairesExtraction struct {

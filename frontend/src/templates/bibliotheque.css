@@ -337,4 +337,15 @@ input[type="checkbox"] {
     color: white;
     padding: 12px;
     display: none;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.bandeau_erreur .bouton_invisible{
+    font-size: xx-large;
+    color: white;
+}
+
+.bandeau_erreur a{
+    color: white;
 }

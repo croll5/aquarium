@@ -51,17 +51,18 @@ function accueil(){
     document.getElementsByTagName("header")[0].style.display = "none";
 }
 
-var contrastes = false;
-var dyslexie = false;
-var non_aux_bubulles = false;
+let contrastes = false;
+let dyslexie = false;
+let non_aux_bubulles = false;
 
 function signaler_erreur(fichierErreur, detailsErreur){
     document.getElementById("texte_details_erreur").textContent = decodeURIComponent(detailsErreur).replaceAll("+"," ")
     document.getElementById("nom_fichier_erreur").textContent = fichierErreur;
-    document.getElementById("bandeau_erreur").style.display = "inline";
-    setTimeout(() =>{
-        document.getElementById("bandeau_erreur").style.display = "none";
-    }, 10000);
+    document.getElementById("bandeau_erreur").style.display = "flex";
+}
+
+function fermer_bandeau(){
+    document.getElementById("bandeau_erreur").style.display = "none";
 }
 
 function details_erreur(){

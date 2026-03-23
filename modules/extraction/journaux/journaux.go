@@ -14,17 +14,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-const SEPARATEUR_ENCODAGE = "|aqua_encodage:"
-const INDICATEUR_CONCATENATION = "[aqua_concat]"
+const (
+	SEPARATEUR_ENCODAGE       = "|aqua_encodage:"
+	INDICATEUR_CONCATENATION  = "[aqua_concat]"
+	PARAM_SEPARATEUR          = "separateur"
+	PARAM_ENCODAGE            = "encodage"
+	PARAM_SEPARATEUR_CHAMPS   = "separateur_champs"
+	PARAM_SYMBOLE_ASSOCIATION = "symbole_association"
+	PARAM_GUILLEMENTS         = "guillemets"
+	PARAM_REGEX               = "regex"
+	PARAM_EXCLUSION           = "exclusion"
+)
 
 var fonctionsTraitementContenuColonne map[string]func(dicChamps map[string]string, cheminFichier string, idMachine string) interface{} = map[string]func(map[string]string, string, string) interface{}{}
 
 type Journaux struct{}
 
 func (jr Journaux) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
-	var listeEvenements []string = []string{decoderFichier(fichier, configExtraction.Complement["encodage"])}
-	if configExtraction.Complement["separateur"] != "" {
-		listeEvenements = getListeDesEvenements(listeEvenements[0], configExtraction.Complement["separateur"])
+	var listeEvenements []string = []string{decoderFichier(fichier, configExtraction.Complement[PARAM_ENCODAGE])}
+	if configExtraction.Complement[PARAM_SEPARATEUR] != "" {
+		listeEvenements = getListeDesEvenements(listeEvenements[0], configExtraction.Complement[PARAM_SEPARATEUR])
 	}
 	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
 	var probleme error
@@ -40,6 +49,8 @@ func (jr Journaux) Extraction(cheminProjet string, fichier io.Reader, cheminFich
 	}
 	return probleme
 }
+
+/* -------------------------------- FONCTIONS LOCALES --------------------------------*/
 
 func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFichier string, idMachine string) interface{} {
 	// Si la fonction existe déjà, on l’utilise
@@ -108,12 +119,12 @@ func reecritureSeparateur(separateur string) string {
 func extraireChampsEvenement(evenement string, configExtraction config.ConfigExtraction) map[string]string {
 	var resultat map[string]string = map[string]string{}
 	// Traiter le cas de l’utilisation d’une expression régulière
-	if configExtraction.Complement["regex"] != "" {
-		return extraireValeursRegex(evenement, reecritureSeparateur(configExtraction.Complement["regex"]))
+	if configExtraction.Complement[PARAM_REGEX] != "" {
+		return extraireValeursRegex(evenement, reecritureSeparateur(configExtraction.Complement[PARAM_REGEX]))
 	}
-	separateur := reecritureSeparateur(configExtraction.Complement["separateur_champs"])
-	symbAssociation := reecritureSeparateur(configExtraction.Complement["symbole_association"])
-	guillemet := reecritureSeparateur(configExtraction.Complement["guillemets"])
+	separateur := reecritureSeparateur(configExtraction.Complement[PARAM_SEPARATEUR_CHAMPS])
+	symbAssociation := reecritureSeparateur(configExtraction.Complement[PARAM_SYMBOLE_ASSOCIATION])
+	guillemet := reecritureSeparateur(configExtraction.Complement[PARAM_GUILLEMENTS])
 	tailleSymAssociation := len(symbAssociation)
 	tailleSeparateur := len(separateur)
 	tailleGuillements := len(guillemet)
@@ -202,7 +213,7 @@ func ajouterEvenementDansRequete(requeteInstertion *aquabase.RequeteInsertion, c
 	if evenement == "" {
 		return nil
 	}
-	if configExtraction.Complement["exclusion"] != "" && strings.HasPrefix(evenement, configExtraction.Complement["exclusion"]) {
+	if configExtraction.Complement[PARAM_EXCLUSION] != "" && strings.HasPrefix(evenement, configExtraction.Complement[PARAM_EXCLUSION]) {
 		return nil
 	}
 	dictChamps := extraireChampsEvenement(evenement, configExtraction)

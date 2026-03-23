@@ -59,6 +59,15 @@ type Extracteur interface {
 	Extraction(string, io.Reader, string, config.ConfigExtraction, string) error
 }
 
+type ErreurConfig struct {
+	IdMachine             string
+	IdExtraction          string
+	ConfigInexistante     bool
+	ExtracteurInexisitant bool
+	DoublonTable          []string
+	ParametresManquants   []string
+}
+
 var progressionExtraction map[string]string = map[string]string{}
 var listeExtractions map[string]ExtractionMachine = map[string]ExtractionMachine{}
 
@@ -118,19 +127,75 @@ func ListeExtractionsHtml(cheminProjet string) (map[string]ExtractionMachine, er
 	return listeExtractions, nil
 }
 
-func LancerExtractions(cheminProjet string, ordreExtractions []map[string]string) error {
+func LancerExtractions(cheminProjet string, ordreExtractions []map[string]string) ([]ErreurConfig, error) {
+	erreursConfig := make([]ErreurConfig, 0)
+	defer func() {
+		// À la fin, on remet la progression à 0 pour pouvoir l’afficher à nouveau au besoin
+		delete(progressionExtraction, "chargement")
+	}()
 	for _, idExtractionMachine := range ordreExtractions {
 		progressionExtraction["idMachine"] = idExtractionMachine["idMachine"]
 		progressionExtraction["idExtraction"] = idExtractionMachine["idExtraction"]
 		progressionExtraction["chargement"] = "0"
+		// On vérifie que la configuration est correcte
+		ok, erreurConf := ConfigExtractionCorrecte(cheminProjet, idExtractionMachine["idExtraction"], idExtractionMachine["idMachine"])
+		if !ok {
+			erreursConfig = append(erreursConfig, erreurConf)
+			continue
+		}
+		// On lance l’extraction
 		err := Extraction(idExtractionMachine["idExtraction"], cheminProjet, idExtractionMachine["idMachine"])
 		if err != nil {
-			return err
+			return erreursConfig, err
 		}
+		// On supprime l’extraction de la liste, puisqu'elle a été correctement extraite
+		delete(listeExtractions[idExtractionMachine["idMachine"]].ListeExtractions, idExtractionMachine["idExtraction"])
 	}
 	progressionExtraction["idMachine"] = ""
 	progressionExtraction["idExtraction"] = ""
-	return nil
+	return erreursConfig, nil
+}
+
+/** Fonction qui permet de vérifier que la configuration de l’extraction est complète**/
+func ConfigExtractionCorrecte(cheminProjet string, idExtraction string, idMachine string) (bool, ErreurConfig) {
+	// On récupère la configuration concernée
+	configExtr, err := config.GetConfigExtraction(cheminProjet, idExtraction)
+	var errConf ErreurConfig = ErreurConfig{IdMachine: idMachine, IdExtraction: idExtraction, ConfigInexistante: false, DoublonTable: []string{}, ParametresManquants: []string{}}
+	if err != nil {
+		errConf.ConfigInexistante = true
+		return false, errConf
+	}
+	// On regarde si la table existe déjà
+	adb := aquabase.InitDB_Extraction(cheminProjet)
+	for _, configTable := range configExtr.Table {
+		_, err := adb.SelectAllFrom(configTable.Nom, 0)
+		if err != nil {
+			continue
+		}
+		// Si la table existe, on vérifie qu’elle contient bien les colonnes nécessaires
+		requete := "SELECT "
+		for i, colonne := range configTable.Colonnes {
+			requete += colonne.Nom
+			if i+1 < len(configTable.Colonnes) {
+				requete += ", "
+			}
+		}
+		requete += " FROM " + configTable.Nom + " LIMIT 0"
+		_, err = adb.SelectFrom0(requete)
+		if err != nil {
+			errConf.DoublonTable = append(errConf.DoublonTable, configTable.Nom)
+		}
+	}
+	if len(errConf.DoublonTable) > 0 {
+		return false, errConf
+	}
+	// On regarde si l'extracteur existe bien
+	_, ok := liste_extracteurs[configExtr.Extracteur]
+	if !ok {
+		errConf.ExtracteurInexisitant = true
+		return false, errConf
+	}
+	return true, errConf
 }
 
 /** Fonction qui exécute une extraction définie dans le fichier de configuration

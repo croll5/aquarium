@@ -1,5 +1,4 @@
 parent.window.go.main.App.ListeExtractionsPossibles().then(resultat => {
-    console.log(resultat);
     let listeExtractions = document.getElementById("liste_extractions");
     // Création d’un affichage d’extraction
     for(let [idMachine, configMachine] of Object.entries(resultat)){

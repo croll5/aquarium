@@ -286,7 +286,21 @@ func (a *App) ListeExtractionsPossibles() map[string]extraction.ExtractionMachin
 }
 
 func (a *App) LancerExtraction(ordreExtractions []map[string]string) {
-	extraction.LancerExtractions(chemin_projet, ordreExtractions)
+	erreursConfig, err := extraction.LancerExtractions(chemin_projet, ordreExtractions)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	for _, erreurConf := range erreursConfig {
+		if erreurConf.ConfigInexistante {
+			a.signalerErreur(fmt.Errorf("La configuration de l’extraction %s est introuvable", erreurConf.IdExtraction))
+		} else if len(erreurConf.DoublonTable) > 0 {
+			for _, nomTable := range erreurConf.DoublonTable {
+				a.signalerErreur(fmt.Errorf("La table %s est utilisée dans deux configurations différentes (%s)", nomTable, erreurConf.IdExtraction))
+			}
+		} else if len(erreurConf.ParametresManquants) > 0 {
+			a.signalerErreur(fmt.Errorf("Des paramètres de la configuration « %s » sont manquants : %v", erreurConf.IdExtraction, erreurConf.ParametresManquants))
+		}
+	}
 }
 
 /* Fonction permettant de connaitre le pourcentage de progression d'une extraction*/

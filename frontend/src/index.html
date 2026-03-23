@@ -51,14 +51,17 @@ termes.
 
 <body id="app" class="app normal">
     <div class="bandeau_erreur" id="bandeau_erreur">
-        Félicitation ! Vous venez de trouver un bogue ! 🎉 <br>
-        Vous pouvez annoncer votre trouvaille à l’adresse <a href="mailto:aquarium@mailo.com">aquarium@mailo.com</a> 
-        en joignant le fichier <i id="nom_fichier_erreur">erreurs/nomdufichier000.txt</i> du dossier d’analyse à votre message. 🚀
-        <button class="bouton_invisible" id="details_erreur" onclick="details_erreur()">🧐</button>
+        <button class="bouton_invisible" onclick="details_erreur()">🧐</button>
+        <div>
+            Félicitation ! Vous venez de trouver un bogue ! 🎉 <br>
+            Vous pouvez annoncer votre trouvaille à l’adresse <a href="mailto:aquarium@mailo.com">aquarium@mailo.com</a> 
+            en joignant le fichier <i id="nom_fichier_erreur">erreurs/nomdufichier000.txt</i> du dossier d’analyse à votre message. 🚀
+        </div>
+        <button class="bouton_invisible" onclick="fermer_bandeau()">✖</button>
     </div>
     <div class="fond-popup" id="fond_popup"></div>
     <div class="cadre-popup" id="popup_erreur">
-        <button class="bouton_fermer" onclick="fermer_popup('popup_erreur')">×</button>
+        <button class="bouton_fermer" onclick="fermer_popup('popup_erreur')">✖</button>
         <h1>Détails de l’erreur</h1>
         <p class="code" id="texte_details_erreur"></p>
     </div>
