@@ -67,15 +67,22 @@ termes.
     </div>
     <header style="display: none;">
         <!-- HEADER ONGLET ICI -->
-        <button id="onglet_synthese" class="onglet onglet_selectionne" onclick="change_onglet('html/synthese.html', 'onglet_synthese')">Synthèse
-            <!-- <strong class="fermer_onglet" onclick="alert('coucou !')">✖</strong> -->
-        </button>
-        <button id="onglet_chronologie" class="onglet" onclick="change_onglet('html/chronologie.html','onglet_chronologie')">Données extraites</button>
-        <button id="onglet_arborescence" class="onglet" onclick="change_onglet('html/arborescence.html','onglet_arborescence')">Arborescence</button>
-        <button id="onglet_detection" class="onglet" onclick="change_onglet('html/detection.html', 'onglet_detection')">Détection d'anomalies</button>
-        <button id="onglet_config" class="onglet" onclick="change_onglet('html/config_analyse.html', 'onglet_config')">Configuration</button>
-        <!-- <button id="onglet_rapport" class="onglet" onclick="change_onglet('html/rapport.html', 'onglet_rapport')">Rapport</button> -->
-        <!--  -->
+         <div class="onglet onglet_selectionne" id="onglet_synthese">
+            <button onclick="change_onglet('html/synthese.html', 'onglet_synthese')">Synthèse</button>
+            <button class="fermer_onglet" onclick="alert('coucou !')">✖</button>
+         </div>
+         <div class="onglet" id="onglet_chronologie">
+            <button onclick="change_onglet('html/chronologie.html','onglet_chronologie')">Données extraites</button>
+         </div>
+         <div class="onglet" id="onglet_arborescence">
+            <button onclick="change_onglet('html/arborescence.html','onglet_arborescence')">Arborescence</button>
+         </div>
+         <div class="onglet" id="onglet_detection">
+            <button onclick="change_onglet('html/detection.html', 'onglet_detection')">Détection d'anomalies</button>
+         </div>
+         <div class="onglet" id="onglet_config">
+            <button onclick="change_onglet('html/config_analyse.html', 'onglet_config')">Configuration</button>
+         </div>
     </header>
     <main>
         <iframe src="html/accueil.html" title="frame"></iframe>

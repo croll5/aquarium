@@ -142,43 +142,6 @@ div.champ{
     text-align: left;
 }
 
-button.onglet{
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    border-top-left-radius: 7px;
-    border-top-right-radius: 7px;
-    font-family: inherit;
-    background-color: var(--or-1);
-    color: var(--or-6);
-    padding: 10px;
-    border: none;
-}
-
-button.onglet:hover{
-    cursor: pointer;
-    background-color: var(--or-2);
-}
-
-button.onglet_selectionne{
-    background-color: var(--or-6);
-    color: black;
-}
-
-button.onglet_selectionne:hover{
-    cursor: default;
-    background-color: var(--or-6);
-}
-
-.fermer_onglet{
-    font-weight: bold;
-    padding: 0;
-}
-
-.fermer_onglet:hover{
-    color: var(--rouge-normal);
-    cursor: pointer;
-}
-
 .code{
     border: solid, 1px;
     border-color: var(--bleu-5);

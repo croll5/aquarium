@@ -39,6 +39,7 @@ body{
     flex-direction: column;
     overflow: hidden;
     margin: 0;
+    background-color: var(--bleu-1);
 }
 
 html, body {
@@ -46,8 +47,8 @@ html, body {
 }
 
 header, footer {
-    background-color: #001D64;
-    color: #EBC331;
+    background-color: var(--bleu-1);
+    color: var(--or-3);
     text-align: center;
     padding: 5px;
 }
@@ -72,7 +73,10 @@ iframe {
 
 header{
     padding-bottom: 0;
+    margin-top: 5px;
     text-align: left;
+    display: flex;
+    flex-direction: row;
 }
 
 #details_erreur{
@@ -87,4 +91,61 @@ header{
     line-height: 30px;
     overflow: overlay;
     height: 80%;
+}
+
+/* ================================= PARTIE ONGLET ================================= */
+
+div.onglet{
+    padding: 8px;
+    background-color: var(--or-1);
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    margin-left: 2px;
+    margin-right: 2px;
+    display: inline;
+}
+
+div.onglet button{
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    margin: 0;
+    font-family: inherit;
+    color: white;
+}
+
+div.onglet:has(:first-child:hover){
+    background-color: var(--or-2);
+}
+
+div.onglet button:hover{
+    cursor: pointer;
+}
+
+div.onglet_selectionne{
+    background-color: var(--or-6);
+}
+
+div.onglet_selectionne button{
+    color: black;
+}
+
+div.onglet_selectionne:has(:first-child:hover){
+    background-color: var(--or-6);
+}
+
+div.onglet_selectionne button:first-child:hover{
+    cursor: default;
+}
+
+.fermer_onglet{
+    font-weight: bold;
+    padding: 0;
+}
+
+.fermer_onglet:hover{
+    color: var(--rouge-normal);
+    cursor: pointer;
 }
