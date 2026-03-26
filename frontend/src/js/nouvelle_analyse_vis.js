@@ -19,10 +19,10 @@ let fonctionCallback;
 
 // create an array with nodes
 let nodes = new vis.DataSet([
-    { id: 1, shape:'image', image:'../assets/images/internet.png' },
+    { id: "1", shape:'image', image:'../assets/images/internet.png' },
 ]);
 
-let contenu_noeuds = {};
+let contenu_noeuds = {'1':{'nature_equipement':'internet'}};
 let liste_liens = {};
 
 // create an array with edges
@@ -275,5 +275,27 @@ function verifier_archi_utilisable(){
 }
 
 function get_donnees_reseau(){
+    // On ajoute les positions des noeuds
+    for(let idNoeud in network.body.nodes){
+        if(idNoeud.startsWith("edgeId")){
+            continue
+        }
+        if(contenu_noeuds[idNoeud] == undefined){
+            contenu_noeuds[idNoeud] = {}
+        }
+        contenu_noeuds[idNoeud].x = network.body.nodes[idNoeud].x;
+        contenu_noeuds[idNoeud].y = network.body.nodes[idNoeud].y;
+    }
     return contenu_noeuds;
+}
+
+function get_liens_reseau(){
+    let resultat = {};
+    for(let idLiaison in network.body.edges){
+        resultat[idLiaison] = {
+            'source': network.body.edges[idLiaison].from.id,
+            'destination': network.body.edges[idLiaison].to.id,
+        };
+    }
+    return resultat
 }

@@ -566,3 +566,13 @@ func (app *App) ChoisirDossier(ordre string) string {
 	}
 	return chemin
 }
+
+/*   FONCTIONS VUE D’ENSEMBLE */
+
+func (a *App) GetAquaConfig() config.AquaConfig {
+	aquaConfig, err := config.GetAquaConfig(chemin_projet)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return aquaConfig
+}

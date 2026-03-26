@@ -108,6 +108,9 @@ func ListeExtractionsHtml(cheminProjet string) (map[string]ExtractionMachine, er
 		return listeExtractions, err
 	}
 	for idMachine, machine := range configAnalyse.Machines {
+		if !machine.AAnalyser {
+			continue
+		}
 		configMachine, err := config.GetConfigurationMachine(cheminProjet, idMachine, machine)
 		if err != nil {
 			return listeExtractions, err

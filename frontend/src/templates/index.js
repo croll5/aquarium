@@ -34,21 +34,50 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
-function change_onglet(destination, id_onglet){
+function change_onglet(destination, onglet){
     document.getElementsByTagName("iframe")[0].src = destination;
     // On met tous les autres onglets à la couleur standard
     let onglets = document.getElementsByClassName("onglet");
     for (const onglet of onglets) {
-        onglet.classList.remove("onglet_selectionne");
+        if(onglet.classList.contains("onglet_selectionne")){
+            onglet.classList.remove("onglet_selectionne");
+        }
     }
     // On met l'onglet sur lequel on va à la couleur de la page
-    let onglet_courant = parent.document.getElementById(id_onglet);
+    let onglet_courant = onglet.parentNode;
     onglet_courant.classList.add("onglet_selectionne");
 }
 
 function accueil(){
     document.getElementsByTagName("iframe")[0].src = "html/accueil.html";
     document.getElementsByTagName("header")[0].style.display = "none";
+}
+
+function creer_onglet(url, nomOnglet){
+    // On crée le nouvel onglet
+    let header = document.getElementsByTagName('header')[0];
+    let nvel_onglet = document.createElement("div");
+    nvel_onglet.classList.add("onglet");
+    header.appendChild(nvel_onglet)
+    // On ajoute le bouton (texte de l’onglet)
+    let bouton_onglet = document.createElement("button");
+    bouton_onglet.onclick = function (ev) {
+        change_onglet(url, bouton_onglet);
+    }
+    bouton_onglet.textContent = nomOnglet;
+    nvel_onglet.appendChild(bouton_onglet);
+    // On ajoute le bouton pour fermer
+    let bouton_fermer = document.createElement("button");
+    bouton_fermer.classList.add("fermer_onglet");
+    bouton_fermer.textContent = "✖";
+    bouton_fermer.onclick = function (event) {
+        if(nvel_onglet.classList.contains("onglet_selectionne")){
+            nvel_onglet.previousElementSibling.getElementsByTagName("button")[0].click()
+        }
+        nvel_onglet.remove();
+    }
+    nvel_onglet.appendChild(bouton_fermer);
+    change_onglet(url, bouton_onglet);
 }
 
 let contrastes = false;

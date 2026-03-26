@@ -16,6 +16,7 @@ type AquaConfig struct {
 	FinAnalyse       time.Time                    `json:"fin_analyse"`
 	Analyste         string                       `json:"analyste"`
 	Machines         map[string]AquaConfigMachine `json:"machines"`
+	LiaisonsReseau   map[string]AquaConfigLiaison `json:"liaisons_reseau"`
 	MainCourante     []AquaConfigEvenement        `json:"main_courante"`
 	DonneesFuitees   []AquaConfigFuiteDP          `json:"donnees_fuitees"`
 	Contacts         []AquaConfigContact          `json:"contacts"`
@@ -32,6 +33,11 @@ type AquaConfigFuiteDP struct {
 	Emplacement   string `json:"emplacement"`
 }
 
+type AquaConfigLiaison struct {
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+}
+
 type AquaConfigContact struct {
 	Genre     string `json:"genre"`
 	Prenom    string `json:"prenom"`
@@ -46,8 +52,10 @@ type AquaConfigMachine struct {
 	NatureEquipement string              `json:"nature_equipement"`
 	Adresses         []AquaConfigAdresse `json:"adresses"`
 	Fichiers         []string
-	AAnalyser        bool   `json:"a_analyser"`
-	Config           string `json:"config"`
+	AAnalyser        bool    `json:"a_analyser"`
+	Config           string  `json:"config"`
+	PositionX        float64 `json:"x"`
+	PositionY        float64 `json:"y"`
 }
 
 type AquaConfigAdresse struct {

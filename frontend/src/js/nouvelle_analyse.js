@@ -132,6 +132,7 @@ function selection_dossier(id_paragraphe, id_input, id_section, id_suivant){
 function valider_creation_analyse(){
     let donnees_analyse = donnees_conf_analyse();
     donnees_analyse["Machines"] = get_donnees_reseau();
+    donnees_analyse["liaisons_reseau"] = get_liens_reseau();
     document.getElementById("formulaire").style.display = "none";
     document.getElementById("patientez").style.display = "inline";
     parent.window.go.main.App.CreationNouveauProjet(donnees_analyse).then(resultat =>{

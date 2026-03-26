@@ -34,10 +34,21 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
-remplir_select_machines();
-affichage_si_extraction_en_cours();
 
-function affichage_si_extraction_en_cours(){
+let params = new URLSearchParams(document.location.search);
+let machine_a_afficher = params.get("machine");
+
+document.getElementById("nom_machine").textContent = params.get("nom_machine");
+
+if(machine_a_afficher == null || machine_a_afficher == ""){
+    parent.signaler_erreur("", "Aucune machine à afficher...")
+}else{
+    affichage_si_extraction_en_cours(machine_a_afficher);
+}
+
+
+
+function affichage_si_extraction_en_cours(idMachine){
     parent.window.go.main.App.ExtractionEnCours().then(resultat =>{
         if(resultat){
             document.getElementById("selection_arborescence").style.display = "none";
@@ -47,46 +58,22 @@ function affichage_si_extraction_en_cours(){
                 parent.window.go.main.App.ExtractionEnCours().then(reponse =>{
                     if(!reponse){
                         clearInterval(verifPasExtrait);
-                        parent.window.go.main.App.ArborescenceEnCache().then(arbo =>{
-                            document.getElementById("choix_arborescence").value = arbo;
-                            if(arbo != "" && arbo != null){
-                                extraire_arborescence();
-                            }
-                        });
+                        extraire_arborescence(idMachine);
                     }
                 });
             }, 1000);
         } else{
-            parent.window.go.main.App.ArborescenceEnCache().then(arbo =>{
-                document.getElementById("choix_arborescence").value = arbo;
-                if(arbo != "" && arbo != null){
-                    extraire_arborescence();
-                }
-            });
+            extraire_arborescence(idMachine);
         }
     })
 }
 
-function remplir_select_machines(){
-    let select_machine = document.getElementById("choix_arborescence")
-    parent.window.go.main.App.ListeMachinesAnalysees().then(resultat =>{
-        for(let [idMachine, configMachine] of Object.entries(resultat)){
-            let nvelle_option = document.createElement("option");
-            nvelle_option.value = idMachine;
-            nvelle_option.textContent = configMachine["nom"];
-            select_machine.appendChild(nvelle_option);
-        }
-    })
-}
-
-async function extraire_arborescence(){
-    // On commence ensuite par regarder quelle arborescence il faut afficher
-    let idMachine = document.getElementById("choix_arborescence").value;
-    document.getElementById("selection_arborescence").style.display = "none";
+async function extraire_arborescence(idMachine){
     // On affiche au besoin la salle d’attente
     let patientez = document.getElementById("patientez");
     parent.window.go.main.App.ArborescenceEnCache().then(resultat =>{
         if(resultat != idMachine){
+            console.log("oki");
             afficher_salle_d_attente(patientez);
         }
     });
@@ -96,7 +83,6 @@ async function extraire_arborescence(){
     // On affiche la racine de l’arborescence
     await ajouter_contenu_dossier(div_arborescence, [], idMachine);
     patientez.style.display = "none";
-    document.getElementById("selection_arborescence").style.display = "inline";
 }
 
 async function ajouter_contenu_dossier(emplacement, chemin, idMachine){
@@ -106,6 +92,7 @@ async function ajouter_contenu_dossier(emplacement, chemin, idMachine){
         emplacement = copieEmplacement;
         emplacement.open = true;
         parent.window.go.main.App.ArborescenceMachineAnalysee(chemin,idMachine).then(resultat => {
+            console.log(idMachine);
             for(let fichier of resultat){
                 if(fichier["ADesEnfants"]){
                     let dossier = document.createElement("details");

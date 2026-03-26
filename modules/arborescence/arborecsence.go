@@ -155,6 +155,7 @@ func RecupEnfantsArbo(cheminProjet string, cheminDossier []string, idMachine str
 			return getContenuDossier(cheminProjet, cheminDossier, configAnalyse.Arborescence)
 		}
 		// Si l’arborescence existe déjà, on la charge dans le cache
+		cacheArbo = Arborescence{}
 		err = json.Unmarshal(contenuFichierArbo, &cacheArbo)
 		if err != nil {
 			return []MetaDonnees{}, errors.WithStack(err)

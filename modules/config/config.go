@@ -110,7 +110,7 @@ func GetConfigurationMachine(cheminProjet string, idMachine string, aquaConfigMa
 	var problemeRencontre error
 	for _, extraction := range donneesConfig.DetailsExtraction {
 		listeDossier, err := ListeFichiersExtraction(extraction.Chemins, cheminProjet, idMachine, false)
-		if err != nil {
+		if err != nil && len(listeDossier) == 0 {
 			problemeRencontre = errors.WithStack(err)
 		}
 		var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)

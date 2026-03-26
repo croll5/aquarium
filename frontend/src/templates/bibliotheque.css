@@ -312,3 +312,28 @@ input[type="checkbox"] {
 .bandeau_erreur a{
     color: white;
 }
+
+/* --------------------------- MENU CONTEXTUEL --------------------------- */
+
+.menu_contextuel{
+    display: none;
+    position: absolute;
+    background-color: var(--or-6);
+    padding: 5px;
+    box-shadow: 2px 2px 5px #000a;
+    border-radius: 5px;
+    flex-direction: column;
+}
+
+.option_menu{
+    padding: 5px;
+    border-radius: 5px;
+    display: inline;
+    background-color: transparent;
+    border: none;
+}
+
+.option_menu:hover{
+    background-color: var(--or-5);
+    cursor: pointer;
+}

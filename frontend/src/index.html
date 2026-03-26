@@ -45,7 +45,7 @@ termes.
     <!-- Main Source Files -->
     <link rel="stylesheet" href="templates/bibliotheque.css" />
     <link rel="stylesheet" href="templates/index.css">
-    <script src="templates/index.js"></script>
+    <script src="templates/index.js" async></script>
     <script src="templates/bibliotheque.js"></script>
 </head>
 
@@ -68,20 +68,19 @@ termes.
     <header style="display: none;">
         <!-- HEADER ONGLET ICI -->
          <div class="onglet onglet_selectionne" id="onglet_synthese">
-            <button onclick="change_onglet('html/synthese.html', 'onglet_synthese')">Synthèse</button>
-            <button class="fermer_onglet" onclick="alert('coucou !')">✖</button>
+            <button onclick="change_onglet('html/synthese.html', this)">Synthèse</button>
          </div>
-         <div class="onglet" id="onglet_chronologie">
-            <button onclick="change_onglet('html/chronologie.html','onglet_chronologie')">Données extraites</button>
+         <div class="onglet">
+            <button onclick="change_onglet('html/vue_d_ensemble.html', this)">Vue d’ensemble</button>
          </div>
-         <div class="onglet" id="onglet_arborescence">
-            <button onclick="change_onglet('html/arborescence.html','onglet_arborescence')">Arborescence</button>
+         <div class="onglet">
+            <button onclick="change_onglet('html/chronologie.html',this)">Données extraites</button>
          </div>
-         <div class="onglet" id="onglet_detection">
-            <button onclick="change_onglet('html/detection.html', 'onglet_detection')">Détection d'anomalies</button>
+         <div class="onglet">
+            <button onclick="change_onglet('html/detection.html', this)">Détection d'anomalies</button>
          </div>
-         <div class="onglet" id="onglet_config">
-            <button onclick="change_onglet('html/config_analyse.html', 'onglet_config')">Configuration</button>
+         <div class="onglet">
+            <button onclick="change_onglet('html/config_analyse.html', this)">Configuration</button>
          </div>
     </header>
     <main>

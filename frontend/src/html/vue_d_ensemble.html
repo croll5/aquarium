@@ -42,36 +42,18 @@ termes.
     <title>Document</title>
     <link rel="stylesheet" href="../templates/bibliotheque.css">
     <link rel="stylesheet" href="../templates/commun_clair.css">
-    <link rel="stylesheet" href="../css/arborescence.css">
+    <link rel="stylesheet" href="../css/vis_affichage_architecture.css">
     <script src="../templates/bibliotheque.js"></script>
-    <script src="../js/arborescence.js" async></script>
+    <script src="../js/bibliotheques/visjs/vis-network.min.js"></script>
+    <script src="../js/vis_affichage_architecture.js" async></script>
 </head>
-<body id="body_arbo">
-    
-    <h1>Arborescence de « <i id="nom_machine"></i> »</h1>
-    <!-- Bloc « salle d’attente » -->
-    <div id="patientez">
-        <p>🫧 Chargement de l’arborescence en cours... 🫧<br>
-        Pour vous permettre de patienter, nous vous offrons ce document scientifique 🐬</p>
-    </div>
-    <!--Légende des indicateurs de légitimité-->
-    <div id="legende" style="display: none;">
-        <h3>Choix des indicateurs de légitimité à afficher</h3>
-        <input type="checkbox" id="affiche_inconnu" onchange="affichage_legitimite('affiche_inconnu', 'legitimite_aucune')" checked>
-        <label for="affiche_inconnu">Fichiers non présents dans le modèle (😵)</label><br>
-        <input type="checkbox" id="affiche_suspect" onchange="affichage_legitimite('affiche_suspect', 'legitimite_suspect')" checked>
-        <label for="affiche_suspect">Fichiers présents dans le modèle avec une empreinte différente (🥴)</label><br>
-        <input type="checkbox" id="affiche_ok" onchange="affichage_legitimite('affiche_ok', 'legitimite_ok')" checked>
-        <label for="affiche_ok">Fichiers présents dans le modèle avec la même empreinte (😇)</label><br>
-    </div>
-    <div id="arborescence">
-        <!--On va ajouter les fichiers d'arborescence ici-->
-    </div>
-    <div class="fond-popup" id="fond_popup"></div>
-    <div class="cadre-popup" id="popup_infos_fichier">
-        <button class="bouton_fermer" onclick="fermer_popup('popup_infos_fichier')">×</button>
-        <h2>Métadonnées du fichier</h2>
-        <table id="table_metadonnees"></table>
+<body>
+    <h1>Vue d’ensemble</h1>
+    <div id="vue_generale"></div>
+    <div class="menu_contextuel" id="menu_contextuel">
+        <button class="option_menu" onclick="affichage_page_personnalisee('arborescence')">🌳 Arborescence</button>
+        <button class="option_menu" onclick="alert('Aïe ! Vous ne pouvez pas regarder où vous mettez les pieds ?')">🔎 Évènements</button>
+        <button class="option_menu" onclick="alert('Aïe ! Vous ne pouvez pas regarder où vous mettez les pieds ?')">🛠️ Configuration</button>
     </div>
 </body>
 </html>
