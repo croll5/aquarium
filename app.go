@@ -576,3 +576,13 @@ func (a *App) GetAquaConfig() config.AquaConfig {
 	}
 	return aquaConfig
 }
+
+/* ---------- FONCTIONS CONFIGURATION DES EXTRACTIONS ---------- */
+
+func (a *App) ListeFichiersAnalysables(idMachine string) extraction.DossierAnalysable {
+	resultat, err := extraction.ListeFichiersAnalysables(filepath.Join(chemin_projet, config.DOSSIER_FICHIERS_A_ANALYSER), idMachine)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}

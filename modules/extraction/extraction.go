@@ -45,7 +45,6 @@ import (
 	"aquarium/modules/extraction/journaux"
 	"aquarium/modules/extraction/prefetch"
 	"aquarium/modules/extraction/registre"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -53,6 +52,7 @@ import (
 	"strings"
 
 	"github.com/bodgit/sevenzip"
+	"github.com/pkg/errors"
 )
 
 type Extracteur interface {
@@ -314,6 +314,73 @@ func ExtraireTableChronologie(cheminProjet string) error {
 		}
 	}
 	return nil
+}
+
+/* ---------------------------- FONCTIONS DE CONFIGURATION ---------------------------- */
+
+type DossierAnalysable struct {
+	DossiersEnfants map[string]*DossierAnalysable
+	Fichiers        []string
+	NbFichiers      int
+}
+
+func ListeFichiersAnalysables(cheminADonner string, nomDossier string) (DossierAnalysable, error) {
+	cheminRacine := filepath.Join(cheminADonner, nomDossier)
+	fichiers, err := os.ReadDir(cheminRacine)
+	if err != nil {
+		return DossierAnalysable{}, errors.WithStack(err)
+	}
+	listeDossiers := DossierAnalysable{Fichiers: make([]string, 0), DossiersEnfants: make(map[string]*DossierAnalysable, 0)}
+	for _, fichier := range fichiers {
+		if fichier.IsDir() {
+			ajoutRec, err := ListeFichiersAnalysables(cheminRacine, fichier.Name())
+			if err != nil {
+				return listeDossiers, errors.WithStack(err)
+			}
+			listeDossiers.DossiersEnfants[fichier.Name()] = &ajoutRec
+		} else {
+			// On regarde s’il s’agit d’un fichier 7z
+			if filepath.Ext(fichier.Name()) == ".7z" {
+				archive, err := sevenzip.OpenReaderWithPassword(filepath.Join(cheminRacine, fichier.Name()), "avproof")
+				if err != nil {
+					listeDossiers.Fichiers = append(listeDossiers.Fichiers, fichier.Name())
+					continue
+				}
+				defer archive.Close()
+				arboArchive := getArborescenceArchive(archive.File)
+				listeDossiers.DossiersEnfants[fichier.Name()] = &arboArchive
+
+			} else {
+				listeDossiers.Fichiers = append(listeDossiers.Fichiers, fichier.Name())
+			}
+		}
+	}
+	return listeDossiers, nil
+}
+
+func getArborescenceArchive(fichiers []*sevenzip.File) DossierAnalysable {
+	resultat := DossierAnalysable{Fichiers: make([]string, 0), DossiersEnfants: make(map[string]*DossierAnalysable, 0)}
+	for _, fichier := range fichiers {
+		dossiers := strings.Split(fichier.Name, "/")
+		var positionDansDossier *DossierAnalysable = &resultat
+		for i, dossier := range dossiers {
+			if i+1 == len(dossiers) {
+				(*positionDansDossier).Fichiers = append((*positionDansDossier).Fichiers, dossier)
+				(*positionDansDossier).NbFichiers++
+				break
+			}
+			_, existe := (*positionDansDossier).DossiersEnfants[dossier]
+			if existe {
+				positionDansDossier = (*positionDansDossier).DossiersEnfants[dossier]
+			} else {
+				nouveauDossier := DossierAnalysable{DossiersEnfants: make(map[string]*DossierAnalysable, 0), Fichiers: make([]string, 0), NbFichiers: 0}
+				(*positionDansDossier).DossiersEnfants[dossier] = &nouveauDossier
+				positionDansDossier = (*positionDansDossier).DossiersEnfants[dossier]
+			}
+
+		}
+	}
+	return resultat
 }
 
 /** Fonction qui renvoie le contenu de la tables "chronologie", contenant un résumé de l'ensemble des

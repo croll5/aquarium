@@ -1,0 +1,32 @@
+.dossier_selectionne{
+    background-color: var(--or-5);
+}
+
+.dossier_arborescence:has(.dossier_selectionne):not([open]) > summary{
+    list-style-type: '🤗';
+}
+
+summary, details{
+    border-radius: 7px;
+}
+
+#filtre_choix_fichiers{
+    width: 95%;
+}
+
+.fichier_liste{
+    list-style-type: '🫡';
+}
+
+.fichier_non_compris{
+    list-style: '🫣';
+    color: var(--or-2);
+    text-decoration: line-through;
+}
+
+.fichier_non_compris:hover{
+    list-style: '🫣';
+    color: var(--or-1);
+    text-decoration: none;
+    font-style: italic;
+}

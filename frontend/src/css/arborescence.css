@@ -34,22 +34,6 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
-.dossier_arborescence{
-    margin-left: 20px;
-    font-weight: normal;
-}
-
-.dossier_arborescence > summary:hover{
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.fichier_arborescence{
-    margin: 0px;
-    margin-left: 20px;
-    font-weight: bolder;
-}
-
 #patientez{
     display: none;
     width: 80vw;

@@ -34,6 +34,8 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
+let version = "1.0"
+
 function change_onglet(destination, onglet){
     document.getElementsByTagName("iframe")[0].src = destination;
     // On met tous les autres onglets à la couleur standard
@@ -88,6 +90,10 @@ function signaler_erreur(fichierErreur, detailsErreur){
     document.getElementById("texte_details_erreur").textContent = decodeURIComponent(detailsErreur).replaceAll("+"," ")
     document.getElementById("nom_fichier_erreur").textContent = fichierErreur;
     document.getElementById("bandeau_erreur").style.display = "flex";
+    lien_courriel = document.getElementById("courriel_erreur")
+    lien_courriel.href = "mailto:aquarium@mailo.com";
+    lien_courriel.href += "?Subject=" + encodeURI("[AQUA#" + Math.round(Math.random()*100000) + "] - Signalement de bogue");
+    lien_courriel.href += "&body=" + encodeURI("Bonjour,\n\nJe me permets de vous signaler un bogue dans le logiciel Aquarium.\nVeuillez en trouver ci-dessous les détails :\n\n" + decodeURIComponent(detailsErreur).replaceAll("+"," ") + "\n\nPour votre bonne information, j'utilise la version " + version + " d’aquarium.\n\nRespectueusement,\n\n[Prénom] [Nom]")
 }
 
 function fermer_bandeau(){

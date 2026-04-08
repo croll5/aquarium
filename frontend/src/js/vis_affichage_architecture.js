@@ -26,7 +26,6 @@ parent.window.go.main.App.GetAquaConfig().then(aquaConfig => {
             image:'../assets/images/' + infosMachine.nature_equipement + '.png', x:infosMachine.x, y:infosMachine.y,
             label:getNomMachine(infosMachine)
         });
-        console.log(infosMachine);
         infos_machines[idMachine] = {nom:infosMachine["nom"], a_analyser:infosMachine["a_analyser"]}; 
     }
     nodes = new vis.DataSet(noeuds);
@@ -53,7 +52,7 @@ parent.window.go.main.App.GetAquaConfig().then(aquaConfig => {
         noeud_selectionne = network.getNodeAt(params.pointer.DOM);
         if(noeud_selectionne != undefined && infos_machines[noeud_selectionne].a_analyser){
             // On affiche le menu contextuel
-            let menu = document.getElementById("menu_contextuel")
+            let menu = document.getElementById("menu_contextuel");
             menu.style.display = "flex";
             menu.style.left = params.event.clientX + "px";
             menu.style.top = params.event.clientY + "px";
@@ -63,7 +62,6 @@ parent.window.go.main.App.GetAquaConfig().then(aquaConfig => {
 })
 
 function getNomMachine(param){
-    console.log(param)
     let resultat = param.nom;
     for(let i in param.adresses){
         resultat += "\n" + param.adresses[i].adresse
@@ -74,6 +72,6 @@ function getNomMachine(param){
     return resultat
 }
 
-function affichage_page_personnalisee(nomPage) {
-    parent.creer_onglet('html/' + nomPage + '.html?machine=' + encodeURI(noeud_selectionne) + "&nom_machine=" + encodeURI(infos_machines[noeud_selectionne].nom), infos_machines[noeud_selectionne].nom + ' - ' + nomPage)
+function affichage_page_personnalisee(idPage, nomPage) {
+    parent.creer_onglet('html/' + idPage + '.html?machine=' + encodeURI(noeud_selectionne) + "&nom_machine=" + encodeURI(infos_machines[noeud_selectionne].nom), infos_machines[noeud_selectionne].nom + ' - ' + nomPage)
 }

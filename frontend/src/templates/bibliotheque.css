@@ -337,3 +337,20 @@ input[type="checkbox"] {
     background-color: var(--or-5);
     cursor: pointer;
 }
+
+
+.dossier_arborescence{
+    margin-left: 20px;
+    font-weight: normal;
+}
+
+.dossier_arborescence > summary:hover{
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.fichier_arborescence{
+    margin: 0px;
+    margin-left: 20px;
+    font-weight: bolder;
+}
