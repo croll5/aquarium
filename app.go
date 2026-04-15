@@ -200,7 +200,15 @@ func (a *App) CreationDossierNouveauModele() string {
 /***************************************************************************************/
 
 func (a *App) ListeConfigurationsDisponibles() []string {
-	resultat, err := config.GetListeConfigurationsDisponibles()
+	resultat, err := config.GetListeConfigurationsDisponibles(false)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
+func (a *App) ListeConfigExtractionsDisponibles() []string {
+	resultat, err := config.GetListeConfigurationsDisponibles(true)
 	if err != nil {
 		a.signalerErreur(err)
 	}

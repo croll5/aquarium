@@ -30,3 +30,15 @@ summary, details{
     text-decoration: none;
     font-style: italic;
 }
+
+#arborescence{
+    display: none;
+}
+
+#popup_select_config_extraction{
+    width: 40%;
+    height: 30%;
+    left: 30%;
+    top: 20%;
+    text-align: center;
+}

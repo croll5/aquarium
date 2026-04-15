@@ -1,11 +1,11 @@
 let dossier_selectionne;
-let selection_dossiers = []
+let selection_dossiers = {}
+let config_dossier_a_enlever = "";
 
 let params = new URLSearchParams(document.location.search);
 
 
 document.getElementById("nom_machine").textContent = params.get("nom_machine");
-document.getElementsByTagName("html")[0].style.cursor = "wait";
 
 document.addEventListener("click", function (event){
     let menus = document.getElementsByClassName("menu_contextuel");
@@ -17,7 +17,17 @@ document.addEventListener("click", function (event){
 parent.window.go.main.App.ListeFichiersAnalysables(params.get("machine")).then(resultat =>{
     let emplacement_arbo = document.getElementById("arborescence");
     ajouter_contenu_dossier(emplacement_arbo, resultat);
-    document.getElementsByTagName("html")[0].style.cursor = "default";
+})
+
+parent.window.go.main.App.ListeConfigExtractionsDisponibles().then(resultat =>{
+    console.log(resultat);
+    let select_extractions = document.getElementById("select_config_extraction");
+    resultat.forEach(nomConfig => {
+        let nouvelle_option = document.createElement("option");
+        nouvelle_option.textContent = nomConfig.replaceAll("_", " ").replaceAll(".xml", "");
+        nouvelle_option.value = nomConfig.replaceAll(".xml", "");
+        select_extractions.appendChild(nouvelle_option);
+    });
 })
  
 function ajouter_contenu_dossier(contenant, ajouts){
@@ -66,9 +76,15 @@ function afficher_menu_contextuel(event, nouveau_dossier){
     let deja_selectionne = false;
     let dossier_a_regarder = nouveau_dossier;
     while (dossier_a_regarder.classList.contains("dossier_arborescence")){
-        if(selection_dossiers.includes(dossier_a_regarder)){
-            deja_selectionne = true;
-            break;
+        for(let [nom_config, contenu] of Object.entries(selection_dossiers)){
+            if(contenu.includes(dossier_a_regarder)){
+                deja_selectionne = true;
+                config_dossier_a_enlever = nom_config;
+                break;
+            }
+        }
+        if (deja_selectionne){
+            break
         }
         dossier_a_regarder = dossier_a_regarder.parentElement;
         if (dossier_a_regarder == undefined){
@@ -83,29 +99,38 @@ function afficher_menu_contextuel(event, nouveau_dossier){
         autre_menu = document.getElementById("menu_suppression");
     }
     autre_menu.style.display = "none";
-    menu_a_afficher.style.top = event.clientY + "px";
-    menu_a_afficher.style.left = event.clientX + "px";
+    menu_a_afficher.style.top = event.pageY + "px";
+    menu_a_afficher.style.left = event.pageX + "px";
     menu_a_afficher.style.display = "flex";
     dossier_selectionne = nouveau_dossier;
 }
 
 function ajout_dossier(){
     dossier_selectionne.classList.add("dossier_selectionne");
-    selection_dossiers.push(dossier_selectionne);
+    let nom_config = document.getElementById("select_config_extraction").value;
+    if(selection_dossiers[nom_config] == undefined){
+        selection_dossiers[nom_config] = [];
+    }
+    selection_dossiers[nom_config].push(dossier_selectionne);
+    fermer_popup('popup_select_config_extraction');
+    console.log(selection_dossiers);
 }
 
 function retrait_dossier(){
     let dossier_a_supprimer = dossier_selectionne;
     while(dossier_a_supprimer.classList.contains("dossier_arborescence")){
         dossier_a_supprimer.classList.remove("dossier_selectionne");
-        const index = selection_dossiers.indexOf(dossier_a_supprimer);
+        const index = selection_dossiers[config_dossier_a_enlever].indexOf(dossier_a_supprimer);
         if (index != -1){
-            selection_dossiers.splice(index,1);
+            selection_dossiers[config_dossier_a_enlever].splice(index,1);
         }
         dossier_a_supprimer = dossier_a_supprimer.parentElement;
         if (dossier_a_supprimer == undefined){
             break;
         }
+    }
+    if(selection_dossiers[config_dossier_a_enlever].length == 0){
+        delete selection_dossiers[config_dossier_a_enlever];
     }
 }
 
@@ -126,4 +151,29 @@ function afficher_popup_select_fichiers(){
         div_liste_fichiers.appendChild(p_fichier);
     }
     document.getElementById("nom_dossier_cible").textContent = dossier_selectionne.getElementsByTagName("summary")[0].textContent;
+}
+
+function afficher_popup_config_extraction(){
+    document.getElementById("popup_select_config_extraction").style.display = "block";
+    document.getElementById("fond_popup").style.display = "block";
+}
+
+function valider_infos_config(){
+    document.getElementById("arborescence").style.display = "inline";
+    document.getElementById("infos_peripheriques").style.display = "none";
+}
+
+function actualisation_fichiers_filtres(){
+    let fichiers_filtres = document.getElementById("fichiers_filtres").childNodes;
+    // Obtention de l’expression régulière entrée dans la zone de 
+    let valeurRecherchee = document.getElementById("filtre_choix_fichiers").value;
+    let regex = new RegExp("^" + valeurRecherchee + "$"); 
+    fichiers_filtres.forEach(fichier =>{
+        if(regex.test(fichier.textContent)){
+            console.log(fichier);
+            fichier.classList.remove("fichier_non_compris");
+        }else{
+            fichier.classList.add("fichier_non_compris");
+        }
+    })
 }

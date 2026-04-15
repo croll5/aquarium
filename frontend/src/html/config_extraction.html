@@ -48,9 +48,17 @@ termes.
 </head>
 <body>
     <h1>Configuration de « <strong id="nom_machine"></strong> »</h1>
+    <div id="infos_peripheriques">
+        <label for="nom_config">Nom de la configuration</label><br>
+        <input type="text" name="nom_config" id="nom_config" class="input_clair"><br><br>
+        <p>Envisagez-vous d’utiliser cette configuration pour une autre analyse ?</p>
+        <input type="radio" name="utilisation" id="permanente" class="input_clair"><label for="permanente"> Oui</label><br>
+        <input type="radio" name="utilisation" id="temporaire" class="input_clair"><label for="temporaire"> Non</label><br><br>
+        <button class="bouton_sombre" onclick="valider_infos_config()">Valider</button>
+    </div>
     <div id="arborescence"></div>
     <div class="menu_contextuel" id="menu_ajout">
-        <button class="option_menu" onclick="ajout_dossier()">✅ Sélectionner le dossier</button>
+        <button class="option_menu" onclick="afficher_popup_config_extraction()">✅ Sélectionner le dossier</button>
         <button class="option_menu" onclick="afficher_popup_select_fichiers()">🎯 Choisir les fichiers</button>
     </div>
     <div class="menu_contextuel" id="menu_suppression">
@@ -60,8 +68,16 @@ termes.
     <div class="cadre-popup" id="popup_select_fichiers">
         <button class="bouton_fermer" onclick="fermer_popup('popup_select_fichiers')">x</button>
         <h1 id="nom_dossier_cible">Erreur de chargement...</h1>
-        <input type="text" class="code" placeholder="Filtre..." id="filtre_choix_fichiers">
+        <input type="text" class="code" placeholder="Filtre..." id="filtre_choix_fichiers" onchange="actualisation_fichiers_filtres()">
         <ul id="fichiers_filtres"></ul>
+    </div>
+    <div class="cadre-popup" id="popup_select_config_extraction">
+        <button class="bouton_fermer" onclick="fermer_popup('popup_select_config_extraction')">x</button>
+        <h2>Quelle configuration voulez-vous utiliser ?</h2>
+        <select name="" id="select_config_extraction">
+            <option value="" selected disabled>----- Sélectionnez une configuration -----</option>
+        </select>
+        <button class="bouton_sombre" onclick="ajout_dossier()">Valider</button>
     </div>
 </body>
 </html>

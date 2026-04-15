@@ -73,13 +73,10 @@ var listeExtractions map[string]ExtractionMachine = map[string]ExtractionMachine
 
 var liste_extracteurs map[string]Extracteur = map[string]Extracteur{
 	// "avs":        avlogs.AvLog{},
-	"evtx":   evtx.Evtx{},
-	"sqlite": bdd_sqlite.SQLite{},
-	// "navigateur": navigateur.Navigateur{},
-	// "werr":       werr.Werr{},
+	"evtx":     evtx.Evtx{},
+	"sqlite":   bdd_sqlite.SQLite{},
 	"registre": registre.Registre{},
 	"csv":      csv.Csv{},
-	// "divers":     divers.Divers{},
 	"prefetch": prefetch.Prefetch{},
 	"journaux": journaux.Journaux{},
 }

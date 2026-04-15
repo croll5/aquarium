@@ -17,6 +17,7 @@ const (
 	AQUA_MACHINE                = "aqua_machine"
 	DOSSIER_EXTRACTIONS         = "extractions"
 	EXTENSION_XML               = ".xml"
+	DOSSIER_CONFIG              = "config"
 )
 
 type ConfigColonneBDD struct {
@@ -244,7 +245,7 @@ func ListeFichiersExtraction(chemins []ConfigChemin, cheminProjet string, dossie
 
 func cheminFichierConfig(cheminProjet string, nomFichierConfig string) (string, error) {
 	// On commence par regarder si le fichier est présent dans le dossier de l'analyse
-	var cheminLocal string = filepath.Join(cheminProjet, "config", nomFichierConfig)
+	var cheminLocal string = filepath.Join(cheminProjet, DOSSIER_CONFIG, nomFichierConfig)
 	_, err := os.Stat(cheminLocal)
 	if err == nil {
 		return cheminLocal, nil
@@ -253,7 +254,7 @@ func cheminFichierConfig(cheminProjet string, nomFichierConfig string) (string, 
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	return filepath.Join(filepath.Dir(emplacementExecutable), "config", nomFichierConfig), nil
+	return filepath.Join(filepath.Dir(emplacementExecutable), DOSSIER_CONFIG, nomFichierConfig), nil
 }
 
 /** Fonction qui renvoie la liste des chemins qui parcourent les dossiers donnés en argument
@@ -369,13 +370,16 @@ func (cftable ConfigTableBDD) GetNomsColonnes() []string {
 	return res
 }
 
-func GetListeConfigurationsDisponibles() ([]string, error) {
+func GetListeConfigurationsDisponibles(dossierExtrations bool) ([]string, error) {
 	// Récupération de l’emplacement de l’exécutable
 	emplacementExecutable, err := os.Executable()
 	if err != nil {
 		return []string{}, errors.WithStack(err)
 	}
-	dossierConfig := filepath.Join(filepath.Dir(emplacementExecutable), "config")
+	dossierConfig := filepath.Join(filepath.Dir(emplacementExecutable), DOSSIER_CONFIG)
+	if dossierExtrations {
+		dossierConfig = filepath.Join(dossierConfig, DOSSIER_EXTRACTIONS)
+	}
 	// Liste des fichiers du dossier
 	fichiers, err := os.ReadDir(dossierConfig)
 	if err != nil {

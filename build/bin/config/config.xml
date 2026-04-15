@@ -53,6 +53,18 @@
             <fichier>Firefox_Vista_History/*</fichier>
         </chemin>
     </extraction>
+    <extraction id="chrome">
+        <chemin>
+            <dossier>*Browsers.7z</dossier>
+            <archive>Browsers_history.7z</archive>
+            <fichier>Chrome_Vista_History/*</fichier>
+        </chemin>
+        <chemin>
+            <dossier>*Browsers.7z</dossier>
+            <archive>Browsers_history.7z</archive>
+            <fichier>Edge_Anhaeim_History/*</fichier>
+        </chemin>
+    </extraction>
     <extraction id="prefetch">
         <chemin>
             <dossier>*General.7z</dossier>

@@ -122,24 +122,6 @@ textarea.input_clair{
     width: 95%;
 }
 
-input[type="radio"].input_clair {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-
-  border-radius: 50%;
-  border: solid 2px var(--or-2);
-
-  margin: 0;
-  padding: 8px;
-
-  transition: 0.5s;
-}
-
-input[type="radio"].input_clair:checked{
-    background-color: var(--or-2);
-}
-
 .liste_options{
     display: flex;
     flex-direction: column;
