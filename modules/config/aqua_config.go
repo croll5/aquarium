@@ -11,9 +11,9 @@ import (
 )
 
 type AquaConfig struct {
-	DebutAnalyse     time.Time                    `json:"debut_analyse"`
+	DebutAnalyse     time.Time                    `json:"debut_analyse" ts_type:"string"`
 	EntitesImpactees string                       `json:"entites_impactees"`
-	FinAnalyse       time.Time                    `json:"fin_analyse"`
+	FinAnalyse       time.Time                    `json:"fin_analyse" ts_type:"string"`
 	Analyste         string                       `json:"analyste"`
 	Machines         map[string]AquaConfigMachine `json:"machines"`
 	LiaisonsReseau   map[string]AquaConfigLiaison `json:"liaisons_reseau"`
@@ -24,7 +24,7 @@ type AquaConfig struct {
 }
 
 type AquaConfigEvenement struct {
-	Horodatage  time.Time `json:"horodatage"`
+	Horodatage  time.Time `json:"horodatage" ts_type:"string"`
 	Description string    `json:"description"`
 }
 

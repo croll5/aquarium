@@ -841,6 +841,10 @@ func (adb Aquabase) EstResultatVide(requete string) (bool, error) {
 }
 
 func (adb *Aquabase) TailleRequeteSQL(requete string) int {
+	requete = strings.TrimSpace(requete)
+	for strings.HasSuffix(requete, ";") {
+		requete = strings.TrimSpace(strings.TrimSuffix(requete, ";"))
+	}
 	var requeteTotal string = fmt.Sprintf("SELECT COUNT(*) FROM (%s)", requete)
 	infosBDD, err := adb.Login()
 	if err != nil {

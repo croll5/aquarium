@@ -154,7 +154,7 @@ func ExtractArchive7z(archive string, destination string) error {
 	}
 	defer r.Close()
 
-	err = os.MkdirAll(destination, os.ModeAppend)
+	err = os.MkdirAll(destination, 0o755)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func copieFichiersAAnalyser(cheminProjet string, configuration config.AquaConfig
 	for id_machine, machine := range configuration.Machines {
 		if machine.AAnalyser {
 			cheminDestination := filepath.Join(cheminProjet, config.DOSSIER_FICHIERS_A_ANALYSER, id_machine)
-			os.MkdirAll(cheminDestination, os.ModeAppend)
+			os.MkdirAll(cheminDestination, 0o755)
 			for _, cheminFichier := range machine.Fichiers {
 				cheminFichierDest := filepath.Join(cheminDestination, filepath.Base(cheminFichier))
 				err := ExtractArchive7z(cheminFichier, cheminFichierDest)
