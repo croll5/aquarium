@@ -47,6 +47,7 @@ import (
 	"aquarium/modules/detection"
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
+	"aquarium/modules/params"
 	"aquarium/modules/rapport"
 	"context"
 	"fmt"
@@ -88,8 +89,23 @@ func (a *App) startup(ctx context.Context) {
 }
 
 // domReady is called after front-end resources have been loaded
-func (a App) domReady(ctx context.Context) {
-	// Add your action here
+func (a *App) domReady(ctx context.Context) {
+	a.ctx = ctx
+	parametres, err := params.ChargerParametres(".")
+	if err != nil {
+		a.signalerErreur(err)
+		return
+	}
+	script := fmt.Sprintf(`
+window.contrastes = %t;
+window.dyslexie = %t;
+window.non_aux_bubulles = %t;
+const iframe = document.getElementsByTagName("iframe")[0];
+if (iframe && iframe.getAttribute("src")) {
+    iframe.setAttribute("src", iframe.getAttribute("src"));
+}
+`, parametres.Contrastes, parametres.Dyslexie, parametres.NonAuxBubulles)
+	runtime.WindowExecJS(ctx, script)
 }
 
 // beforeClose is called when the application is about to quit,
@@ -141,6 +157,15 @@ func (a *App) signalerErreur(erreur error) {
 
 func (a *App) alerterEnregistrementErreurImpossible() {
 	runtime.WindowExecJS(a.ctx, "details_erreur()")
+}
+
+func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool) bool {
+	err := params.SauvegarderParametres(".", contrastes, dyslexie, nonAuxBubulles)
+	if err != nil {
+		a.signalerErreur(err)
+		return false
+	}
+	return true
 }
 
 /***************************************************************************************/

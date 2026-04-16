@@ -42,12 +42,75 @@ termes.
     <title>Parametres</title>
     <link rel="stylesheet" href="../templates/bibliotheque.css">
     <link rel="stylesheet" href="../templates/commun_sombre.css">
+    <style>
+        .bouton_fermeture_parametres {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .icone_fermeture_parametres {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #titre_parametres {
+            align-self: flex-start;
+            text-align: left;
+            margin-left: 12px;
+        }
+
+        #zone_bouton_parametres {
+            align-self: flex-start;
+            margin-left: 10px;
+        }
+
+        #toast_parametres {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            max-width: 420px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background-color: #111;
+            color: #fff;
+            box-shadow: 0 10px 24px #0008;
+        }
+
+        #toast_parametres button {
+            border: none;
+            background: transparent;
+            color: #fff;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+        }
+    </style>
     <script src="../js/outils/bubulles.js" async></script>
     <script src="../js/parametres.js" async></script>
     <script src="../templates/bibliotheque.js" async></script>
 </head>
 <body>
-    <h1>Paramètres</h1>
+    <div id="toast_parametres">
+        <span id="message_toast_parametres"></span>
+        <button onclick="fermer_toast_parametres()" aria-label="Fermer la notification">❌</button>
+    </div>
+    <button class="bouton_fermeture_parametres" onclick="fermer_parametres_sans_enregistrer()" aria-label="Fermer les paramètres">
+        <img class="icone_fermeture_parametres" src="../assets/images/croix-fermer-blanche.svg" alt="Fermer">
+    </button>
+    <h1 id="titre_parametres">Paramètres</h1>
     <div class="champ">
         <input type="checkbox" id="contrastes" onchange="changer_contrastes()">
         <label for="contrastes">Mode contrastes élevés</label>
@@ -60,8 +123,8 @@ termes.
         <input type="checkbox" id="non_aux_bubulles" onchange="enlever_bubulles()">
         <label for="non_aux_bubulles">Désactiver l'affichage des bulles 🥲</label>
     </div>
-    <div>
-    <button class="bouton_clair" onclick="quitter_parametres()">Enregistrer</button>
-</div>
+    <div id="zone_bouton_parametres">
+        <button class="bouton_clair" onclick="quitter_parametres()">Enregistrer</button>
+    </div>
 </body>
 </html>

@@ -34,6 +34,34 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
+let redirection_apres_toast = false;
+let timer_toast_parametres = null;
+
+function afficher_toast_parametres(message, rediriger){
+    redirection_apres_toast = rediriger;
+    if(timer_toast_parametres != null){
+        clearTimeout(timer_toast_parametres);
+    }
+    document.getElementById("message_toast_parametres").textContent = message;
+    document.getElementById("toast_parametres").style.display = "flex";
+    timer_toast_parametres = setTimeout(fermer_toast_parametres, 5000);
+}
+
+function fermer_toast_parametres(){
+    if(timer_toast_parametres != null){
+        clearTimeout(timer_toast_parametres);
+        timer_toast_parametres = null;
+    }
+    document.getElementById("toast_parametres").style.display = "none";
+    if(redirection_apres_toast){
+        window.location.replace("accueil.html");
+    }
+}
+
+function fermer_parametres_sans_enregistrer(){
+    window.location.replace("accueil.html");
+}
+
 if(parent.contrastes){
     document.getElementById("contrastes").checked = true;
 }
@@ -73,7 +101,25 @@ function enlever_bubulles(){
 }
 
 function quitter_parametres(){
-    window.location.replace("accueil.html");
+    const contrastes = document.getElementById("contrastes").checked;
+    const dyslexie = document.getElementById("dyslexie").checked;
+    const nonAuxBubulles = document.getElementById("non_aux_bubulles").checked;
+    const app = parent?.window?.go?.main?.App;
+    if(app && typeof app.SauvegarderParametres === "function"){
+        Promise.resolve(app.SauvegarderParametres(contrastes, dyslexie, nonAuxBubulles))
+            .then(resultat => {
+                if(resultat){
+                    afficher_toast_parametres("Les paramètres ont bien été enregistrés.", true);
+                } else{
+                    afficher_toast_parametres("L'enregistrement des paramètres a échoué.", false);
+                }
+            })
+            .catch(() => {
+                afficher_toast_parametres("L'enregistrement des paramètres a échoué.", false);
+            });
+        return;
+    }
+    afficher_toast_parametres("L'enregistrement des paramètres a échoué.", false);
 }
 
 function contrastes_normaux(){

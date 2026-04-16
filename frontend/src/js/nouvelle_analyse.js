@@ -105,6 +105,10 @@ function afficher_bloc(a_afficher, id){
     }
 }
 
+function quitter_nouvelle_analyse(){
+    window.location.replace("../html/accueil.html");
+}
+
 function verifier_remplissage(section, prochaine_etape){
     let element = document.getElementById(section);
     if(section_remplie(element, true)){
