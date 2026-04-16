@@ -32,3 +32,5 @@ frontend/src/assets/documents
 
 
 go.mod
+code.MD
+.DS_Store
