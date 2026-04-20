@@ -91,21 +91,6 @@ func (a *App) startup(ctx context.Context) {
 // domReady is called after front-end resources have been loaded
 func (a *App) domReady(ctx context.Context) {
 	a.ctx = ctx
-	parametres, err := params.ChargerParametres(".")
-	if err != nil {
-		a.signalerErreur(err)
-		return
-	}
-	script := fmt.Sprintf(`
-window.contrastes = %t;
-window.dyslexie = %t;
-window.non_aux_bubulles = %t;
-const iframe = document.getElementsByTagName("iframe")[0];
-if (iframe && iframe.getAttribute("src")) {
-    iframe.setAttribute("src", iframe.getAttribute("src"));
-}
-`, parametres.Contrastes, parametres.Dyslexie, parametres.NonAuxBubulles)
-	runtime.WindowExecJS(ctx, script)
 }
 
 // beforeClose is called when the application is about to quit,
@@ -159,13 +144,40 @@ func (a *App) alerterEnregistrementErreurImpossible() {
 	runtime.WindowExecJS(a.ctx, "details_erreur()")
 }
 
+func (a *App) getCheminBaseApplication() (string, error) {
+	emplacementExecutable, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(emplacementExecutable), nil
+}
+
 func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool) bool {
-	err := params.SauvegarderParametres(".", contrastes, dyslexie, nonAuxBubulles)
+	cheminBase, err := a.getCheminBaseApplication()
+	if err != nil {
+		a.signalerErreur(err)
+		return false
+	}
+	err = params.SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles)
 	if err != nil {
 		a.signalerErreur(err)
 		return false
 	}
 	return true
+}
+
+func (a *App) GetParametres() params.ParametresXML {
+	cheminBase, err := a.getCheminBaseApplication()
+	if err != nil {
+		a.signalerErreur(err)
+		return params.ParametresXML{}
+	}
+	parametres, err := params.ChargerParametres(cheminBase)
+	if err != nil {
+		a.signalerErreur(err)
+		return params.ParametresXML{}
+	}
+	return parametres
 }
 
 /***************************************************************************************/

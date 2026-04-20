@@ -357,6 +357,40 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+.toast_notification{
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    max-width: 420px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    box-shadow: 0 10px 24px #0008;
+}
+
+.toast_notification button{
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.toast_succes{
+    background-color: var(--bleu-1);
+    color: var(--or-6);
+}
+
+.toast_echec{
+    background-color: var(--rouge-cramoisi);
+    color: white;
+}
+
 
 .dossier_arborescence{
     margin-left: 20px;
