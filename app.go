@@ -49,6 +49,7 @@ import (
 	"aquarium/modules/gestionprojet"
 	"aquarium/modules/params"
 	"aquarium/modules/rapport"
+	"aquarium/modules/utilitaires"
 	"context"
 	"fmt"
 	"log"
@@ -144,16 +145,8 @@ func (a *App) alerterEnregistrementErreurImpossible() {
 	runtime.WindowExecJS(a.ctx, "details_erreur()")
 }
 
-func (a *App) getCheminBaseApplication() (string, error) {
-	emplacementExecutable, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Dir(emplacementExecutable), nil
-}
-
 func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool) bool {
-	cheminBase, err := a.getCheminBaseApplication()
+	cheminBase, err := utilitaires.GetCheminBaseApplication()
 	if err != nil {
 		a.signalerErreur(err)
 		return false
@@ -167,7 +160,7 @@ func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubull
 }
 
 func (a *App) GetParametres() params.ParametresXML {
-	cheminBase, err := a.getCheminBaseApplication()
+	cheminBase, err := utilitaires.GetCheminBaseApplication()
 	if err != nil {
 		a.signalerErreur(err)
 		return params.ParametresXML{}

@@ -1,5 +1,5 @@
 /*
-Copyright ou © ou Copr. Cécile Rolland, (21 janvier 2025)
+Copyright ou © ou Copr. Didier Hoizé, (20 avril 2026)
 
 aquarium[@]mailo[.]com
 
