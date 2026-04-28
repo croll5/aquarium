@@ -119,7 +119,7 @@ func ExtraireArborescence(cheminProjet string, cheminModele string, idMachine st
 		ajouterFichierDansArbo(fichier, configMachine.Arborescence, &cache)
 	}
 	// Enregistrement de l’analyse
-	err = os.MkdirAll(filepath.Join(cheminProjet, config.DOSSIER_ANALYSE, DOSSIER_ARBO), os.ModeAppend)
+	err = os.MkdirAll(filepath.Join(cheminProjet, config.DOSSIER_ANALYSE, DOSSIER_ARBO), 0o755)
 	if err != nil {
 		return errors.WithStack(err)
 	}

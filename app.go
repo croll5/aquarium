@@ -47,13 +47,16 @@ import (
 	"aquarium/modules/detection"
 	"aquarium/modules/extraction"
 	"aquarium/modules/gestionprojet"
+	"aquarium/modules/params"
 	"aquarium/modules/rapport"
+	"aquarium/modules/utilitaires"
 	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
+	goruntime "runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -87,8 +90,8 @@ func (a *App) startup(ctx context.Context) {
 }
 
 // domReady is called after front-end resources have been loaded
-func (a App) domReady(ctx context.Context) {
-	// Add your action here
+func (a *App) domReady(ctx context.Context) {
+	a.ctx = ctx
 }
 
 // beforeClose is called when the application is about to quit,
@@ -121,7 +124,7 @@ func (a *App) signalerErreur(erreur error) {
 		cheminErreurs = filepath.Join(filepath.Dir(cheminExecutable), DOSSIER_ERREURS)
 	}
 	// Créer le dossier des erreur s’il n’existe pas
-	err := os.MkdirAll(cheminErreurs, os.ModeAppend)
+	err := os.MkdirAll(cheminErreurs, 0o755)
 	if err != nil {
 		a.alerterEnregistrementErreurImpossible()
 		return
@@ -142,6 +145,34 @@ func (a *App) alerterEnregistrementErreurImpossible() {
 	runtime.WindowExecJS(a.ctx, "details_erreur()")
 }
 
+func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool) bool {
+	cheminBase, err := utilitaires.GetCheminBaseApplication()
+	if err != nil {
+		a.signalerErreur(err)
+		return false
+	}
+	err = params.SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles)
+	if err != nil {
+		a.signalerErreur(err)
+		return false
+	}
+	return true
+}
+
+func (a *App) GetParametres() params.ParametresXML {
+	cheminBase, err := utilitaires.GetCheminBaseApplication()
+	if err != nil {
+		a.signalerErreur(err)
+		return params.ParametresXML{}
+	}
+	parametres, err := params.ChargerParametres(cheminBase)
+	if err != nil {
+		a.signalerErreur(err)
+		return params.ParametresXML{}
+	}
+	return parametres
+}
+
 /***************************************************************************************/
 /************************* INDEX FUNCTIONS **********************************/
 /***************************************************************************************/
@@ -152,10 +183,13 @@ func (a *App) alerterEnregistrementErreurImpossible() {
 @return : vrai si et seulement si l'analyse a été correctement ouverte
 */
 func (a *App) OuvrirAnalyseExistante() bool {
-	fichier, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title:   "Ouvrir une analyse existante",
-		Filters: []runtime.FileFilter{{DisplayName: "Aquarium", Pattern: "analyse.aqua"}},
-	})
+	options := runtime.OpenDialogOptions{
+		Title: "Ouvrir une analyse existante",
+	}
+	if goruntime.GOOS != "darwin" {
+		options.Filters = []runtime.FileFilter{{DisplayName: "Aquarium", Pattern: "*.aqua"}}
+	}
+	fichier, err := runtime.OpenFileDialog(a.ctx, options)
 	if err != nil {
 		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 			Type:    runtime.InfoDialog,
@@ -165,6 +199,14 @@ func (a *App) OuvrirAnalyseExistante() bool {
 		return false
 	}
 	if fichier == "" {
+		return false
+	}
+	if !strings.EqualFold(filepath.Base(fichier), "analyse.aqua") {
+		runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+			Type:    runtime.InfoDialog,
+			Title:   "Fichier invalide",
+			Message: "Veuillez sélectionner un fichier nommé analyse.aqua",
+		})
 		return false
 	}
 	chemin_projet = filepath.Dir(fichier)
@@ -463,7 +505,11 @@ func (a *App) StatutReglesDetection() []map[string]interface{} {
 /***************************************************************************************/
 
 func (a *App) ResultatRequeteSQLExtraction(requete string, debut int, taille int) []map[string]interface{} {
-	requete = fmt.Sprintf("%s LIMIT %d OFFSET %d", requete, taille, debut)
+	requete = strings.TrimSpace(requete)
+	for strings.HasSuffix(requete, ";") {
+		requete = strings.TrimSpace(strings.TrimSuffix(requete, ";"))
+	}
+	requete = fmt.Sprintf("SELECT * FROM (%s) AS requete_utilisateur LIMIT %d OFFSET %d", requete, taille, debut)
 	log.Println("[INFO] - Execution depuis JS de la requete ", requete)
 	var base aquabase.Aquabase = *aquabase.InitDB_Extraction(chemin_projet)
 	resultat, err := base.ResultatRequeteSQL(requete)

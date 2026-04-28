@@ -42,12 +42,20 @@ termes.
     <title>Parametres</title>
     <link rel="stylesheet" href="../templates/bibliotheque.css">
     <link rel="stylesheet" href="../templates/commun_sombre.css">
+    <link rel="stylesheet" href="../css/parametres.css">
     <script src="../js/outils/bubulles.js" async></script>
     <script src="../js/parametres.js" async></script>
     <script src="../templates/bibliotheque.js" async></script>
 </head>
 <body>
-    <h1>Paramètres</h1>
+    <div id="toast_parametres" class="toast_notification toast_succes">
+        <span id="message_toast_parametres"></span>
+        <button onclick="fermer_toast_parametres()" aria-label="Fermer la notification">❌</button>
+    </div>
+    <button class="bouton_fermeture_parametres" onclick="fermer_parametres_sans_enregistrer()" aria-label="Fermer les paramètres">
+        <img class="icone_fermeture_parametres" src="../assets/images/croix-fermer-blanche.svg" alt="Fermer">
+    </button>
+    <h1 id="titre_parametres">Paramètres</h1>
     <div class="champ">
         <input type="checkbox" id="contrastes" onchange="changer_contrastes()">
         <label for="contrastes">Mode contrastes élevés</label>
@@ -60,8 +68,8 @@ termes.
         <input type="checkbox" id="non_aux_bubulles" onchange="enlever_bubulles()">
         <label for="non_aux_bubulles">Désactiver l'affichage des bulles 🥲</label>
     </div>
-    <div>
-    <button class="bouton_clair" onclick="quitter_parametres()">Enregistrer</button>
-</div>
+    <div id="zone_bouton_parametres">
+        <button class="bouton_clair" onclick="quitter_parametres()">Enregistrer</button>
+    </div>
 </body>
 </html>

@@ -57,7 +57,7 @@ type Regle struct {
 	Auteur      string    `json:"auteur"`
 	Description string    `json:"description"`
 	Criticite   int       `json:"criticite"`
-	Date        time.Time `json:"date"`
+	Date        time.Time `json:"date" ts_type:"string"`
 	SQL         string    `json:"sql"`
 	IsGlobal    bool
 }

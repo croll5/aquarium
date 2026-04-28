@@ -82,9 +82,33 @@ function creer_onglet(url, nomOnglet){
     change_onglet(url, bouton_onglet);
 }
 
-let contrastes = false;
-let dyslexie = false;
-let non_aux_bubulles = false;
+window.contrastes = false;
+window.dyslexie = false;
+window.non_aux_bubulles = false;
+
+function initialiser_parametres(tentatives_restantes = 20){
+    const app = window?.go?.main?.App;
+    if(!(app && typeof app.GetParametres === "function")){
+        if(tentatives_restantes > 0){
+            setTimeout(() => initialiser_parametres(tentatives_restantes - 1), 100);
+        }
+        return;
+    }
+    Promise.resolve(app.GetParametres()).then(parametres => {
+        if(parametres == null){
+            return;
+        }
+        window.contrastes = parametres.Contrastes === true;
+        window.dyslexie = parametres.Dyslexie === true;
+        window.non_aux_bubulles = parametres.NonAuxBubulles === true;
+        const iframe = document.getElementsByTagName("iframe")[0];
+        if(iframe && iframe.getAttribute("src")){
+            iframe.setAttribute("src", iframe.getAttribute("src"));
+        }
+    }).catch(() => {});
+}
+
+initialiser_parametres();
 
 function signaler_erreur(fichierErreur, detailsErreur){
     document.getElementById("texte_details_erreur").textContent = decodeURIComponent(detailsErreur).replaceAll("+"," ")
