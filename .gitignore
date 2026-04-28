@@ -18,6 +18,7 @@ build/bin
 
 # Go files
 go.sum
+go.mod
 
 # IDEs
 .idea
@@ -30,8 +31,12 @@ env
 
 frontend/src/assets/documents
 
+# Testing
+node_modules
+package-lock.json
+test-results
 
-go.mod
+# Perso Didier
 code.MD
 .DS_Store
 SUIVI-GIT.md

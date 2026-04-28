@@ -1,5 +1,6 @@
 /*
 Copyright ou © ou Copr. Cécile Rolland, (21 janvier 2025) 
+Copyright ou © ou Copr. Didier Hoizé, (20 avril 2026)
 
 aquarium[@]mailo[.]com
 
@@ -94,6 +95,7 @@ function changer_dyslexie(){
 if(parent.non_aux_bubulles){
     document.getElementById("non_aux_bubulles").checked = true;
 }
+
 function enlever_bubulles(){
     if(document.getElementById("non_aux_bubulles").checked){
         parent.non_aux_bubulles = true;
