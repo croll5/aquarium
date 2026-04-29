@@ -640,3 +640,11 @@ func (a *App) ListeFichiersAnalysables(idMachine string) extraction.DossierAnaly
 	}
 	return resultat
 }
+
+func (a *App) CorrespondanceCheminModele(filename string, modele string) bool {
+	result, err := filepath.Match(modele, filename)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return result
+}

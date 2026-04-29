@@ -167,13 +167,13 @@ function actualisation_fichiers_filtres(){
     let fichiers_filtres = document.getElementById("fichiers_filtres").childNodes;
     // Obtention de l’expression régulière entrée dans la zone de 
     let valeurRecherchee = document.getElementById("filtre_choix_fichiers").value;
-    let regex = new RegExp("^" + valeurRecherchee + "$"); 
     fichiers_filtres.forEach(fichier =>{
-        if(regex.test(fichier.textContent)){
-            console.log(fichier);
-            fichier.classList.remove("fichier_non_compris");
-        }else{
-            fichier.classList.add("fichier_non_compris");
-        }
+        parent.window.go.main.App.CorrespondanceCheminModele(fichier.textContent, valeurRecherchee).then(resultat =>{
+            if(resultat){
+                fichier.classList.remove("fichier_non_compris");
+            }else{
+                fichier.classList.add("fichier_non_compris");
+            }
+        })
     })
 }
