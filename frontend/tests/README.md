@@ -11,31 +11,36 @@ https://v3alpha.wails.io/guides/e2e-testing/
 
 ## Limites
 On ne teste PAS :
-> la vraie app desktop native
-> la WebView directement
+- la vraie app desktop native
+- la WebView directement
 On teste via  :
-> la version web exposée par Wails
+- la version web exposée par Wails
 C'est poiur cela qu'il faut 2 session de Terminal actives.
 
 ## Setup minimal
 
 1. Installer les dépendances JS de test dans le workspace frontend (Vitest + Playwright).
 > npm install -D vitest jsdom
-> npm install -D @playwright/test  > setup du framework https://v3alpha.wails.io/guides/e2e-testing/
-    added 3 packages, and audited 87 packages in 2s
-> npx playwright install  > Initialize les browsers Firefox + WebKit
+
+> npm install -D @playwright/test  
+ 
+2. Initialize les browsers Firefox + WebKit
+
+> npx playwright install  
+
 exemple pour macOs:
+    
     Downloading Firefox 148.0.2 (playwright firefox v1511) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1511/firefox-mac-arm64.zip
     97.1 MiB [====================] 100% 0.0s
-    Firefox 148.0.2 (playwright firefox v1511) downloaded to /Users/.../Library/Caches/ms-playwright/firefox-1511
+    
     Downloading WebKit 26.4 (playwright webkit v2272) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2272/webkit-mac-15-arm64.zip
     75.4 MiB [====================] 100% 0.0s
-    WebKit 26.4 (playwright webkit v2272) downloaded to /Users/.../Library/Caches/ms-playwright/webkit-2272
+    
 
 
-2. Configurer Vitest en environnement `jsdom`.
-3. Créer un mock partagé de `window.go` (ex: `test/mocks/wails.mock.js`).
-4. Charger ce mock dans les tests unitaires (setup Vitest) et E2E (injection Playwright avant chargement de page).
+3. Configurer Vitest en environnement `jsdom`.
+4. Créer un mock partagé de `window.go` (ex: `test/mocks/wails.mock.js`).
+5. Charger ce mock dans les tests unitaires (setup Vitest) et E2E (injection Playwright avant chargement de page).
 
 ## Règles d'usage
 
