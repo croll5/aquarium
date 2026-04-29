@@ -9,6 +9,14 @@ https://v3alpha.wails.io/guides/e2e-testing/
 - `Playwright` : tests E2E pour valider les parcours complets utilisateur dans un navigateur réel.
 - `Mock Wails (window.go)` : permet de tester le frontend sans dépendre du backend Go en simulant les appels `window.go.main.App.*`.
 
+## Limites
+On ne teste PAS :
+> la vraie app desktop native
+> la WebView directement
+On teste via  :
+> la version web exposée par Wails
+C'est poiur cela qu'il faut 2 session de Terminal actives.
+
 ## Setup minimal
 
 1. Installer les dépendances JS de test dans le workspace frontend (Vitest + Playwright).
@@ -35,15 +43,12 @@ exemple pour macOs:
 - E2E (`Playwright`) : tester les scénarios critiques (navigation, sauvegarde paramètres, erreurs visibles).
 - Toujours contrôler les réponses Wails via mock (`succès`, `échec`, `exception`) pour couvrir les cas robustes.
 
-
 ## lancer les tests JS unitaires
 npx vitest run --config frontend/tests/vitest.config.mjs
 
 ## Lancer les tests Playwright (E2E)
-
 1. Démarrer l'application dans un terminal :
 `wails dev`
-
 2. Dans un second terminal, lancer les tests E2E :
 `npx playwright test --config frontend/tests/setup/playwright.config.js`
 
