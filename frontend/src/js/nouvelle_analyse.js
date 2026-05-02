@@ -34,31 +34,92 @@ pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
 */
 
-function ajuster_champs(id_section){
+function ajouter_bouton_suppression(bloc){
+    if(bloc.parentElement != null && bloc.parentElement.firstElementChild === bloc){
+        return;
+    }
+    if(bloc.getElementsByClassName("bouton_suppression_ligne").length > 0){
+        return;
+    }
+    let suppr = document.createElement("button");
+    suppr.innerText = "🗑️";
+    suppr.className = "bouton_invisible bouton_suppression_ligne";
+    suppr.onclick = () => {
+        let bouton_ajout_dans_bloc = bloc.querySelector(".bouton_ajout_liste");
+        if(bouton_ajout_dans_bloc != null){
+            let bloc_precedent = bloc.previousElementSibling;
+            if(bloc_precedent != null && bloc_precedent.classList.contains("bloc_de_liste")){
+                bloc_precedent.appendChild(bouton_ajout_dans_bloc);
+            }
+        }
+        bloc.remove();
+    };
+    let bouton_ajout = bloc.getElementsByClassName("bouton_ajout_liste");
+    if(bouton_ajout.length > 0){
+        bloc.insertBefore(suppr, bouton_ajout.item(0));
+    } else {
+        bloc.appendChild(suppr);
+    }
+}
+
+function ajouter_ligne_liste(id_section){
+    let noeud_principal = document.getElementById(id_section);
+    let liste_elements = noeud_principal.children;
+    let numero_champ = liste_elements.length - 1;
+    let element_de_base = liste_elements.item(numero_champ);
+    let clone = element_de_base.cloneNode(true);
+    let bouton_ajout = noeud_principal.querySelector(".bouton_ajout_liste");
+    if(bouton_ajout != null){
+        bouton_ajout.remove();
+    }
+    let bouton_ajout_clone = clone.getElementsByClassName("bouton_ajout_liste");
+    if(bouton_ajout_clone.length > 0){
+        bouton_ajout_clone.item(0).remove();
+    }
+    let boutons_suppression_clone = clone.getElementsByClassName("bouton_suppression_ligne");
+    while(boutons_suppression_clone.length > 0){
+        boutons_suppression_clone.item(0).remove();
+    }
+    vider_champs(clone);
+    noeud_principal.appendChild(clone);
+    if(bouton_ajout != null){
+        clone.appendChild(bouton_ajout);
+    }
+    ajouter_bouton_suppression(clone);
+}
+
+function initialiser_suppression_lignes(id_section){
+    let section = document.getElementById(id_section);
+    if(section == null){
+        return;
+    }
+    for(let i = 1; i < section.children.length; i++){
+        let bloc = section.children.item(i);
+        if(bloc.classList.contains("bloc_de_liste")){
+            ajouter_bouton_suppression(bloc);
+        }
+    }
+}
+
+function ajuster_champs(id_section, ajout_auto = true){
     let noeud_principal = document.getElementById(id_section)
     let liste_elements = noeud_principal.children;
     let numero_champ = liste_elements.length - 1
-    if(section_remplie(liste_elements.item(numero_champ), false)){
-        let element_de_base = liste_elements.item(numero_champ);
-        let clone = element_de_base.cloneNode(true);
-        vider_champs(clone);
-        noeud_principal.appendChild(clone);
-        // Ajout d'un bouton « supprimer »
-        let suppr = document.createElement("button");
-        suppr.innerText = "🗑️";
-        suppr.className = "bouton_invisible";
-        suppr.onclick = (ev) => {
-            element_de_base.remove();
-        }
-        element_de_base.appendChild(suppr);
-    } else if(numero_champ > 0 && !section_remplie(liste_elements.item(numero_champ - 1), false)){
-        let liste_boutons = liste_elements.item(numero_champ-1).getElementsByClassName("bouton_invisible");
+    if(ajout_auto && section_remplie(liste_elements.item(numero_champ), false)){
+        ajouter_ligne_liste(id_section);
+    } else if(ajout_auto && numero_champ > 0 && !section_remplie(liste_elements.item(numero_champ - 1), false)){
+        let liste_boutons = liste_elements.item(numero_champ-1).getElementsByClassName("bouton_suppression_ligne");
         for(bouton of liste_boutons){
             bouton.remove();
         }
         liste_elements.item(numero_champ).remove()
     }
 }
+
+window.addEventListener("load", () => {
+    initialiser_suppression_lignes("main_courante");
+    initialiser_suppression_lignes("liste_contacts");
+});
 
 function vider_champs(objet){
     let liste_elements = objet.children;

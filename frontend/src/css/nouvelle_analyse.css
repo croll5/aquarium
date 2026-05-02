@@ -158,8 +158,38 @@ textarea.input_clair{
     margin-top: 15px;
 }
 
+#main_courante .bloc_de_liste[aqua_champ="main_courante"]{
+    display: flex;
+    align-items: center;
+}
+
+#main_courante .bouton_ajout_main_courante{
+    margin-left: 3px;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+#liste_contacts .bouton_ajout_liste_contacts{
+    margin-left: 3px;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+#main_courante .bouton_suppression_ligne{
+    margin-right: 3px;
+}
+
 .input_clair{
     margin: 3px;
+}
+
+.page_navigation h3{
+    margin-top: 2.0em;
+    margin-bottom: 0.2em;
+}
+
+.page_navigation h3 + p{
+    margin-top: 0.2em;
 }
 
 input#etape_1:checked ~ .pages{ transform: translateX(0%);}
