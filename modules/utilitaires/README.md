@@ -17,6 +17,7 @@ Le logger est centralise dans `modules/utilitaires/utilitaires.go` :
 - Initialisation unique : `InitLogger(cheminBase, debugActif)`
 - Ecriture : `LogEvent(niveau, evenement, attributs, message)`
 - Fin de session : `SyncLogger()`
+- Helpers applicatifs optionnels : `modules/utilitaires/app_logging.go` (ex: flux `parametres.enregistrer`)
 
 Un fichier de log est cree dans `./logs/` a chaque lancement quand le debug est actif, avec un nom horodate :
 `aquarium_YYYYMMDD_HHMMSS.log`.
@@ -111,34 +112,10 @@ func ExempleTraitement() {
 
 Le logger est no-op si la session n'est pas en debug, donc ces appels restent sans effet quand `oui_au_debug=false`.
 
+## Politique de journalisation
 
+Le logging n'est pas systematique sur toute l'application.
 
-EXEMPLES EVENT :
-
-{"level":"info","ts":"2026-05-04T20:46:46.337+0200","caller":"utilitaires/utilitaires.go:155","msg":"application_startup","event":"application.startup","attrs":{"oui_au_debug":true,"source":"backend"}}
-
-# explication :
-level: "info" : événement informatif.
-ts: "2026-05-04T20:46:46.337+0200" : horodatage précis (4 mai 2026, 20:46:46.337, UTC+2).
-caller: "utilitaires/utilitaires.go:155" : point d’écriture dans le logger central.
-msg: "application_startup" : message libre fourni par le backend au démarrage.
-event: "application.startup" : nom d’événement structuré.
-attrs :
-oui_au_debug: true : la session debug est active.
-source: "backend" : événement émis côté Go.
-
----------
-
-{"level":"info","ts":"2026-05-04T20:46:51.607+0200","caller":"utilitaires/utilitaires.go:155","msg":"[PARAMETRES] case_changee | option=contrastes | valeur=true","event":"parametres.case_changee","attrs":{"option":"contrastes","source":"frontend","utilisateur_session_debug":true,"valeur":true}}
-
-# explication :
-level: "info" : événement informatif.
-ts: "2026-05-04T20:46:51.607+0200" : horodatage (environ 5.27 s après le démarrage).
-caller: "utilitaires/utilitaires.go:155" : même point d’entrée central.
-msg: "[PARAMETRES] case_changee | option=contrastes | valeur=true" : message manuel lisible.
-event: "parametres.case_changee" : événement structuré “une case paramètres a changé”.
-attrs :
-option: "contrastes" : la case concernée.
-valeur: true : nouvel état coché.
-source: "frontend" : événement émis depuis JS via wrapper Wails.
-utilisateur_session_debug: true : garde-fou de session debug actif.
+- logger uniquement les evenements a valeur operationnelle (debut/succes/echec d'actions metier, erreurs, transitions d'etat utiles) ;
+- eviter le bruit (events ultra frequents sans valeur de diagnostic) ;
+- conserver `signalerErreur(err)` pour les fichiers d'erreurs detailles, et `LogEvent(...)` pour la tracabilite generale.

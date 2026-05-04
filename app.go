@@ -178,37 +178,21 @@ func (a *App) LoggerEvent(niveau string, evenement string, attributs map[string]
 
 func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool, ouiAuDebug bool) bool {
 
-	utilitaires.LogEvent("info", "parametres.enregistrer", map[string]interface{}{
-		"status":           "debut",
-		"contrastes":       contrastes,
-		"dyslexie":         dyslexie,
-		"non_aux_bubulles": nonAuxBubulles,
-		"oui_au_debug":     ouiAuDebug,
-	}, "Sauvegarde des parametres - debut")
+	utilitaires.LogParametresEnregistrerDebut(contrastes, dyslexie, nonAuxBubulles, ouiAuDebug)
 
 	cheminBase, err := utilitaires.GetCheminBaseApplication()
 	if err != nil {
-		utilitaires.LogEvent("error", "parametres.enregistrer", map[string]interface{}{
-			"status": "echec",
-			"etape":  "GetCheminBaseApplication",
-			"erreur": err.Error(),
-		}, "Sauvegarde des parametres - echec")
+		utilitaires.LogParametresEnregistrerEchec("GetCheminBaseApplication", err.Error())
 		a.signalerErreur(err)
 		return false
 	}
 	err = params.SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles, ouiAuDebug)
 	if err != nil {
-		utilitaires.LogEvent("error", "parametres.enregistrer", map[string]interface{}{
-			"status": "echec",
-			"etape":  "params.SauvegarderParametres",
-			"erreur": err.Error(),
-		}, "Sauvegarde des parametres - echec")
+		utilitaires.LogParametresEnregistrerEchec("params.SauvegarderParametres", err.Error())
 		a.signalerErreur(err)
 		return false
 	}
-	utilitaires.LogEvent("info", "parametres.enregistrer", map[string]interface{}{
-		"status": "succes",
-	}, "Sauvegarde des parametres - succes")
+	utilitaires.LogParametresEnregistrerSucces()
 	return true
 }
 
