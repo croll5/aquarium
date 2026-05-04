@@ -87,6 +87,25 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	runtime.WindowMaximise(ctx)
 	a.ctx = ctx
+
+	cheminBase, err := utilitaires.GetCheminBaseApplication()
+	if err != nil {
+		log.Printf("initialisation logger impossible (chemin base): %v", err)
+		return
+	}
+	parametres, err := params.ChargerParametres(cheminBase)
+	if err != nil {
+		log.Printf("initialisation logger impossible (lecture params): %v", err)
+		return
+	}
+	if err = utilitaires.InitLogger(cheminBase, parametres.OuiAuDebug); err != nil {
+		log.Printf("initialisation logger impossible: %v", err)
+		return
+	}
+	utilitaires.LogEvent("info", "application.startup", map[string]interface{}{
+		"source":       "backend",
+		"oui_au_debug": parametres.OuiAuDebug,
+	}, "application_startup")
 }
 
 // domReady is called after front-end resources have been loaded
@@ -104,11 +123,18 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 
 // shutdown is called at application termination
 func (a *App) shutdown(ctx context.Context) {
-	// Perform your teardown here
+	utilitaires.LogEvent("info", "application.shutdown", map[string]interface{}{
+		"source": "backend",
+	}, "application_shutdown")
+	utilitaires.SyncLogger()
 }
 
 // Call this function when a bug appear
 func (a *App) signalerErreur(erreur error) {
+	utilitaires.LogEvent("error", "application.erreur", map[string]interface{}{
+		"source": "backend",
+		"erreur": fmt.Sprintf("%+v", erreur),
+	}, "erreur_application")
 	// Récupérer l’horodatage
 	nomFichierErreur := time.Now().Format("2006010215040599999_erreur.txt")
 	// Informer l’utilisateur de l’erreur
@@ -145,17 +171,44 @@ func (a *App) alerterEnregistrementErreurImpossible() {
 	runtime.WindowExecJS(a.ctx, "details_erreur()")
 }
 
+func (a *App) LoggerEvent(niveau string, evenement string, attributs map[string]interface{}, message string) bool {
+	utilitaires.LogEvent(niveau, evenement, attributs, message)
+	return true
+}
+
 func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool, ouiAuDebug bool) bool {
+
+	utilitaires.LogEvent("info", "parametres.enregistrer", map[string]interface{}{
+		"status":           "debut",
+		"contrastes":       contrastes,
+		"dyslexie":         dyslexie,
+		"non_aux_bubulles": nonAuxBubulles,
+		"oui_au_debug":     ouiAuDebug,
+	}, "Sauvegarde des parametres - debut")
+
 	cheminBase, err := utilitaires.GetCheminBaseApplication()
 	if err != nil {
+		utilitaires.LogEvent("error", "parametres.enregistrer", map[string]interface{}{
+			"status": "echec",
+			"etape":  "GetCheminBaseApplication",
+			"erreur": err.Error(),
+		}, "Sauvegarde des parametres - echec")
 		a.signalerErreur(err)
 		return false
 	}
 	err = params.SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles, ouiAuDebug)
 	if err != nil {
+		utilitaires.LogEvent("error", "parametres.enregistrer", map[string]interface{}{
+			"status": "echec",
+			"etape":  "params.SauvegarderParametres",
+			"erreur": err.Error(),
+		}, "Sauvegarde des parametres - echec")
 		a.signalerErreur(err)
 		return false
 	}
+	utilitaires.LogEvent("info", "parametres.enregistrer", map[string]interface{}{
+		"status": "succes",
+	}, "Sauvegarde des parametres - succes")
 	return true
 }
 
