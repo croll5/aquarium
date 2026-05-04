@@ -85,6 +85,7 @@ function creer_onglet(url, nomOnglet){
 window.contrastes = false;
 window.dyslexie = false;
 window.non_aux_bubulles = false;
+window.oui_au_debug = false;
 
 function initialiser_parametres(tentatives_restantes = 20){
     const app = window?.go?.main?.App;
@@ -101,6 +102,7 @@ function initialiser_parametres(tentatives_restantes = 20){
         window.contrastes = parametres.Contrastes === true;
         window.dyslexie = parametres.Dyslexie === true;
         window.non_aux_bubulles = parametres.NonAuxBubulles === true;
+        window.oui_au_debug = parametres.OuiAuDebug === true;
         const iframe = document.getElementsByTagName("iframe")[0];
         if(iframe && iframe.getAttribute("src")){
             iframe.setAttribute("src", iframe.getAttribute("src"));

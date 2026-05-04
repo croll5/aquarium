@@ -53,13 +53,15 @@ type ParametresXML struct {
 	Contrastes     bool     `xml:"contrastes"`
 	Dyslexie       bool     `xml:"dyslexie"`
 	NonAuxBubulles bool     `xml:"non_aux_bubulles"`
+	OuiAuDebug     bool     `xml:"oui_au_debug"`
 }
 
-func SauvegarderParametres(cheminBase string, contrastes bool, dyslexie bool, nonAuxBubulles bool) error {
+func SauvegarderParametres(cheminBase string, contrastes bool, dyslexie bool, nonAuxBubulles bool, ouiAuDebug bool) error {
 	parametres := ParametresXML{
 		Contrastes:     contrastes,
 		Dyslexie:       dyslexie,
 		NonAuxBubulles: nonAuxBubulles,
+		OuiAuDebug:     ouiAuDebug,
 	}
 	contenuXML, err := xml.MarshalIndent(parametres, "", "  ")
 	if err != nil {

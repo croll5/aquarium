@@ -145,13 +145,13 @@ func (a *App) alerterEnregistrementErreurImpossible() {
 	runtime.WindowExecJS(a.ctx, "details_erreur()")
 }
 
-func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool) bool {
+func (a *App) SauvegarderParametres(contrastes bool, dyslexie bool, nonAuxBubulles bool, ouiAuDebug bool) bool {
 	cheminBase, err := utilitaires.GetCheminBaseApplication()
 	if err != nil {
 		a.signalerErreur(err)
 		return false
 	}
-	err = params.SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles)
+	err = params.SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles, ouiAuDebug)
 	if err != nil {
 		a.signalerErreur(err)
 		return false

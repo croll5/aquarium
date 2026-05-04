@@ -104,13 +104,26 @@ function enlever_bubulles(){
     }
 }
 
+if(parent.oui_au_debug){
+    document.getElementById("oui_au_debug").checked = true;
+}
+
+function activer_debug(){
+    if(document.getElementById("oui_au_debug").checked){
+        parent.oui_au_debug = true;
+    }else{
+        parent.oui_au_debug = false;
+    }
+}
+
 function quitter_parametres(){
     const contrastes = document.getElementById("contrastes").checked;
     const dyslexie = document.getElementById("dyslexie").checked;
     const non_aux_bubulles = document.getElementById("non_aux_bubulles").checked;
+    const oui_au_debug = document.getElementById("oui_au_debug").checked;
     const app = parent?.window?.go?.main?.App;
     if(app && typeof app.SauvegarderParametres === "function"){
-        Promise.resolve(app.SauvegarderParametres(contrastes, dyslexie, non_aux_bubulles))
+        Promise.resolve(app.SauvegarderParametres(contrastes, dyslexie, non_aux_bubulles, oui_au_debug))
             .then(resultat => {
                 if(resultat){
                     afficher_toast_parametres("Les paramètres ont bien été enregistrés.", true, "succes");
