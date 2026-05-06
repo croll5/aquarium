@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Avertissement : Cette configuration d’aquarium se base sur la configuration
+ par défaut d’ORC proposée par l’ANSSI : https://github.com/DFIR-ORC/dfir-orc-config
+ 
+ Cela ne signifie en aucun cas que cette configuration a été approuvée par l’ANSSI.
+ -->
+<extractions>
+    <chronologie nom="chronologie">
+        <colonne type="INT">idEvt</colonne>
+        <colonne type="TEXT">extraction</colonne>
+        <colonne type="TEXT">nomTable</colonne>
+        <colonne type="TEXT">source</colonne>
+        <colonne type="DATETIME">horodatage</colonne>
+        <colonne type="TEXT">message</colonne>
+        <colonne type="TEXT">machine</colonne>
+    </chronologie>
+    <arborescence>
+        <requete_creation>SELECT ntfs_info.id AS idSource, getthis.id AS idCopie, (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) AS chemin_fichier FROM ntfs_info LEFT JOIN getthis ON getthis.nom_fichier = (ntfs_info.emplacement || "\" || ntfs_info.nom_fichier) WHERE ntfs_info.aqua_machine="[AQUA_MACHINE]"</requete_creation>
+        <requete_metadonnees>SELECT nom_fichier AS "Nom", emplacement || "\" || nom_fichier AS "Chemin complet", date_creation AS "Date de création", dernier_acces AS "Date de dernier accès", derniere_modification AS "Date de dernière modification", source AS "Chemin source" FROM ntfs_info WHERE id=?</requete_metadonnees>
+        <separateur_dossiers>\</separateur_dossiers>
+    </arborescence>
+    <extraction id="getthis">
+        <chemin>
+            <dossier>*</dossier>
+            <archive>*.7z</archive>
+            <fichier>GetThis.csv</fichier>
+        </chemin>
+        <chemin>
+            <dossier>*</dossier>
+            <fichier>GetThis.csv</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="ntfs_info">
+        <chemin>
+            <dossier>*Little.7z*</dossier>
+            <archive>NTFSInfo_detail.7z</archive>
+            <fichier>NTFSInfo*.csv</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="evtx">
+        <chemin>
+            <dossier>*General.7z</dossier>
+            <archive>Event.7z</archive>
+            <fichier>evtx/*</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="sam">
+        <chemin>
+            <dossier>*SAM.7z</dossier>
+            <archive>SAM.7z</archive>
+            <fichier>*</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="firefox">
+        <chemin>
+            <dossier>*Browsers.7z</dossier>
+            <archive>Browsers_history.7z</archive>
+            <fichier>Firefox_Vista_History/*</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="chrome">
+        <chemin>
+            <dossier>*Browsers.7z</dossier>
+            <archive>Browsers_history.7z</archive>
+            <fichier>Chrome_Vista_History/*</fichier>
+        </chemin>
+        <chemin>
+            <dossier>*Browsers.7z</dossier>
+            <archive>Browsers_history.7z</archive>
+            <fichier>Edge_Anhaeim_History/*</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="prefetch">
+        <chemin>
+            <dossier>*General.7z</dossier>
+            <archive>Artefacts.7z</archive>
+            <fichier>Prefetch/*</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="werr">
+        <chemin>
+            <dossier>*General.7z</dossier>
+            <archive>Errors.7z</archive>
+            <fichier>WER/*</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="iis">
+        <chemin>
+            <dossier>*General.7z</dossier>
+            <archive>TextLogs.7z</archive>
+            <fichier>IIS_log/*</fichier>
+        </chemin>
+    </extraction>
+    <extraction id="divers">
+        <chemin>
+            <dossier>*General.7z</dossier>
+            <archive>TextLogs.7z</archive>
+            <fichier>divers/*</fichier>
+        </chemin>
+    </extraction>
+</extractions>
