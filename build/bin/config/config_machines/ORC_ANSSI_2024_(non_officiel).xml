@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Avertissement : Cette configuration d’aquarium se base sur la configuration
+ par défaut d’ORC proposée par l’ANSSI : https://github.com/DFIR-ORC/dfir-orc-config
+ 
+ Cela ne signifie en aucun cas que cette configuration a été approuvée par l’ANSSI.
+ -->
 <extractions>
     <chronologie nom="chronologie">
         <colonne type="INT">idEvt</colonne>

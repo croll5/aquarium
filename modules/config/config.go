@@ -15,7 +15,8 @@ const (
 	DOSSIER_FICHIERS_A_ANALYSER = "fichiers"
 	DOSSIER_ANALYSE             = "analyse"
 	AQUA_MACHINE                = "aqua_machine"
-	DOSSIER_EXTRACTIONS         = "extractions"
+	DOSSIER_CONFIG_EXTRACTIONS  = "config_extractions"
+	DOSSIER_CONFIG_MACHINES     = "config_machines"
 	EXTENSION_XML               = ".xml"
 	DOSSIER_CONFIG              = "config"
 )
@@ -93,7 +94,7 @@ func GetConfigurationMachine(cheminProjet string, idMachine string, aquaConfigMa
 	// On commence par récupérer le chemin du fichier de configuration
 	var donneesConfig ConfigurationXML
 	var cheminFichierConfigPrincipal string
-	cheminFichierConfigPrincipal, err := cheminFichierConfig(cheminProjet, aquaConfigMachine.Config)
+	cheminFichierConfigPrincipal, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_CONFIG_MACHINES, aquaConfigMachine.Config))
 	if err != nil {
 		return donneesConfig, errors.WithStack(err)
 	}
@@ -141,7 +142,7 @@ func GetConfigExtraction(cheminProjet string, nomFichierConfig string) (ConfigEx
 	}
 	var donneesConfig ConfigExtraction
 	var cheminConfig string
-	cheminConfig, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_EXTRACTIONS, nomFichierConfig)+EXTENSION_XML)
+	cheminConfig, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_CONFIG_EXTRACTIONS, nomFichierConfig)+EXTENSION_XML)
 	if err != nil {
 		return donneesConfig, errors.WithStack(err)
 	}
@@ -174,7 +175,7 @@ func GetConfigExtraction(cheminProjet string, nomFichierConfig string) (ConfigEx
 func GetInfosSommairesExtraction(cheminProjet string, nomFichierConfig string) (InfosSommairesExtraction, error) {
 	var infosExtraction InfosSommairesExtraction
 	var cheminConfig string
-	cheminConfig, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_EXTRACTIONS, nomFichierConfig)+EXTENSION_XML)
+	cheminConfig, err := cheminFichierConfig(cheminProjet, filepath.Join(DOSSIER_CONFIG_EXTRACTIONS, nomFichierConfig)+EXTENSION_XML)
 	if err != nil {
 		return infosExtraction, errors.WithStack(err)
 	}
@@ -378,7 +379,9 @@ func GetListeConfigurationsDisponibles(dossierExtrations bool) ([]string, error)
 	}
 	dossierConfig := filepath.Join(filepath.Dir(emplacementExecutable), DOSSIER_CONFIG)
 	if dossierExtrations {
-		dossierConfig = filepath.Join(dossierConfig, DOSSIER_EXTRACTIONS)
+		dossierConfig = filepath.Join(dossierConfig, DOSSIER_CONFIG_EXTRACTIONS)
+	} else {
+		dossierConfig = filepath.Join(dossierConfig, DOSSIER_CONFIG_MACHINES)
 	}
 	// Liste des fichiers du dossier
 	fichiers, err := os.ReadDir(dossierConfig)
