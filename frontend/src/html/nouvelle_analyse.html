@@ -72,8 +72,9 @@ termes.
                 <p>Renseignez la chronologie des faits liés à l’incident :</p>
                 <div id="main_courante">
                     <div class="bloc_de_liste" aqua_champ="main_courante">
-                        <input type="datetime-local" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="horodatage">
-                        <input type="text" class="input_clair" placeholder="Description de l’évènement" onchange="ajuster_champs('main_courante')" required aqua_prof="1" aqua_champ="description" autocomplete="off">
+                        <input type="datetime-local" class="input_clair" name="" id="" onchange="ajuster_champs('main_courante', false)" required aqua_prof="1" aqua_champ="horodatage">
+                        <input type="text" class="input_clair" placeholder="Description de l’évènement" onchange="ajuster_champs('main_courante', false)" required aqua_prof="1" aqua_champ="description" autocomplete="off">
+                        <button class="bouton_invisible bouton_ajout_liste bouton_ajout_main_courante" type="button" onclick="ajouter_ligne_liste('main_courante')" aria-label="Ajouter une ligne à la main courante">+</button>
                     </div>
                 </div>
                 <h3>Impacts de l’incident</h3>
@@ -105,7 +106,7 @@ termes.
                 <p>Quelles personnes pouvez-vous contacter pour obtenir plus d’informations ?</p>
                 <div id="liste_contacts">
                     <div class="bloc_de_liste" aqua_champ="contacts">
-                        <select name="genre" aqua_prof="1" aqua_champ="genre">
+                        <select name="genre" onchange="ajuster_champs('liste_contacts', false)" aqua_prof="1" aqua_champ="genre">
                             <option disabled selected value>...</option>
                             <option value="M.">M.</option>
                             <option value="Mme">Mme</option>
@@ -126,11 +127,12 @@ termes.
                             <option value="BRC">BRC</option>
                             <option value="BRI">BRI</option>
                         </select>
-                        <input type="text" class="input_clair" placeholder="Prénom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="prenom" autocomplete="off">
-                        <input type="text" class="input_clair" placeholder="Nom" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="nom" autocomplete="off">
-                        <input type="text" class="input_clair" placeholder="Qualité" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="qualite" autocomplete="off">
-                        <input type="text" class="input_clair" placeholder="Téléphone" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="telephone" autocomplete="off">
-                        <input type="email" class="input_clair" placeholder="Courriel" onchange="ajuster_champs('liste_contacts')" aqua_prof="1" aqua_champ="courriel" autocomplete="off">
+                        <input type="text" class="input_clair" placeholder="Prénom" onchange="ajuster_champs('liste_contacts', false)" aqua_prof="1" aqua_champ="prenom" autocomplete="off">
+                        <input type="text" class="input_clair" placeholder="Nom" onchange="ajuster_champs('liste_contacts', false)" aqua_prof="1" aqua_champ="nom" autocomplete="off">
+                        <input type="text" class="input_clair" placeholder="Qualité" onchange="ajuster_champs('liste_contacts', false)" aqua_prof="1" aqua_champ="qualite" autocomplete="off">
+                        <input type="text" class="input_clair" placeholder="Téléphone" onchange="ajuster_champs('liste_contacts', false)" aqua_prof="1" aqua_champ="telephone" autocomplete="off">
+                        <input type="email" class="input_clair" placeholder="Courriel" onchange="ajuster_champs('liste_contacts', false)" aqua_prof="1" aqua_champ="courriel" autocomplete="off">
+                        <button class="bouton_invisible bouton_ajout_liste bouton_ajout_liste_contacts" type="button" onclick="ajouter_ligne_liste('liste_contacts')" aria-label="Ajouter une ligne de contact">+</button>
                     </div>
                 </div>
                 <br>
