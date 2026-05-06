@@ -53,6 +53,17 @@ Nous avons choisi d’utiliser les technologies Web en raison de leur relative s
 
 Nous avons choisi d’utiliser une base de données SQLite pour enregistrer les données extraites des collectes ORC. Il s’agit d’une bibliothèque en C permettant d’enregistrer des données manipulables grâce au langage SQL dans un unique fichier. Cela permet de tirer parti des avantages des bases de données SQL (facilité de requêtage, relative optimisation, organisation structurée,…) sans nécessiter le déploiement d’un serveur de bases de données. 
 
+## Testing
+
+### FRONT JS
+tests unitaires JS = vitest
+tests E2E = Playwright
+Mock Wails (simuler window.go)
+
+### BACK GO
+Utilisation de 'Testify' https://github.com/stretchr/testify
+
+
 # Architecture du logiciel
 
 ## Interface graphique
