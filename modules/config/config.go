@@ -2,6 +2,7 @@ package config
 
 import (
 	"aquarium/modules/aquabase"
+	"embed"
 	"encoding/xml"
 	"io"
 	"os"
@@ -386,7 +387,14 @@ func GetListeConfigurationsDisponibles(dossierExtrations bool) ([]string, error)
 	// Liste des fichiers du dossier
 	fichiers, err := os.ReadDir(dossierConfig)
 	if err != nil {
-		return []string{}, errors.WithStack(err)
+		err := initialiserDossierConfigDepuisEmbarque(filepath.Dir(emplacementExecutable))
+		if err != nil {
+			return []string{}, errors.WithStack(err)
+		}
+		fichiers, err = os.ReadDir(dossierConfig)
+		if err != nil {
+			return []string{}, errors.WithStack(err)
+		}
 	}
 	// Énumération des ficheirs xml
 	var listeConfigs []string = []string{}
@@ -397,6 +405,30 @@ func GetListeConfigurationsDisponibles(dossierExtrations bool) ([]string, error)
 		}
 	}
 	return listeConfigs, nil
+}
+
+//go:embed config_embarquee/*
+var configEmbarquee embed.FS
+
+func initialiserDossierConfigDepuisEmbarque(emplacementExecutable string) error {
+	for _, nomConfig := range []string{DOSSIER_CONFIG_EXTRACTIONS, DOSSIER_CONFIG_MACHINES} {
+		fichiersConfigExtraction, err := configEmbarquee.ReadDir("config_embarquee/" + nomConfig)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		cheminDossierExtractions := filepath.Join(emplacementExecutable, DOSSIER_CONFIG, nomConfig)
+		os.MkdirAll(cheminDossierExtractions, os.ModeAppend)
+		for _, config := range fichiersConfigExtraction {
+			contenuFichierExtraction, err := configEmbarquee.ReadFile("config_embarquee/" + nomConfig + "/" + config.Name())
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			os.WriteFile(filepath.Join(cheminDossierExtractions, config.Name()), contenuFichierExtraction, os.ModeAppend)
+		}
+	}
+
+	return nil
+
 }
 
 func ajouterColonneMachineDansTables(confTable []ConfigTableBDD) []ConfigTableBDD {
