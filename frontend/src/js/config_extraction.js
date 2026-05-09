@@ -109,9 +109,9 @@ function ajout_dossier(){
     dossier_selectionne.classList.add("dossier_selectionne");
     let nom_config = document.getElementById("select_config_extraction").value;
     if(selection_dossiers[nom_config] == undefined){
-        selection_dossiers[nom_config] = [];
+        selection_dossiers[nom_config] = {};
     }
-    selection_dossiers[nom_config].push(dossier_selectionne);
+    selection_dossiers[nom_config][dossier_selectionne] = "*";
     fermer_popup('popup_select_config_extraction');
     console.log(selection_dossiers);
 }
@@ -120,10 +120,7 @@ function retrait_dossier(){
     let dossier_a_supprimer = dossier_selectionne;
     while(dossier_a_supprimer.classList.contains("dossier_arborescence")){
         dossier_a_supprimer.classList.remove("dossier_selectionne");
-        const index = selection_dossiers[config_dossier_a_enlever].indexOf(dossier_a_supprimer);
-        if (index != -1){
-            selection_dossiers[config_dossier_a_enlever].splice(index,1);
-        }
+        delete selection_dossiers[config_dossier_a_enlever][dossier_a_supprimer];
         dossier_a_supprimer = dossier_a_supprimer.parentElement;
         if (dossier_a_supprimer == undefined){
             break;
@@ -134,20 +131,38 @@ function retrait_dossier(){
     }
 }
 
+let scrollDansListeFichiersFiltres = 0;
+
+function scroll_liste_fichiers(){
+    let contenant_liste_fichiers = document.getElementById("contenant_fichiers_filtres");
+    let scrollCourant = contenant_liste_fichiers.scrollTop;
+    if(Math.abs(scrollCourant - scrollDansListeFichiersFiltres) < contenant_liste_fichiers.scrollHeight/20){
+        return
+    }else{
+        if(scrollCourant > scrollDansListeFichiersFiltres){
+            console.log("descente");
+            scrollDansListeFichiersFiltres+= contenant_liste_fichiers.scrollHeight/20;
+        }else{
+            console.log("montée");
+            scrollDansListeFichiersFiltres-= contenant_liste_fichiers.scrollHeight/20;
+        }
+    }
+}
+
 function afficher_popup_select_fichiers(){
-    document.getElementById("popup_select_fichiers").style.display = "block";
+    document.getElementById("popup_select_fichiers").style.display = "flex";
     document.getElementById("fond_popup").style.display = "block";
+    document.getElementById("filtre_choix_fichiers").value = "*";
     let liste_fichiers = dossier_selectionne.getAttribute("fichiers").split(",");
     let div_liste_fichiers = document.getElementById("fichiers_filtres");
     div_liste_fichiers.textContent = "";
-    for(let fichier of liste_fichiers){
-        let p_fichier = document.createElement("li");
-        p_fichier.textContent = fichier;
-        p_fichier.classList.add("fichier_liste");
-        p_fichier.onclick = function(event){
-            p_fichier.classList.remove("fichier_liste");
-            p_fichier.classList.add("fichier_non_compris");
+    for(let i = 0; i < 50; i++){
+        if(liste_fichiers.length <= i){
+            break;
         }
+        let p_fichier = document.createElement("li");
+        p_fichier.textContent = liste_fichiers[i];
+        p_fichier.classList.add("fichier_liste");
         div_liste_fichiers.appendChild(p_fichier);
     }
     document.getElementById("nom_dossier_cible").textContent = dossier_selectionne.getElementsByTagName("summary")[0].textContent;

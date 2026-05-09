@@ -42,3 +42,37 @@ summary, details{
     top: 20%;
     text-align: center;
 }
+
+#zone_recherche_fichiers{
+    display: inline-flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+#zone_recherche_fichiers button{
+    width: fit-content;
+    margin-left: 5px;
+}
+
+#zone_filtrage_fichiers{
+    display: inline-flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#zone_filtrage_fichiers div{
+    width: 100%;
+    padding: 5px;
+}
+
+#valider_filtrage_fichiers{
+    width: 100%;
+}
+
+#contenant_fichiers_filtres{
+    overflow: overlay;
+}
+
+#popup_select_fichiers{
+    flex-direction: column;
+}

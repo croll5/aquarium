@@ -350,6 +350,7 @@ input[type="checkbox"] {
     display: inline;
     background-color: transparent;
     border: none;
+    text-align: left;
 }
 
 .option_menu:hover{
