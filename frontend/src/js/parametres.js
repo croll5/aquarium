@@ -65,6 +65,24 @@ function fermer_parametres_sans_enregistrer(){
     window.location.replace("accueil.html");
 }
 
+function journaliser_case_changee(option, valeur){
+    if(parent.oui_au_debug !== true){
+        return;
+    }
+    const app = parent?.window?.go?.main?.App;
+    if(!(app && typeof app.LoggerEvent === "function")){
+        return;
+    }
+    const attributs = {
+        option: option,
+        valeur: valeur,
+        utilisateur_session_debug: true,
+        source: "frontend",
+    };
+    const message = "[PARAMETRES] case_changee | option=" + option + " | valeur=" + (valeur ? "true" : "false");
+    Promise.resolve(app.LoggerEvent("info", "parametres.case_changee", attributs, message)).catch(() => {});
+}
+
 if(parent.contrastes){
     document.getElementById("contrastes").checked = true;
 }
@@ -76,6 +94,7 @@ function changer_contrastes(){
         parent.contrastes = false;
         contrastes_normaux();
     }
+    journaliser_case_changee("contrastes", document.getElementById("contrastes").checked);
 }
 
 if(parent.dyslexie){
@@ -90,6 +109,7 @@ function changer_dyslexie(){
         parent.dyslexie = false;
         document.body.style.fontFamily = "Comic Sans Ms"
     }
+    journaliser_case_changee("dyslexie", document.getElementById("dyslexie").checked);
 }
 
 if(parent.non_aux_bubulles){
@@ -102,15 +122,30 @@ function enlever_bubulles(){
     }else{
         parent.non_aux_bubulles = false;
     }
+    journaliser_case_changee("non_aux_bubulles", document.getElementById("non_aux_bubulles").checked);
+}
+
+if(parent.oui_au_debug){
+    document.getElementById("oui_au_debug").checked = true;
+}
+
+function activer_debug(){
+    if(document.getElementById("oui_au_debug").checked){
+        parent.oui_au_debug = true;
+    }else{
+        parent.oui_au_debug = false;
+    }
+    journaliser_case_changee("oui_au_debug", document.getElementById("oui_au_debug").checked);
 }
 
 function quitter_parametres(){
     const contrastes = document.getElementById("contrastes").checked;
     const dyslexie = document.getElementById("dyslexie").checked;
     const non_aux_bubulles = document.getElementById("non_aux_bubulles").checked;
+    const oui_au_debug = document.getElementById("oui_au_debug").checked;
     const app = parent?.window?.go?.main?.App;
     if(app && typeof app.SauvegarderParametres === "function"){
-        Promise.resolve(app.SauvegarderParametres(contrastes, dyslexie, non_aux_bubulles))
+        Promise.resolve(app.SauvegarderParametres(contrastes, dyslexie, non_aux_bubulles, oui_au_debug))
             .then(resultat => {
                 if(resultat){
                     afficher_toast_parametres("Les paramètres ont bien été enregistrés.", true, "succes");

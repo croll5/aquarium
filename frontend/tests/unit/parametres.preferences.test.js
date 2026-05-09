@@ -57,12 +57,14 @@ describe('parametres.js - preferences UI', () => {
       <input id="contrastes" type="checkbox" />
       <input id="dyslexie" type="checkbox" />
       <input id="non_aux_bubulles" type="checkbox" />
+      <input id="oui_au_debug" type="checkbox" />
     `;
 
     global.parent = {
       contrastes: false,
       dyslexie: false,
       non_aux_bubulles: false,
+      oui_au_debug: false,
       window: {
         go: { main: { App: {} } },
       },
@@ -120,5 +122,24 @@ describe('parametres.js - preferences UI', () => {
     expect(parent.dyslexie).toBe(false);
     expect(document.body.style.fontFamily).toContain('Comic Sans Ms');
     expect(police_dyslexie).not.toHaveBeenCalled();
+  });
+
+  it('activer_debug: met parent.oui_au_debug a true', () => {
+    const checkbox = document.getElementById('oui_au_debug');
+    checkbox.checked = true;
+
+    activer_debug();
+
+    expect(parent.oui_au_debug).toBe(true);
+  });
+
+  it('activer_debug: met parent.oui_au_debug a false', () => {
+    const checkbox = document.getElementById('oui_au_debug');
+    checkbox.checked = false;
+    parent.oui_au_debug = true;
+
+    activer_debug();
+
+    expect(parent.oui_au_debug).toBe(false);
   });
 });
