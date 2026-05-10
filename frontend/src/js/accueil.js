@@ -56,3 +56,22 @@ function nouveau_modele(){
 function parametres(){
     window.location.replace("../html/parametres.html")
 }
+
+parent.window.go.main.App.VerifierPrerequisDemarrage().then(manquants => {
+    if (!Array.isArray(manquants) || manquants.length === 0) {
+        return;
+    }
+    const cadre = document.getElementById("alerte-prerequis");
+    const liste = document.getElementById("liste-prerequis-manquants");
+    if (!cadre || !liste) {
+        return;
+    }
+    liste.innerHTML = "";
+    for (const manquant of manquants) {
+        const item = document.createElement("li");
+        item.textContent = manquant;
+        liste.appendChild(item);
+    }
+    cadre.style.display = "block";
+});
+
