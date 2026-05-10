@@ -44,7 +44,7 @@ function analyse_existante(){
     parent.window.go.main.App.OuvrirAnalyseExistante().then(resultat=>{
         if(resultat){
             window.location.replace("../html/synthese.html")
-            parent.document.getElementsByTagName("header")[0].style.display = "inline";
+            parent.document.getElementsByTagName("header")[0].style.display = "flex";
         }
     })
 }
@@ -74,4 +74,3 @@ parent.window.go.main.App.VerifierPrerequisDemarrage().then(manquants => {
     }
     cadre.style.display = "block";
 });
-
