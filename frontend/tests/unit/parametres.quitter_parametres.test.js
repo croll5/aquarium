@@ -61,12 +61,14 @@ describe('parametres.js - quitter_parametres', () => {
       <input id="contrastes" type="checkbox" />
       <input id="dyslexie" type="checkbox" />
       <input id="non_aux_bubulles" type="checkbox" />
+      <input id="oui_au_debug" type="checkbox" />
     `;
 
     global.parent = {
       contrastes: false,
       dyslexie: false,
       non_aux_bubulles: false,
+      oui_au_debug: false,
       window: {
         go: {
           main: {
@@ -81,18 +83,19 @@ describe('parametres.js - quitter_parametres', () => {
     chargerScriptParametres();
   });
 
-  it('envoie les 3 bons booleens a SauvegarderParametres', () => {
-    // Contrat principal frontend -> backend: ordre et valeurs des 3 flags.
+  it('envoie les 4 bons booleens a SauvegarderParametres', () => {
+    // Contrat principal frontend -> backend: ordre et valeurs des 4 flags.
     document.getElementById('contrastes').checked = true;
     document.getElementById('dyslexie').checked = false;
     document.getElementById('non_aux_bubulles').checked = true;
+    document.getElementById('oui_au_debug').checked = true;
 
     parent.window.go.main.App.SauvegarderParametres.mockResolvedValue(true);
 
     quitter_parametres();
 
     expect(parent.window.go.main.App.SauvegarderParametres).toHaveBeenCalledTimes(1);
-    expect(parent.window.go.main.App.SauvegarderParametres).toHaveBeenCalledWith(true, false, true);
+    expect(parent.window.go.main.App.SauvegarderParametres).toHaveBeenCalledWith(true, false, true, true);
   });
 
   it('gere le retour backend true', async () => {
