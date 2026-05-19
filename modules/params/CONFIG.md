@@ -5,6 +5,7 @@ Ce module gère la persistance des préférences utilisateur de l’application 
 - `contrastes`
 - `dyslexie`
 - `non_aux_bubulles`
+- `oui_au_debug`
 
 Les préférences sont stockées dans `./config/params.xml`.
 
@@ -18,6 +19,7 @@ Le fichier attendu est :
   <contrastes>false</contrastes>
   <dyslexie>false</dyslexie>
   <non_aux_bubulles>true</non_aux_bubulles>
+  <oui_au_debug>false</oui_au_debug>
 </parametres>
 ```
 
@@ -27,13 +29,13 @@ Fichier : `modules/params/params.go`
 
 - `type ParametresXML`
   - structure de mapping XML (`<parametres>...`).
-- `SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles)`
+- `SauvegarderParametres(cheminBase, contrastes, dyslexie, nonAuxBubulles, ouiAuDebug)`
   - sérialise en XML,
   - crée `./config` si nécessaire,
   - écrit `./config/params.xml`.
 - `ChargerParametres(cheminBase)`
   - lit et désérialise `./config/params.xml`,
-  - si le fichier n’existe pas, renvoie des valeurs par défaut (`false/false/false`) sans erreur bloquante.
+  - si le fichier n’existe pas, renvoie des valeurs par défaut (`false/false/false/false`) sans erreur bloquante.
 
 Intégration dans `app.go` :
 
@@ -51,6 +53,7 @@ Fichier : `frontend/src/templates/index.js`
   - `contrastes`
   - `dyslexie`
   - `non_aux_bubulles`
+  - `oui_au_debug`
 - L’iframe est rechargée pour appliquer immédiatement le style/comportement sur la page affichée.
 
 ### Enregistrement depuis la page Paramètres
@@ -58,7 +61,7 @@ Fichier : `frontend/src/templates/index.js`
 Fichier : `frontend/src/js/parametres.js`
 
 - Le bouton **Enregistrer** appelle `quitter_parametres()`.
-- Cette fonction lit l’état des 3 cases puis appelle `window.go.main.App.SauvegarderParametres(...)`.
+- Cette fonction lit l’état des 4 cases puis appelle `window.go.main.App.SauvegarderParametres(...)`.
 - Une toast notification indique le résultat :
   - succès : message + redirection vers l’accueil,
   - échec : message d’erreur, sans redirection forcée.
@@ -74,6 +77,6 @@ La croix de fermeture (`parametres.html`) appelle `fermer_parametres_sans_enregi
 
 1. Démarrage app : frontend appelle `GetParametres()`.
 2. Le backend lit `config/params.xml` (si présent) et renvoie l’état.
-3. Le frontend applique l’état global (contraste, police, bulles).
+3. Le frontend applique l’état global (contraste, police, bulles, debug).
 4. L’utilisateur modifie les options dans l’écran Paramètres.
 5. Si **Enregistrer** : appel backend `SauvegarderParametres(...)` puis écriture XML.
