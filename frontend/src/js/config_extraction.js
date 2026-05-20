@@ -4,7 +4,6 @@ let config_dossier_a_enlever = "";
 
 let params = new URLSearchParams(document.location.search);
 
-
 document.getElementById("nom_machine").textContent = params.get("nom_machine");
 
 document.addEventListener("click", function (event){
@@ -131,20 +130,16 @@ function retrait_dossier(){
     }
 }
 
-let scrollDansListeFichiersFiltres = 0;
-
 function scroll_liste_fichiers(){
     let contenant_liste_fichiers = document.getElementById("contenant_fichiers_filtres");
     let scrollCourant = contenant_liste_fichiers.scrollTop;
-    if(Math.abs(scrollCourant - scrollDansListeFichiersFiltres) < contenant_liste_fichiers.scrollHeight/20){
-        return
-    }else{
-        if(scrollCourant > scrollDansListeFichiersFiltres){
-            console.log("descente");
-            scrollDansListeFichiersFiltres+= contenant_liste_fichiers.scrollHeight/20;
-        }else{
-            console.log("montée");
-            scrollDansListeFichiersFiltres-= contenant_liste_fichiers.scrollHeight/20;
+    if(scrollCourant + contenant_liste_fichiers.getBoundingClientRect().height > 4*contenant_liste_fichiers.scrollHeight/5){
+        console.log("on descend !");
+        let ul_liste_fichiers = document.getElementById("fichiers_filtres");
+        let tailler_liste_affichee = ul_liste_fichiers.childNodes.length;
+        let liste_fichiers = dossier_selectionne.getAttribute("fichiers").split(",");
+        for(let i = 0; i < 5; i++){
+            console.log(liste_fichiers.length);
         }
     }
 }
