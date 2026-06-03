@@ -56,6 +56,11 @@ termes.
 <body id="app" class="app">
     <h1>Bienvenue dans l’Aquarium</h1>
     <div class="bubble-cursor"></div>
+    <div id="alerte-prerequis" class="contenuDetails" style="display:none; max-width: 720px; margin: 1rem auto; text-align: left; background-color: var(--or-5); color: black;">
+        <h3 style="margin-top:0;">Configuration incomplète</h3>
+        <p>Les éléments suivants sont absents au lancement :</p>
+        <ul id="liste-prerequis-manquants"></ul>
+    </div>
     <div>
         <button class="bouton_clair" onclick="nouvelle_analyse()">Créer une nouvelle analyse</button>
         <button class="bouton_clair" onclick="analyse_existante()">Ouvrir une analyse existante</button><br><br>

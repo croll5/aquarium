@@ -41,6 +41,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+
+	"aquarium/modules/utilitaires"
 )
 
 const (
@@ -73,7 +75,12 @@ func SauvegarderParametres(cheminBase string, contrastes bool, dyslexie bool, no
 	}
 	cheminFichier := filepath.Join(cheminConfig, fichierParams)
 	contenuFinal := append([]byte(xml.Header), contenuXML...)
-	return os.WriteFile(cheminFichier, contenuFinal, 0o644)
+	if err = os.WriteFile(cheminFichier, contenuFinal, 0o644); err != nil {
+		return err
+	}
+
+	// Applique immediatement le nouvel etat de journalisation sans redemarrage.
+	return utilitaires.InitLogger(cheminBase, ouiAuDebug)
 }
 
 func ChargerParametres(cheminBase string) (ParametresXML, error) {

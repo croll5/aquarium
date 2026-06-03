@@ -142,4 +142,5 @@ describe('parametres.js - preferences UI', () => {
 
     expect(parent.oui_au_debug).toBe(false);
   });
+
 });

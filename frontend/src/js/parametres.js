@@ -65,8 +65,8 @@ function fermer_parametres_sans_enregistrer(){
     window.location.replace("accueil.html");
 }
 
-function journaliser_case_changee(option, valeur){
-    if(parent.oui_au_debug !== true){
+function journaliser_case_changee(option, valeur, forcer_journalisation = false){
+    if(parent.oui_au_debug !== true && forcer_journalisation !== true){
         return;
     }
     const app = parent?.window?.go?.main?.App;
@@ -130,12 +130,15 @@ if(parent.oui_au_debug){
 }
 
 function activer_debug(){
+    const debug_actif_avant_changement = parent.oui_au_debug === true;
     if(document.getElementById("oui_au_debug").checked){
         parent.oui_au_debug = true;
     }else{
         parent.oui_au_debug = false;
     }
-    journaliser_case_changee("oui_au_debug", document.getElementById("oui_au_debug").checked);
+    const debug_est_actif_apres_changement = document.getElementById("oui_au_debug").checked;
+    const forcer_journalisation = debug_actif_avant_changement && !debug_est_actif_apres_changement;
+    journaliser_case_changee("oui_au_debug", debug_est_actif_apres_changement, forcer_journalisation);
 }
 
 function quitter_parametres(){
