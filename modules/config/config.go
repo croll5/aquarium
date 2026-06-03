@@ -462,6 +462,8 @@ func VerifierPrerequisDemarrage() ([]string, error) {
 	}
 
 	return manquants, nil
+}
+
 //go:embed config_embarquee/*
 var configEmbarquee embed.FS
 
