@@ -95,6 +95,11 @@ body{
     background-color: var(--or-4);
 }
 
+.bouton_clair:disabled:hover, .bouton_sombre:disabled:hover, .bouton_mi_tons:disabled:hover{
+    cursor: not-allowed;
+    background-color: var(--or-4);
+}
+
 .bouton_clair:hover{
     background-color: var(--or-3);
     cursor: pointer;

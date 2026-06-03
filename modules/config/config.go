@@ -474,13 +474,13 @@ func initialiserDossierConfigDepuisEmbarque(emplacementExecutable string) error 
 			return errors.WithStack(err)
 		}
 		cheminDossierExtractions := filepath.Join(emplacementExecutable, DOSSIER_CONFIG, nomConfig)
-		os.MkdirAll(cheminDossierExtractions, os.ModeAppend)
+		os.MkdirAll(cheminDossierExtractions, 0o755)
 		for _, config := range fichiersConfigExtraction {
 			contenuFichierExtraction, err := configEmbarquee.ReadFile("config_embarquee/" + nomConfig + "/" + config.Name())
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			os.WriteFile(filepath.Join(cheminDossierExtractions, config.Name()), contenuFichierExtraction, os.ModeAppend)
+			os.WriteFile(filepath.Join(cheminDossierExtractions, config.Name()), contenuFichierExtraction, 0o755)
 		}
 	}
 

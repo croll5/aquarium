@@ -73,4 +73,9 @@ parent.window.go.main.App.VerifierPrerequisDemarrage().then(manquants => {
         liste.appendChild(item);
     }
     cadre.style.display = "block";
+    const ouvrir_analyse_existante = document.getElementById("ouvrir_analyse_existante");
+    if (!ouvrir_analyse_existante) {
+        return;
+    }
+    ouvrir_analyse_existante.setAttribute("disabled", "true")
 });
