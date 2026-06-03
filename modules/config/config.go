@@ -20,6 +20,8 @@ const (
 	DOSSIER_CONFIG_MACHINES     = "config_machines"
 	EXTENSION_XML               = ".xml"
 	DOSSIER_CONFIG              = "config"
+	DOSSIER_RESSOURCES          = "ressources"
+	DOSSIER_REGLES_DETECTIONS   = "regles_detection"
 )
 
 type ConfigColonneBDD struct {
@@ -405,6 +407,61 @@ func GetListeConfigurationsDisponibles(dossierExtrations bool) ([]string, error)
 		}
 	}
 	return listeConfigs, nil
+}
+
+func VerifierPrerequisDemarrage() ([]string, error) {
+	emplacementExecutable, err := os.Executable()
+	if err != nil {
+		return []string{}, errors.WithStack(err)
+	}
+	base := filepath.Dir(emplacementExecutable)
+
+	type prerequis struct {
+		cheminRelatif string
+		extension     string
+	}
+
+	prerequisAttendus := []prerequis{
+		{cheminRelatif: "./config", extension: ""},
+		{cheminRelatif: "./config/config_extractions", extension: ".xml"},
+		{cheminRelatif: "./config/config_machines", extension: ".xml"},
+		{cheminRelatif: "./ressources", extension: ""},
+		{cheminRelatif: "./ressources/regles_detection", extension: ".json"},
+	}
+
+	manquants := []string{}
+	for _, attendu := range prerequisAttendus {
+		cheminComplet := filepath.Join(base, attendu.cheminRelatif)
+		infos, err := os.Stat(cheminComplet)
+		if err != nil || !infos.IsDir() {
+			manquants = append(manquants, attendu.cheminRelatif)
+			continue
+		}
+		if attendu.extension == "" {
+			continue
+		}
+		fichiers, err := os.ReadDir(cheminComplet)
+		if err != nil {
+			manquants = append(manquants, attendu.cheminRelatif+" (aucun "+attendu.extension+")")
+			continue
+		}
+		trouveFichier := false
+		for _, fichier := range fichiers {
+			if fichier.IsDir() {
+				continue
+			}
+			ok, _ := filepath.Match("*"+attendu.extension, fichier.Name())
+			if ok {
+				trouveFichier = true
+				break
+			}
+		}
+		if !trouveFichier {
+			manquants = append(manquants, attendu.cheminRelatif+" (aucun "+attendu.extension+")")
+		}
+	}
+
+	return manquants, nil
 }
 
 //go:embed config_embarquee/*

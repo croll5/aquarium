@@ -48,6 +48,19 @@ exemple pour macOs:
 - E2E (`Playwright`) : tester les scénarios critiques (navigation, sauvegarde paramètres, erreurs visibles).
 - Toujours contrôler les réponses Wails via mock (`succès`, `échec`, `exception`) pour couvrir les cas robustes.
 
+## Priorisation des tests par criticité
+
+Principe : prioriser les tests qui réduisent le plus le risque fonctionnel métier.
+
+- Priorité `Haute` : logique de transformation/validation des données avant appel backend (ex: sérialisation d'un formulaire, règles de complétude, activation d'étape suivante).
+- Priorité `Moyenne` : comportements UI dynamiques qui n'altèrent pas directement le contenu métier (ajout/suppression de lignes, états visuels intermédiaires).
+- Priorité `Basse` : navigation simple et comportements de confort.
+
+Règle pratique :
+- Commencer par les tests unitaires `Haute`.
+- Couvrir ensuite les parcours E2E critiques de bout en bout.
+- Compléter avec `Moyenne` puis `Basse` selon le temps disponible.
+
 ## lancer les tests JS unitaires
 npx vitest run --config frontend/tests/vitest.config.mjs
 

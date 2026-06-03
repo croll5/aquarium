@@ -294,6 +294,15 @@ func (a *App) ListeConfigExtractionsDisponibles() []string {
 	return resultat
 }
 
+func (a *App) VerifierPrerequisDemarrage() []string {
+	manquants, err := config.VerifierPrerequisDemarrage()
+	if err != nil {
+		a.signalerErreur(err)
+		return []string{}
+	}
+	return manquants
+}
+
 /*
 	Fonction permettant la création d'un nouveau projet
 

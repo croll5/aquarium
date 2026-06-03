@@ -1,7 +1,7 @@
 >[!CAUTION]
-> Ce projet a été réalisé par des particuliers.
-> 
-> Il n’a pas été validé par l’ANSSI et peut présenter des erreurs ou des vulnérabilités.
+> Ce logiciel, qui s’appuie sur l’outil de collecte traçologique DFIR-ORC concu par l’ANSSI, n’a pas été lui-même développé par l’ANSSI mais par des développeurs passionnés dans le cadre de leurs loisirs.
+>
+> Malgré tout le soin apporté, il se peut que des erreurs ou des vulnérabilités aient échappé à notre relecture attentive. Si vous en découvrez, nous vous remercions de bien vouloir nous le signaler au plus vite à l’adresse [aquarium@mailo.com](mailto:aquarium@mailo.com)
 
 # Présentation
 

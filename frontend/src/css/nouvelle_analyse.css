@@ -60,22 +60,7 @@ termes.
 }
 
 .bouton_fermeture_nouvelle_analyse{
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: transparent;
-    padding: 0;
-    cursor: pointer;
     z-index: 2;
-}
-
-.icone_fermeture_nouvelle_analyse{
-    width: 100%;
-    height: 100%;
-    display: block;
 }
 
 /* Configuration de la navigation */
