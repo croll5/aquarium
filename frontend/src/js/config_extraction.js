@@ -4,22 +4,25 @@ let config_dossier_a_enlever = "";
 
 let params = new URLSearchParams(document.location.search);
 
+// Afficher le nom de la machine dans le titre de la page
 document.getElementById("nom_machine").textContent = params.get("nom_machine");
 
+// Enlever le menu contextuel quand on clique ailleurs
 document.addEventListener("click", function (event){
     let menus = document.getElementsByClassName("menu_contextuel");
-    for(let [_, menu] of Object.entries(menus)){
+    for(let [, menu] of Object.entries(menus)){
         menu.style.display = "none";
     }
 })
 
+// Afficher les dossiers analysables
 parent.window.go.main.App.ListeFichiersAnalysables(params.get("machine")).then(resultat =>{
     let emplacement_arbo = document.getElementById("arborescence");
     ajouter_contenu_dossier(emplacement_arbo, resultat);
 })
 
+// Ajouter la liste des configurations disponibles au menu déroulant
 parent.window.go.main.App.ListeConfigExtractionsDisponibles().then(resultat =>{
-    console.log(resultat);
     let select_extractions = document.getElementById("select_config_extraction");
     resultat.forEach(nomConfig => {
         let nouvelle_option = document.createElement("option");
@@ -29,7 +32,13 @@ parent.window.go.main.App.ListeConfigExtractionsDisponibles().then(resultat =>{
     });
 })
  
+/** Fonction récursive qui ajoute le contenu des dossiers analysables
+ * @param contenant : dossier à remplir
+ * @param ajouts : éléments à ajouter dans le dossier
+ * @returns : rien, ajoute des éléments sur la page HTML
+**/
 function ajouter_contenu_dossier(contenant, ajouts){
+    // Ajouter les sous-dossiers
     if (ajouts.DossiersEnfants != undefined){
         for(let [str_nom_dossier, dossier] of Object.entries(ajouts.DossiersEnfants)){
             let nouveau_dossier = document.createElement("details");
@@ -44,6 +53,7 @@ function ajouter_contenu_dossier(contenant, ajouts){
             }
         }
     }
+    // Ajouter les fichiers
     if (ajouts.Fichiers != undefined){
         contenant.setAttribute("fichiers", ajouts.Fichiers);
         let limite = 8;
@@ -61,6 +71,7 @@ function ajouter_contenu_dossier(contenant, ajouts){
             limite--;
         }
     }
+    // Ajouter le nombre d'éléments s’ils ne peuvent pas être tous ajoutés
     if (ajouts.NbFichiers > 10){
         let indication_nb_fichiers = document.createElement("i");
         indication_nb_fichiers.textContent = "... et " + (ajouts.NbFichiers-10) + " autres fichiers";
@@ -68,6 +79,11 @@ function ajouter_contenu_dossier(contenant, ajouts){
     }
 }
 
+/*** Fonction qui affiche un menu contextuel différent en fonction de 
+ * si le dossier est sélectionné ou non
+ * @param event : l’évènement de click, avec notamment la position du menu
+ * @param nouveau_dossier : le dossier sélectionné 
+***/
 function afficher_menu_contextuel(event, nouveau_dossier){
     event.preventDefault();
     let menu_a_afficher;
@@ -76,9 +92,14 @@ function afficher_menu_contextuel(event, nouveau_dossier){
     let dossier_a_regarder = nouveau_dossier;
     while (dossier_a_regarder.classList.contains("dossier_arborescence")){
         for(let [nom_config, contenu] of Object.entries(selection_dossiers)){
-            if(contenu.includes(dossier_a_regarder)){
-                deja_selectionne = true;
-                config_dossier_a_enlever = nom_config;
+            for(let i = 0; i < contenu.length; i++){
+                if(contenu[i].dossier == dossier_a_regarder){
+                    deja_selectionne=true;
+                    config_dossier_a_enlever = {config:nom_config, index:i}
+                    break
+                }
+            }
+            if(deja_selectionne){
                 break;
             }
         }
@@ -104,50 +125,71 @@ function afficher_menu_contextuel(event, nouveau_dossier){
     dossier_selectionne = nouveau_dossier;
 }
 
+/*** Fonction permettant de valider un filtre sur les fichiers 
+ * d'un dossier
+ */
+function valider_selection_filtre(){
+    fermer_popup("popup_select_fichiers");
+    afficher_popup_config_extraction();
+}
+
+/** Fonction permettant d’ajouter un dossier à la sélection
+ */
 function ajout_dossier(){
     dossier_selectionne.classList.add("dossier_selectionne");
     let nom_config = document.getElementById("select_config_extraction").value;
     if(selection_dossiers[nom_config] == undefined){
-        selection_dossiers[nom_config] = {};
+        selection_dossiers[nom_config] = [];
     }
-    selection_dossiers[nom_config][dossier_selectionne] = "*";
+    let input_filtre = document.getElementById("filtre_choix_fichiers");
+    selection_dossiers[nom_config].push({dossier:dossier_selectionne, filtre:input_filtre.value});
+    input_filtre.value = "*";
     fermer_popup('popup_select_config_extraction');
-    console.log(selection_dossiers);
+    document.getElementById("select_config_extraction").value = "";
+    
 }
 
+/** Fonction permettant de supprimer le dossier sélectionné */
 function retrait_dossier(){
     let dossier_a_supprimer = dossier_selectionne;
     while(dossier_a_supprimer.classList.contains("dossier_arborescence")){
         dossier_a_supprimer.classList.remove("dossier_selectionne");
-        delete selection_dossiers[config_dossier_a_enlever][dossier_a_supprimer];
         dossier_a_supprimer = dossier_a_supprimer.parentElement;
         if (dossier_a_supprimer == undefined){
             break;
         }
     }
-    if(selection_dossiers[config_dossier_a_enlever].length == 0){
-        delete selection_dossiers[config_dossier_a_enlever];
+    selection_dossiers[config_dossier_a_enlever.config].splice(config_dossier_a_enlever.index, 1)
+    if(selection_dossiers[config_dossier_a_enlever.config].length == 0){
+        delete selection_dossiers[config_dossier_a_enlever.config];
     }
 }
 
+/** Fonctionn affichant les fichiers suivants au scroll */
 function scroll_liste_fichiers(){
     let contenant_liste_fichiers = document.getElementById("contenant_fichiers_filtres");
     let scrollCourant = contenant_liste_fichiers.scrollTop;
     if(scrollCourant + contenant_liste_fichiers.getBoundingClientRect().height > 4*contenant_liste_fichiers.scrollHeight/5){
-        console.log("on descend !");
         let ul_liste_fichiers = document.getElementById("fichiers_filtres");
-        let tailler_liste_affichee = ul_liste_fichiers.childNodes.length;
+        let taille_liste_affichee = ul_liste_fichiers.childNodes.length;
         let liste_fichiers = dossier_selectionne.getAttribute("fichiers").split(",");
-        for(let i = 0; i < 5; i++){
-            console.log(liste_fichiers.length);
+        let div_liste_fichiers = document.getElementById("fichiers_filtres");
+        for(let i = taille_liste_affichee; i < taille_liste_affichee+5 && i < liste_fichiers.length; i++){
+            let nouveau_fichier = document.createElement("li");
+            nouveau_fichier.textContent = liste_fichiers[i];
+            nouveau_fichier.classList.add("fichier_liste");
+            div_liste_fichiers.appendChild(nouveau_fichier);
         }
     }
 }
 
-function afficher_popup_select_fichiers(){
+/** Fonction affichant la fenêtre contextuelle permettant 
+ * de choisir un filtre à appliquer aux fichiers
+ */
+function afficher_popup_select_fichiers(filtre="*"){
     document.getElementById("popup_select_fichiers").style.display = "flex";
     document.getElementById("fond_popup").style.display = "block";
-    document.getElementById("filtre_choix_fichiers").value = "*";
+    document.getElementById("filtre_choix_fichiers").value = filtre;
     let liste_fichiers = dossier_selectionne.getAttribute("fichiers").split(",");
     let div_liste_fichiers = document.getElementById("fichiers_filtres");
     div_liste_fichiers.textContent = "";
@@ -161,18 +203,23 @@ function afficher_popup_select_fichiers(){
         div_liste_fichiers.appendChild(p_fichier);
     }
     document.getElementById("nom_dossier_cible").textContent = dossier_selectionne.getElementsByTagName("summary")[0].textContent;
+    document.getElementById("contenant_fichiers_filtres").scrollTop = 0;
 }
 
+/** Affichage de la fenêtre contextuelle pour choisir la 
+ * configuration d’extraction des éléments d’un dossier */
 function afficher_popup_config_extraction(){
     document.getElementById("popup_select_config_extraction").style.display = "block";
     document.getElementById("fond_popup").style.display = "block";
 }
 
+/** Fonction permettant de valider les informations de la configruation */
 function valider_infos_config(){
-    document.getElementById("arborescence").style.display = "inline";
+    document.getElementById("details_config").style.display = "inline";
     document.getElementById("infos_peripheriques").style.display = "none";
 }
 
+/** Application du filtre renseigné par l’utilisateur aux fichiers affichés */
 function actualisation_fichiers_filtres(){
     let fichiers_filtres = document.getElementById("fichiers_filtres").childNodes;
     // Obtention de l’expression régulière entrée dans la zone de 
@@ -186,4 +233,29 @@ function actualisation_fichiers_filtres(){
             }
         })
     })
+}
+
+/** Fonction permettant de modifier le filtre appliqué aux fichiers 
+ * du dossier sélectionné
+ */
+function modifier_filtres_fichiers(){
+    let filtre_actuel = selection_dossiers[config_dossier_a_enlever.config][config_dossier_a_enlever.index].filtre;
+    document.getElementById("select_config_extraction").value = config_dossier_a_enlever.config;
+    afficher_popup_select_fichiers(filtre_actuel);
+    actualisation_fichiers_filtres();
+    retrait_dossier();
+}
+
+function modifier_config_dossier(){
+    let filtre_actuel = selection_dossiers[config_dossier_a_enlever.config][config_dossier_a_enlever.index].filtre;
+    let input_filtre = document.getElementById("filtre_choix_fichiers");
+    input_filtre.value = filtre_actuel;
+    document.getElementById("select_config_extraction").value = config_dossier_a_enlever.config;
+    afficher_popup_config_extraction();
+    retrait_dossier();
+}
+
+/** Fonction permettant d’enregistrer la nouvelle configuration */
+function valider_configuration(){
+    console.log(selection_dossiers);
 }

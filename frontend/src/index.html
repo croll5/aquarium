@@ -67,21 +67,24 @@ termes.
     </div>
     <header style="display: none;">
         <!-- HEADER ONGLET ICI -->
-         <div class="onglet onglet_selectionne" id="onglet_synthese">
-            <button onclick="change_onglet('html/synthese.html', this)">Synthèse</button>
+         <div id="contenant_onglets">
+            <div class="onglet onglet_selectionne" id="onglet_synthese">
+                <button onclick="change_onglet('html/synthese.html', this)">Synthèse</button>
+            </div>
+            <div class="onglet">
+                <button onclick="change_onglet('html/vue_d_ensemble.html', this)">Vue d’ensemble</button>
+            </div>
+            <div class="onglet">
+                <button onclick="change_onglet('html/chronologie.html',this)">Données extraites</button>
+            </div>
+            <div class="onglet">
+                <button onclick="change_onglet('html/detection.html', this)">Détection d'anomalies</button>
+            </div>
+            <div class="onglet">
+                <button onclick="change_onglet('html/config_analyse.html', this)">Configuration</button>
+            </div>
          </div>
-         <div class="onglet">
-            <button onclick="change_onglet('html/vue_d_ensemble.html', this)">Vue d’ensemble</button>
-         </div>
-         <div class="onglet">
-            <button onclick="change_onglet('html/chronologie.html',this)">Données extraites</button>
-         </div>
-         <div class="onglet">
-            <button onclick="change_onglet('html/detection.html', this)">Détection d'anomalies</button>
-         </div>
-         <div class="onglet">
-            <button onclick="change_onglet('html/config_analyse.html', this)">Configuration</button>
-         </div>
+         
          <button class="bouton_fermeture bouton_fermeture_header" onclick="accueil()" aria-label="Fermer">
             <img class="icone_bouton_fermeture" src="assets/images/croix-fermer-blanche.svg" alt="Fermer">
          </button>

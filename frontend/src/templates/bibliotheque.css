@@ -237,6 +237,11 @@ div.champ{
     transform: scale(1.02);
 }
 
+.contenant_bouton_centre{
+    width: 100%;
+    text-align: center;
+}
+
 .element_deplace {
     opacity: 0.6;
     background-color: var(--bleu-3);

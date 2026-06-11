@@ -57,7 +57,7 @@ function accueil(){
 
 function creer_onglet(url, nomOnglet){
     // On crée le nouvel onglet
-    let header = document.getElementsByTagName('header')[0];
+    let header = document.getElementById('contenant_onglets');
     let nvel_onglet = document.createElement("div");
     nvel_onglet.classList.add("onglet");
     header.appendChild(nvel_onglet)
