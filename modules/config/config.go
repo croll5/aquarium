@@ -4,7 +4,6 @@ import (
 	"aquarium/modules/aquabase"
 	"embed"
 	"encoding/xml"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -139,8 +138,34 @@ func GetConfigurationMachine(cheminProjet string, idMachine string, aquaConfigMa
 	return donneesConfig, problemeRencontre
 }
 
-func EnregistrerConfigMachine(cheminProjet string, nomConfig string, reutilisable bool, configuration ConfigurationXML) error {
-	fmt.Println(configuration)
+func EnregistrerConfigMachine(cheminProjet string, nomConfig string, reutilisable bool, extractions []DetailsConfigExtraction, idMachine string) error {
+	// Définir et au besoin créer le chemin d’enregistrement de la configuration
+	cheminEnregistrement := filepath.Join(cheminProjet, DOSSIER_CONFIG, DOSSIER_CONFIG_MACHINES)
+	if reutilisable {
+		emplacementExecutable, err := os.Executable()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		cheminEnregistrement = filepath.Join(filepath.Dir(emplacementExecutable), DOSSIER_CONFIG, DOSSIER_CONFIG_MACHINES)
+	}
+	err := os.MkdirAll(cheminEnregistrement, 0o755)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// Créer la configuration
+	var configMachine ConfigurationXML
+	configMachine.DetailsExtraction = extractions
+	// Enregistrer la configuration
+	contenuXML, err := xml.Marshal(configMachine)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	err = os.WriteFile(filepath.Join(cheminEnregistrement, nomConfig+EXTENSION_XML), contenuXML, 0o755)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// Mettre à jour la configuration chargée
+	cacheConfigMachines[idMachine] = configMachine
 	return nil
 }
 

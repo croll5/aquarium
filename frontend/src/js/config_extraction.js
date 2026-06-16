@@ -247,11 +247,28 @@ function modifier_config_dossier(){
 
 /** Fonction permettant d’enregistrer la nouvelle configuration */
 function valider_configuration(){
-    let nouvelle_config = []
+    let nouvelle_config = conversion_config_html_objet()
     if(Object.keys(selection_dossiers).length == 0){
         alert("Vous n’avez ajouté aucun dossier à la configuration !😯\nVous pouvez le faire à l’aide d’un clic droit sur le dossier que vous souhaitez ajouter.");
         return
     }
+    // Récupération du nom de la configuration
+    let nom_config = document.getElementById("nom_config").value;
+    nom_config = nom_config.replaceAll(" ", "_");
+    let reutilisable = document.getElementById("permanente").checked;
+    if(confirm("Voulez-vous enregistrer cette configuration ?🙃")){
+        parent.window.go.main.App.EnregistrerConfigMachine(nouvelle_config, nom_config, reutilisable, params.get("machine")).then(resultat =>{
+            let titre_cr = document.createElement("h1");
+            titre_cr.textContent = "Enregistrement réussi 🐬";
+            let texte_cr = document.createElement("p");
+            texte_cr.textContent = "La configuration a bien été enregistrée. Vous pouvez aller à la vue d’ensemble pour lancer l’extraction des données. 🫧"
+            parent.fermer_onglet_courant(titre_cr, texte_cr)
+        })
+    }
+}
+
+function conversion_config_html_objet(){
+    let nouvelle_config = []
     for(let [config, dossiers] of Object.entries(selection_dossiers)){
         nouvelle_config.push({
             Id:config,
@@ -288,13 +305,5 @@ function valider_configuration(){
             
         }
     }
-    if(confirm("Voulez-vous enregistrer cette configuration ?🙃")){
-        parent.window.go.main.App.EnregistrerConfigMachine(nouvelle_config, "un nom", true).then(resultat =>{
-            let titre_cr = document.createElement("h1");
-            titre_cr.textContent = "Enregistrement réussi 🐬";
-            let texte_cr = document.createElement("p");
-            texte_cr.textContent = "La configuration a bien été enregistrée. Vous pouvez aller à la vue d’ensemble pour lancer l’extraction des données. 🫧"
-            parent.fermer_onglet_courant(titre_cr, texte_cr)
-        })
-    }
+    return nouvelle_config
 }

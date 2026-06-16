@@ -92,25 +92,11 @@ func ListeMachinesAnalysees(cheminProjet string) (map[string]AquaConfigMachine, 
 }
 
 func EnregistrerAquaConfig(cheminProjet string, config AquaConfig) error {
-	// Ouverture du fichier
-	var fichier *os.File
-	fichier, err := os.Open(filepath.Join(cheminProjet, ANALYSE_AQUA))
-	if err != nil {
-		fichier, err = os.Create(filepath.Join(cheminProjet, ANALYSE_AQUA))
-		if err != nil {
-			return errors.WithStack(err)
-		}
-	}
-	defer fichier.Close()
 	// Génération des données
 	donnees, err := json.Marshal(config)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// Enregistrement des données
-	_, err = fichier.Write(donnees)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+	os.WriteFile(filepath.Join(cheminProjet, ANALYSE_AQUA), donnees, 0o766)
 	return err
 }
