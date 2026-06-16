@@ -82,6 +82,17 @@ function creer_onglet(url, nomOnglet){
     change_onglet(url, bouton_onglet);
 }
 
+
+function fermer_onglet_courant(){
+    let onglets_selectionnes = document.getElementsByClassName("onglet_selectionne");
+    for(let onglet of onglets_selectionnes){
+        onglet.remove();
+    }
+    let iframe = document.getElementsByTagName("iframe")[0];
+    iframe.src = "html/cr_operation.html";
+    globalThis.contenu_iframe_cr = arguments;
+}
+
 window.contrastes = false;
 window.dyslexie = false;
 window.non_aux_bubulles = false;

@@ -2,6 +2,20 @@
     background-color: var(--or-5);
 }
 
+.dossier_arborescence:not(.dossier_selectionne){
+    background-color: var(--or-6);
+}
+
+.dossier_arborescence:not(.dossier_selectionne) + .dossier_arborescence:not(.dossier_selectionne){
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.dossier_arborescence:not(.dossier_selectionne):has(+ .dossier_arborescence:not(.dossier_selectionne)){
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
 .dossier_arborescence:has(.dossier_selectionne):not([open]) > summary{
     list-style-type: '🤗';
 }

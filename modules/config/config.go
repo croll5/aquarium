@@ -4,6 +4,7 @@ import (
 	"aquarium/modules/aquabase"
 	"embed"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -136,6 +137,11 @@ func GetConfigurationMachine(cheminProjet string, idMachine string, aquaConfigMa
 	donneesConfig.DetailsExtraction = listeExtractions
 	cacheConfigMachines[idMachine] = donneesConfig
 	return donneesConfig, problemeRencontre
+}
+
+func EnregistrerConfigMachine(cheminProjet string, nomConfig string, reutilisable bool, configuration ConfigurationXML) error {
+	fmt.Println(configuration)
+	return nil
 }
 
 func GetConfigExtraction(cheminProjet string, nomFichierConfig string) (ConfigExtraction, error) {

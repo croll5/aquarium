@@ -694,3 +694,7 @@ func (a *App) CorrespondanceCheminModele(filename string, modele string) bool {
 	}
 	return result
 }
+
+func (a *App) EnregistrerConfigMachine(configMachine []config.DetailsConfigExtraction, nomConfig string, reutilisable bool) {
+	fmt.Println(configMachine)
+}

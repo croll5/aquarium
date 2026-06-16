@@ -43,6 +43,9 @@ function ajouter_contenu_dossier(contenant, ajouts){
         for(let [str_nom_dossier, dossier] of Object.entries(ajouts.DossiersEnfants)){
             let nouveau_dossier = document.createElement("details");
             nouveau_dossier.classList.add("dossier_arborescence");
+            if(dossier.Est7z){
+                nouveau_dossier.setAttribute("aqua_archive", true);
+            }
             let nom_dossier = document.createElement("summary");
             nouveau_dossier.appendChild(nom_dossier);
             nom_dossier.textContent = str_nom_dossier;
@@ -90,24 +93,18 @@ function afficher_menu_contextuel(event, nouveau_dossier){
     let autre_menu;
     let deja_selectionne = false;
     let dossier_a_regarder = nouveau_dossier;
-    while (dossier_a_regarder.classList.contains("dossier_arborescence")){
-        for(let [nom_config, contenu] of Object.entries(selection_dossiers)){
-            for(let i = 0; i < contenu.length; i++){
-                if(contenu[i].dossier == dossier_a_regarder){
-                    deja_selectionne=true;
-                    config_dossier_a_enlever = {config:nom_config, index:i}
-                    break
-                }
-            }
-            if(deja_selectionne){
-                break;
-            }
-        }
-        if (deja_selectionne){
-            break
-        }
+    if (dossier_a_regarder.classList.contains("fichier_arborescence")){
         dossier_a_regarder = dossier_a_regarder.parentElement;
-        if (dossier_a_regarder == undefined){
+    }
+    for(let [nom_config, contenu] of Object.entries(selection_dossiers)){
+        for(let i = 0; i < contenu.length; i++){
+            if(contenu[i].dossier == dossier_a_regarder){
+                deja_selectionne=true;
+                config_dossier_a_enlever = {config:nom_config, index:i}
+                break
+            }
+        }
+        if(deja_selectionne){
             break;
         }
     }
@@ -151,14 +148,7 @@ function ajout_dossier(){
 
 /** Fonction permettant de supprimer le dossier sélectionné */
 function retrait_dossier(){
-    let dossier_a_supprimer = dossier_selectionne;
-    while(dossier_a_supprimer.classList.contains("dossier_arborescence")){
-        dossier_a_supprimer.classList.remove("dossier_selectionne");
-        dossier_a_supprimer = dossier_a_supprimer.parentElement;
-        if (dossier_a_supprimer == undefined){
-            break;
-        }
-    }
+    dossier_selectionne.classList.remove("dossier_selectionne");
     selection_dossiers[config_dossier_a_enlever.config].splice(config_dossier_a_enlever.index, 1)
     if(selection_dossiers[config_dossier_a_enlever.config].length == 0){
         delete selection_dossiers[config_dossier_a_enlever.config];
@@ -257,5 +247,54 @@ function modifier_config_dossier(){
 
 /** Fonction permettant d’enregistrer la nouvelle configuration */
 function valider_configuration(){
-    console.log(selection_dossiers);
+    let nouvelle_config = []
+    if(Object.keys(selection_dossiers).length == 0){
+        alert("Vous n’avez ajouté aucun dossier à la configuration !😯\nVous pouvez le faire à l’aide d’un clic droit sur le dossier que vous souhaitez ajouter.");
+        return
+    }
+    for(let [config, dossiers] of Object.entries(selection_dossiers)){
+        nouvelle_config.push({
+            Id:config,
+            Chemins:[]
+        })
+        for(const dossier of dossiers){
+            let liste_dossiers = [];
+            let num_archive = -1;
+            let dossier_courant = dossier.dossier;
+            let i = 0
+            while(dossier_courant.classList.contains("dossier_arborescence")){
+                liste_dossiers.push(dossier_courant.querySelector("summary").textContent);
+                if(dossier_courant.hasAttribute("aqua_archive")){
+                    num_archive = i;
+                }
+                dossier_courant = dossier_courant.parentElement;
+                i++;
+            }
+            if(num_archive == -1){
+                nouvelle_config.at(-1).Chemins.push({
+                    Dossiers: liste_dossiers,
+                    Fichier: dossier.filtre
+                })
+            }else{
+                if(num_archive > 0){
+                    dossier.filtre = liste_dossiers.slice(0, num_archive).join("/") + "/" + dossier.filtre;
+                }
+                nouvelle_config.at(-1).Chemins.push({
+                    Dossiers: liste_dossiers.slice(num_archive+1, liste_dossiers.length),
+                    Archive: liste_dossiers[num_archive],
+                    Fichier: dossier.filtre
+                })
+            }
+            
+        }
+    }
+    if(confirm("Voulez-vous enregistrer cette configuration ?🙃")){
+        parent.window.go.main.App.EnregistrerConfigMachine(nouvelle_config, "un nom", true).then(resultat =>{
+            let titre_cr = document.createElement("h1");
+            titre_cr.textContent = "Enregistrement réussi 🐬";
+            let texte_cr = document.createElement("p");
+            texte_cr.textContent = "La configuration a bien été enregistrée. Vous pouvez aller à la vue d’ensemble pour lancer l’extraction des données. 🫧"
+            parent.fermer_onglet_courant(titre_cr, texte_cr)
+        })
+    }
 }
