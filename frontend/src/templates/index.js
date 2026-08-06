@@ -57,7 +57,7 @@ function accueil(){
 
 function creer_onglet(url, nomOnglet){
     // On crée le nouvel onglet
-    let header = document.getElementsByTagName('header')[0];
+    let header = document.getElementById('contenant_onglets');
     let nvel_onglet = document.createElement("div");
     nvel_onglet.classList.add("onglet");
     header.appendChild(nvel_onglet)
@@ -80,6 +80,17 @@ function creer_onglet(url, nomOnglet){
     }
     nvel_onglet.appendChild(bouton_fermer);
     change_onglet(url, bouton_onglet);
+}
+
+
+function fermer_onglet_courant(){
+    let onglets_selectionnes = document.getElementsByClassName("onglet_selectionne");
+    for(let onglet of onglets_selectionnes){
+        onglet.remove();
+    }
+    let iframe = document.getElementsByTagName("iframe")[0];
+    iframe.src = "html/cr_operation.html";
+    globalThis.contenu_iframe_cr = arguments;
 }
 
 window.contrastes = false;

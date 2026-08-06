@@ -319,6 +319,7 @@ type DossierAnalysable struct {
 	DossiersEnfants map[string]*DossierAnalysable
 	Fichiers        []string
 	NbFichiers      int
+	Est7z           bool
 }
 
 func ListeFichiersAnalysables(cheminADonner string, nomDossier string) (DossierAnalysable, error) {
@@ -346,6 +347,7 @@ func ListeFichiersAnalysables(cheminADonner string, nomDossier string) (DossierA
 				defer archive.Close()
 				arboArchive := getArborescenceArchive(archive.File)
 				listeDossiers.DossiersEnfants[fichier.Name()] = &arboArchive
+				listeDossiers.DossiersEnfants[fichier.Name()].Est7z = true
 
 			} else {
 				listeDossiers.Fichiers = append(listeDossiers.Fichiers, fichier.Name())

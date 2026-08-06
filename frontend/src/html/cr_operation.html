@@ -1,5 +1,5 @@
-/*
-Copyright ou © ou Copr. Cécile Rolland, (21 janvier 2025) 
+<!--
+Copyright Cécile Rolland, (16 juin 2026) 
 
 aquarium[@]mailo[.]com
 
@@ -32,50 +32,19 @@ sécurité de leurs systèmes et ou de leurs données et, plus généralement,
 Le fait que vous puissiez accéder à cet en-tête signifie que vous avez 
 pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
-*/
+-->
 
-/** Fonction appelée lorsque l'utilisateur appuie sur le bouton "nouvelle analyse"
- */
-function nouvelle_analyse(){
-    window.location.replace("../html/nouvelle_analyse.html");
-}
-
-function analyse_existante(){
-    parent.window.go.main.App.OuvrirAnalyseExistante().then(resultat=>{
-        if(resultat){
-            window.location.replace("../html/synthese.html")
-            parent.document.getElementsByTagName("header")[0].style.display = "flex";
-        }
-    })
-}
-
-function nouveau_modele(){
-    window.location.replace("../html/nouveau_modele.html");
-}
-
-function parametres(){
-    window.location.replace("../html/parametres.html")
-}
-
-parent.window.go.main.App.VerifierPrerequisDemarrage().then(manquants => {
-    if (!Array.isArray(manquants) || manquants.length === 0) {
-        return;
-    }
-    const cadre = document.getElementById("alerte-prerequis");
-    const liste = document.getElementById("liste-prerequis-manquants");
-    if (!cadre || !liste) {
-        return;
-    }
-    liste.innerHTML = "";
-    for (const manquant of manquants) {
-        const item = document.createElement("li");
-        item.textContent = manquant;
-        liste.appendChild(item);
-    }
-    cadre.style.display = "block";
-    const ouvrir_analyse_existante = document.getElementById("ouvrir_analyse_existante");
-    if (!ouvrir_analyse_existante) {
-        return;
-    }
-    ouvrir_analyse_existante.setAttribute("disabled", "true")
-});
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compte-rendu d’opération</title>
+    <link rel="stylesheet" href="../templates/bibliotheque.css">
+    <link rel="stylesheet" href="../templates/commun_clair.css">
+    <script src="../templates/bibliotheque.js"></script>
+    <script async src="../js/cr_operation.js"></script>
+</head>
+<body>   
+</body>
+</html>

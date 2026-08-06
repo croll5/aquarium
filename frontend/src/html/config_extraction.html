@@ -56,20 +56,38 @@ termes.
         <input type="radio" name="utilisation" id="temporaire" class="input_clair"><label for="temporaire"> Non</label><br><br>
         <button class="bouton_sombre" onclick="valider_infos_config()">Valider</button>
     </div>
-    <div id="arborescence"></div>
+    <div id="details_config">
+        <div id="arborescence"></div><br>
+        <div class="contenant_bouton_centre">
+            <button class="bouton_sombre" onclick="valider_configuration()">Valider la configuration</button>
+        </div>
+    </div>
     <div class="menu_contextuel" id="menu_ajout">
         <button class="option_menu" onclick="afficher_popup_config_extraction()">✅ Sélectionner le dossier</button>
         <button class="option_menu" onclick="afficher_popup_select_fichiers()">🎯 Choisir les fichiers</button>
     </div>
     <div class="menu_contextuel" id="menu_suppression">
         <button class="option_menu" onclick="retrait_dossier()">🗑️ Désélectionner le dossier</button>
+        <button class="option_menu" onclick="modifier_filtres_fichiers()">🎯 Modifier le choix des fichiers</button>
+        <button class="option_menu" onclick="modifier_config_dossier()">🛠️ Modifier la configuration d’extraction</button>
     </div>
     <div class="fond-popup" id="fond_popup"></div>
     <div class="cadre-popup" id="popup_select_fichiers">
         <button class="bouton_fermer" onclick="fermer_popup('popup_select_fichiers')">x</button>
         <h1 id="nom_dossier_cible">Erreur de chargement...</h1>
-        <input type="text" class="code" placeholder="Filtre..." id="filtre_choix_fichiers" onchange="actualisation_fichiers_filtres()">
-        <ul id="fichiers_filtres"></ul>
+        <div id="zone_filtrage_fichiers">
+            <div id="zone_recherche_fichiers">
+                <input type="text" class="code" value="*" id="filtre_choix_fichiers">
+                <button class="bouton_sombre" onclick="actualisation_fichiers_filtres()">🔎 Appliquer</button>
+            </div>
+            <div>
+                <button class="bouton_sombre" id="valider_filtrage_fichiers" onclick="valider_selection_filtre()">Valider la sélection</button>
+            </div>
+        </div>
+
+        <div id="contenant_fichiers_filtres" onscroll="scroll_liste_fichiers()">
+            <ul id="fichiers_filtres"></ul>
+        </div>
     </div>
     <div class="cadre-popup" id="popup_select_config_extraction">
         <button class="bouton_fermer" onclick="fermer_popup('popup_select_config_extraction')">x</button>

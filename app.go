@@ -694,3 +694,18 @@ func (a *App) CorrespondanceCheminModele(filename string, modele string) bool {
 	}
 	return result
 }
+
+func (a *App) EnregistrerConfigMachine(extractions []config.DetailsConfigExtraction, nomConfig string, reutilisable bool, idMachine string) {
+	err := config.EnregistrerConfigMachine(chemin_projet, nomConfig, reutilisable, extractions, idMachine)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	aquaConfig, err := config.GetAquaConfig(chemin_projet)
+	configMachine := aquaConfig.Machines[idMachine]
+	configMachine.Config = nomConfig + config.EXTENSION_XML
+	aquaConfig.Machines[idMachine] = configMachine
+	err = config.EnregistrerAquaConfig(chemin_projet, aquaConfig)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+}

@@ -39,7 +39,6 @@ body{
     flex-direction: column;
     overflow: hidden;
     margin: 0;
-    background-color: var(--bleu-1);
 }
 
 html, body {
@@ -73,11 +72,14 @@ iframe {
 
 header{
     padding-bottom: 0;
-    margin-top: 5px;
     text-align: left;
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+#contenant_onglets{
+    margin-top: 5px;
 }
 
 #details_erreur{

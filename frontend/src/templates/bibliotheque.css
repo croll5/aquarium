@@ -95,6 +95,11 @@ body{
     background-color: var(--or-4);
 }
 
+.bouton_clair:disabled:hover, .bouton_sombre:disabled:hover, .bouton_mi_tons:disabled:hover{
+    cursor: not-allowed;
+    background-color: var(--or-4);
+}
+
 .bouton_clair:hover{
     background-color: var(--or-3);
     cursor: pointer;
@@ -230,6 +235,11 @@ div.champ{
 .bouton_mi_tons:hover{
     cursor: pointer;
     transform: scale(1.02);
+}
+
+.contenant_bouton_centre{
+    width: 100%;
+    text-align: center;
 }
 
 .element_deplace {
@@ -369,6 +379,7 @@ input[type="checkbox"] {
     display: inline;
     background-color: transparent;
     border: none;
+    text-align: left;
 }
 
 .option_menu:hover{
