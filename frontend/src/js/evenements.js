@@ -39,3 +39,21 @@ let params = new URLSearchParams(document.location.search);
 let machine_a_afficher = params.get("machine");
 
 document.getElementById("nom_machine").textContent = params.get("nom_machine");
+
+afficher_nouveau_filtre("machine", params.get("nom_machine"))
+
+
+function afficher_nouveau_filtre(nom_champ, valeur_filtre){
+    let zone_recherche = document.getElementById("zone_recherche")
+    let liste_filtres = document.getElementById("barre_recherche");
+    let filtre = document.createElement("div");
+    filtre.textContent = nom_champ + ": " + valeur_filtre;
+    filtre.classList.add("filtre_recherche");
+    let bouton_fermer = document.createElement("button");
+    bouton_fermer.textContent = "✖";
+    bouton_fermer.onclick = function (event) {
+        filtre.remove();
+    }
+    filtre.appendChild(bouton_fermer);
+    zone_recherche.before(filtre);
+}
