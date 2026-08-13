@@ -37,6 +37,8 @@ termes.
 package utilitaires
 
 import (
+	"aquarium/modules/aquabase"
+	"aquarium/modules/config"
 	"database/sql"
 	"encoding/binary"
 	"io"
@@ -187,4 +189,26 @@ func ExtraireFichierDepuis7z(file *sevenzip.File, destination string) error {
 	}
 
 	return err
+}
+
+/*
+Fonction permettant de créer une requête d’insertion en base de données
+à partir d’une configuration d’extraction
+*/
+func CreerRequeteInstertionDepuisConfig(cheminProjet string, idMachine string, configTable *config.ConfigTableBDD) *aquabase.RequeteInsertion {
+	adb := aquabase.InitDB_Extraction(cheminProjet)
+	var nomsColonnesTables []string = make([]string, len(configTable.Colonnes))
+	var descriptifColonnes map[string]string = make(map[string]string, 0)
+	var colonnesAIndexer []int = make([]int, 0)
+	for i := range configTable.Colonnes {
+		nomsColonnesTables[i] = configTable.Colonnes[i].Nom
+		descriptifColonnes[configTable.Colonnes[i].Nom] = configTable.Colonnes[i].Contenu
+		if configTable.Colonnes[i].Indexable {
+			colonnesAIndexer = append(colonnesAIndexer, i)
+		}
+	}
+	adb.CreateTableIfNotExist2(configTable.Nom, descriptifColonnes, true)
+	adb.CreateTableIfNotExist2(aquabase.TABLE_CHRONOLOGIE_GLOBALE, aquabase.ColonnesTableChronologieGlobale, false)
+	requeteInsertion := adb.InitRequeteInsertionExtractionAvecIndex(configTable.Nom, idMachine, nomsColonnesTables, colonnesAIndexer)
+	return &requeteInsertion
 }

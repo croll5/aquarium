@@ -4,7 +4,7 @@
     <nom>Historique de navigation Chromium</nom>
     <description>Historique de navigation Chrome, Chromium et Edge</description>
     <table nom="historique_chrome">
-        <colonne type="DATETIME" contenu="last_visit_date">derniere_visite</colonne>
+        <colonne type="DATETIME" contenu="last_visit_date" indexable="true">derniere_visite</colonne>
         <colonne type="TEXT" contenu="url">url</colonne>
         <colonne type="TEXT" contenu="visit_count">nb_visites</colonne>
         <colonne type="TEXT" contenu="url">url</colonne>

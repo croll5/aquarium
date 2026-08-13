@@ -25,9 +25,10 @@ const (
 )
 
 type ConfigColonneBDD struct {
-	Nom     string `xml:",chardata"`
-	Type    string `xml:"type,attr"`
-	Contenu string `xml:"contenu,attr"`
+	Nom       string `xml:",chardata"`
+	Type      string `xml:"type,attr"`
+	Contenu   string `xml:"contenu,attr"`
+	Indexable bool   `xml:"indexable,attr"`
 }
 
 type ConfigTableBDD struct {

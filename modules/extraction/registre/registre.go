@@ -126,14 +126,8 @@ func (s Registre) Extraction(cheminProjet string, fichier io.Reader, source stri
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// On récupère les colonnes de la table
-	var nomColonnesTable []string = []string{}
-	for _, colonne := range configExtraction.Table[0].Colonnes {
-		nomColonnesTable = append(nomColonnesTable, colonne.Nom)
-	}
 	// On crée une requête d'insertion dans la BDD
-	var abase aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
-	var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomColonnesTable)
+	var requeteInsertion aquabase.RequeteInsertion = *utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &configExtraction.Table[0])
 	// Ouverture de la clé de registre contenant les comptes personnels
 	if configExtraction.Complement["registre"] == "" {
 		return errors.WithStack(errors.New("[AQUA_ERR] - Problème de configuration de l’extracteur" + configExtraction.Nom + " : valeur conplémentaire « registe non définie »."))

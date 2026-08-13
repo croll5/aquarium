@@ -10,9 +10,9 @@
         <colonne type="TEXT" contenu="FullName">nom_fichier</colonne>
         <colonne type="TEXT" contenu="MD5">md5</colonne>
         <colonne type="TEXT" contenu="SHA1">sha1</colonne>
-        <colonne type="DATETIME" contenu="CreationDate">date_creation</colonne>
-        <colonne type="DATETIME" contenu="LastModificationDate">derniere_modif</colonne>
-        <colonne type="DATETIME" contenu="LastAccessDate">dernier_acces</colonne>
+        <colonne type="DATETIME" contenu="CreationDate" indexable="true">date_creation</colonne>
+        <colonne type="DATETIME" contenu="LastModificationDate" indexable="true">derniere_modif</colonne>
+        <colonne type="DATETIME" contenu="LastAccessDate" indexable="true">dernier_acces</colonne>
     </table>
     <sql_chronologie>SELECT id, "getthis", "creation", source, date_creation AS horodatage, "Création du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis 
         UNION SELECT id, "getthis", "modification", source, derniere_modif as horodatage, "Dernière modification du fichier « " || nom_fichier || " » (empreinte MD5 : " || MD5 || ")", aqua_machine FROM getthis  

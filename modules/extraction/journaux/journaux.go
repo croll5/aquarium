@@ -71,10 +71,9 @@ func (jr Journaux) Extraction(cheminProjet string, fichier io.Reader, cheminFich
 	if configExtraction.Complement[PARAM_SEPARATEUR] != "" {
 		listeEvenements = getListeDesEvenements(listeEvenements[0], configExtraction.Complement[PARAM_SEPARATEUR])
 	}
-	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
 	var probleme error
 	for _, table := range configExtraction.Table {
-		var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(table.Nom, table.GetNomsColonnes())
+		var requeteInsertion aquabase.RequeteInsertion = *utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &table)
 		for _, evenement := range listeEvenements {
 			ajouterEvenementDansRequete(&requeteInsertion, cheminFichierAExtraire, evenement, table, configExtraction, idMachine)
 		}

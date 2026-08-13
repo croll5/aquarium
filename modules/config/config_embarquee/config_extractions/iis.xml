@@ -4,7 +4,7 @@
     <nom>Journaux IIS</nom>
     <description>Journaux IIS (serveur Web Windows)</description>
     <table nom="iis">
-        <colonne type="DATETIME" contenu="0[aqua_concat]1[aqua_concat] |aqua_encodage:date[aqua_sep]2006-01-02 15:04:05">horodatage</colonne>
+        <colonne type="DATETIME" contenu="0[aqua_concat]1[aqua_concat] |aqua_encodage:date[aqua_sep]2006-01-02 15:04:05" indexable="true">horodatage</colonne>
         <colonne type="TEXT" contenu="2">ip_serveur</colonne>
         <colonne type="TEXT" contenu="3">methode</colonne>
         <colonne type="TEXT" contenu="4">uri_stem</colonne>

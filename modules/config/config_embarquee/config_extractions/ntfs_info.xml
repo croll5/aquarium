@@ -10,9 +10,9 @@
         <colonne type="TEXT" contenu="VolumeID">id_volume</colonne>
         <colonne type="TEXT" contenu="ParentName">emplacement</colonne>
         <colonne type="INT" contenu="SizeInBytes">taille</colonne>
-        <colonne type="DATETIME" contenu="CreationDate">date_creation</colonne>
-        <colonne type="DATETIME" contenu="LastModificationDate">derniere_modification</colonne>
-        <colonne type="DATETIME" contenu="LastAccessDate">dernier_acces</colonne>
+        <colonne type="DATETIME" contenu="CreationDate" indexable="true">date_creation</colonne>
+        <colonne type="DATETIME" contenu="LastModificationDate" indexable="true">derniere_modification</colonne>
+        <colonne type="DATETIME" contenu="LastAccessDate" indexable="true">dernier_acces</colonne>
         <colonne type="DATETIME" contenu="MD5">md5</colonne>
         <colonne type="DATETIME" contenu="SHA1">sha1</colonne>
         <colonne type="DATETIME" contenu="SHA256">sha256</colonne>

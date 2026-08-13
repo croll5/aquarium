@@ -58,10 +58,12 @@ type Aquabase struct {
 }
 
 type RequeteInsertion struct {
-	nomTable      string
-	colonnesTable []string
-	valeurs       [][]interface{}
-	bdd           *Aquabase
+	nomTable         string
+	colonnesTable    []string
+	valeurs          [][]interface{}
+	bdd              *Aquabase
+	colonnesIndexees []int
+	idMachine        string
 }
 
 type ResultatRequete struct {
@@ -75,6 +77,13 @@ type InfosBDD struct {
 }
 
 var basesDeDonnees map[string]InfosBDD = map[string]InfosBDD{}
+
+var tailleTables map[string]int64 = map[string]int64{}
+
+const TABLE_CHRONOLOGIE_GLOBALE = "aqua_chronologie"
+
+var ColonnesTableChronologieGlobale map[string]string = map[string]string{"horodatage": "DATETIME", "id_machine": "VARCHAR(30)", "id_evenement": "INT", "nom_table": "VARCHAR(50)"}
+var nomColonnesTableChronologieGlobale []string = []string{"horodatage", "id_machine", "id_evenement", "nom_table"}
 
 /* -------------------------- GESTION DE LA BASE DE DONNÉES -------------------------- */
 
@@ -478,6 +487,14 @@ func (abd *Aquabase) InitRequeteInsertionExtraction(nomTable string, colonnesTab
 	requete.colonnesTable = colonnesTable
 	requete.valeurs = make([][]interface{}, 0)
 	requete.bdd = abd
+	requete.colonnesIndexees = make([]int, 0)
+	return requete
+}
+
+func (adb *Aquabase) InitRequeteInsertionExtractionAvecIndex(nomTable string, idMachine string, colonnesTable []string, colonnesIndexees []int) RequeteInsertion {
+	var requete RequeteInsertion = adb.InitRequeteInsertionExtraction(nomTable, colonnesTable)
+	requete.colonnesIndexees = colonnesIndexees
+	requete.idMachine = idMachine
 	return requete
 }
 
@@ -498,6 +515,22 @@ func (requete *RequeteInsertion) Executer() error {
 	infosBdd, err := requete.bdd.Login()
 	if err != nil {
 		return errors.WithStack(err)
+	}
+	// Récupération de la taille de la table
+	nbLignes, ok := tailleTables[requete.nomTable]
+	if !ok {
+		requeteNbLignes, err := requete.bdd.ExecuterRequeteSQL("SELECT COUNT(*) AS nbLignes FROM " + requete.nomTable)
+		nbLignes = 0
+		if err == nil {
+
+			resultat, existe := requeteNbLignes.Suivant()
+			if existe {
+				nbLignes = resultat["nbLignes"].(int64)
+				tailleTables[requete.nomTable] = nbLignes
+			}
+			requeteNbLignes.requete.Close()
+		}
+		tailleTables[requete.nomTable] = nbLignes
 	}
 	// Préparation des instesions
 	var texteRequete string = "INSERT INTO " + requete.nomTable + "("
@@ -532,6 +565,49 @@ func (requete *RequeteInsertion) Executer() error {
 		}
 		return err
 	})
+	// Ajout des index
+
+	idEvt := nbLignes
+	texteRequete = "INSERT INTO " + TABLE_CHRONOLOGIE_GLOBALE +
+		"(" + strings.Join(nomColonnesTableChronologieGlobale, ",") + ") VALUES (" +
+		strings.Repeat("?,", len(ColonnesTableChronologieGlobale)-1) + "?)"
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		// Création de la transaction
+		tx, err := infosBdd.bdd.Begin()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// Prepare the query insertion
+		stmt, err := tx.Prepare(texteRequete)
+		if err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+		defer stmt.Close()
+		for _, ligne := range requete.valeurs {
+			var dejaInsere map[interface{}]bool = map[interface{}]bool{}
+			for _, num_colonne := range requete.colonnesIndexees {
+				_, ok = dejaInsere[ligne[num_colonne]]
+				if ok {
+					continue
+				}
+				dejaInsere[ligne[num_colonne]] = true
+				_, err = stmt.Exec(ligne[num_colonne], requete.idMachine, idEvt, requete.nomTable)
+				if err != nil {
+					tx.Rollback()
+					return errors.WithStack(err)
+				}
+			}
+			idEvt++
+		}
+		// Commit the transaction
+		err = tx.Commit()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		return err
+	})
+	tailleTables[requete.nomTable] += int64(len(requete.valeurs))
 	requete.valeurs = make([][]interface{}, 0)
 	if err != nil {
 		return errors.WithStack(err)
