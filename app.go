@@ -652,6 +652,14 @@ func (a *App) ContenuEvenementsChronologie(idMachine string, indexDebut int64, i
 	return resultat
 }
 
+func (a *App) PositionDateDansChronologie(idMachine string, dateSelectionnee time.Time) int64 {
+	resultat, err := chronologie.PositionDateDansChronologie(chemin_projet, idMachine, dateSelectionnee)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
 /***************************************************************************************/
 /******************************* FONCTIONS UTILITAIRES  ********************************/
 /***************************************************************************************/

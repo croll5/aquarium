@@ -217,6 +217,17 @@ div.champ{
     cursor: pointer;
 }
 
+.barre_recherche .filtre_recherche > input{
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-family: inherit;
+}
+
+.barre_recherche .filtre_recherche > input::-webkit-calendar-picker-indicator{
+    filter: invert();
+}
+
 
 .bouton_invisible{
     background-color: #fff0;

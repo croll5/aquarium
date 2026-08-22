@@ -48,15 +48,25 @@ function afficher_suite(){
 }
 
 function afficher_precedent(){
-    afficher_evenements_suivants(50, nb_evenements_affiches-50*7, true)
+    let liste_evenements = document.getElementById("liste_evenements");
+    afficher_evenements_suivants(50, nb_evenements_affiches-liste_evenements.childElementCount-50, true)
+}
+
+function repositionner_date(){
+    // Récupération de la date
+    let date_choisie = new Date(document.getElementById("selecteur_date").value)
+    parent.window.go.main.App.PositionDateDansChronologie(params.get("nachine"), date_choisie).then(resultat =>{
+        document.getElementById("liste_evenements").textContent = "";
+        nb_evenements_affiches = resultat;
+        document.getElementById("bouton_evt_precedents").style.display = "inline";
+        afficher_evenements_suivants(50, resultat);
+    })
 }
 
 afficher_evenements_suivants(50, 0);
 
 function afficher_evenements_suivants(nombre, decalage, debut=false){
-    console.log(decalage)
     parent.window.go.main.App.ContenuEvenementsChronologie(params.get("machine"), decalage, nombre).then(resultat =>{
-        console.log(resultat)
         let premier_element;
         let liste_evenements = document.getElementById("liste_evenements");
         if(debut){
@@ -92,12 +102,12 @@ function afficher_evenements_suivants(nombre, decalage, debut=false){
         }else{
             nb_evenements_affiches += nombre;
         }
-        if(!debut && decalage > nombre*5){
+        if(!debut && liste_evenements.childElementCount > nombre*5){
             document.getElementById("bouton_evt_precedents").style.display = "inline";
             for(let i = 0; i < nombre; i++){
                 liste_evenements.firstChild.remove()
             }
-        } else if(debut){
+        } else if(debut && liste_evenements.childElementCount > nombre*5){
             for(let i = 0; i < nombre; i++){
                 liste_evenements.lastChild.remove()
             }

@@ -48,6 +48,10 @@ termes.
 <body id="body_arbo">
     <h1>Évènements de « <strong id="nom_machine"></strong> »</h1>
     <div class="barre_recherche" id="barre_recherche">
+        <div class="filtre_recherche">
+            <input type="datetime-local" id="selecteur_date" onchange="repositionner_date()">
+            <label for="selecteur_date" style="display: none;">Sélectionner une date</label>
+        </div>
         <input type="text" id="zone_recherche" placeholder="Saisissez un filtre...">
         <label for="zone_recherche" style="display: none;">Saisissez un filtre</label>
     </div>

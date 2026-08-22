@@ -39,6 +39,7 @@ package chronologie
 import (
 	"aquarium/modules/aquabase"
 	"fmt"
+	"time"
 )
 
 var machineEnCache = ""
@@ -49,7 +50,7 @@ func ContenuEvenementsChronologie(cheminProjet string, idMachine string, indexDe
 	adb := aquabase.InitDB_Extraction(cheminProjet)
 	// Récupération des identifiants des évènements classés par horodatage
 	listeIdEvenements, err := adb.ResultatRequeteSQLAvecFiltres(&aquabase.ParametresRequeteSQL{
-		NomTable:        "aqua_chronologie",
+		NomTable:        aquabase.TABLE_CHRONOLOGIE_GLOBALE,
 		Colonnes:        []string{"id_evenement", "horodatage", "nom_table"},
 		FiltresColonnes: []aquabase.FiltreRequeteSQL{aquabase.FiltreRequeteSQL{NomColonne: "id_machine", Valeur: idMachine}},
 		Limit:           taille,
@@ -74,4 +75,21 @@ func ContenuEvenementsChronologie(cheminProjet string, idMachine string, indexDe
 		resultat = append(resultat, resultatEvenement...)
 	}
 	return resultat, nil
+}
+
+func PositionDateDansChronologie(cheminProjet string, idMachine string, dateSelectionne time.Time) (int64, error) {
+	adb := aquabase.InitDB_Extraction(cheminProjet)
+	resultatTaille, err := adb.ResultatRequeteSQLAvecFiltres(&aquabase.ParametresRequeteSQL{
+		NomTable: aquabase.TABLE_CHRONOLOGIE_GLOBALE,
+		Colonnes: []string{"count(*) AS nb"},
+		FiltresColonnes: []aquabase.FiltreRequeteSQL{aquabase.FiltreRequeteSQL{
+			NomColonne: "horodatage",
+			Valeur:     dateSelectionne,
+			Inferieur:  true,
+		}},
+	})
+	if err != nil {
+		return 0, err
+	}
+	return resultatTaille[0]["nb"].(int64), nil
 }

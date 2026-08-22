@@ -687,6 +687,8 @@ type FiltreRequeteSQL struct {
 	Valeur     interface{}
 	Contient   bool
 	Negation   bool
+	Inferieur  bool
+	Superieur  bool
 }
 
 /** Pragma request to obtains all the table name of the database
@@ -860,7 +862,14 @@ func (adb Aquabase) ResultatRequeteSQLAvecFiltres(parametres *ParametresRequeteS
 		requete += " WHERE "
 	}
 	for _, filtreColonne := range parametres.FiltresColonnes {
-		requete += filtreColonne.NomColonne + "=? OR "
+		requete += filtreColonne.NomColonne
+		if filtreColonne.Inferieur {
+			requete += "<? OR "
+		} else if filtreColonne.Superieur {
+			requete += ">? OR "
+		} else {
+			requete += "=? OR "
+		}
 		valeursFiltres = append(valeursFiltres, filtreColonne.Valeur)
 	}
 	requete = strings.TrimSuffix(requete, " OR ")
