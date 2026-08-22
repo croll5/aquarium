@@ -37,10 +37,76 @@ termes.
 
 let params = new URLSearchParams(document.location.search);
 let machine_a_afficher = params.get("machine");
+let nb_evenements_affiches = 0;
 
 document.getElementById("nom_machine").textContent = params.get("nom_machine");
 
-afficher_nouveau_filtre("machine", params.get("nom_machine"))
+afficher_nouveau_filtre("machine", params.get("nom_machine"));
+
+function afficher_suite(){
+    afficher_evenements_suivants(50, nb_evenements_affiches)
+}
+
+function afficher_precedent(){
+    afficher_evenements_suivants(50, nb_evenements_affiches-50*7, true)
+}
+
+afficher_evenements_suivants(50, 0);
+
+function afficher_evenements_suivants(nombre, decalage, debut=false){
+    console.log(decalage)
+    parent.window.go.main.App.ContenuEvenementsChronologie(params.get("machine"), decalage, nombre).then(resultat =>{
+        console.log(resultat)
+        let premier_element;
+        let liste_evenements = document.getElementById("liste_evenements");
+        if(debut){
+            premier_element = liste_evenements.firstChild;
+        }
+        for(let evenement of resultat){
+            let ligne_evenement = document.createElement("li");
+            if(debut){
+                premier_element.before(ligne_evenement)
+            }else{
+                liste_evenements.appendChild(ligne_evenement);
+            }
+            let horodatage = document.createElement("h3");
+            horodatage.textContent = evenement.aqua_horodatage;
+            ligne_evenement.appendChild(horodatage);
+            let contenu_evenement = document.createElement("p");
+            for(let [attribut, valeur] of Object.entries(evenement)){
+                if(attribut == "aqua_horodatage"){
+                    continue;
+                }
+                let attribut_html = document.createElement("strong");
+                attribut_html.textContent = attribut + " : "
+                contenu_evenement.appendChild(attribut_html);
+                let valeur_html = document.createElement("span");
+                valeur_html.textContent = valeur+" "
+                contenu_evenement.appendChild(valeur_html);
+            }
+            // contenu_evenement.textContent = JSON.stringify(evenement);
+            ligne_evenement.appendChild(contenu_evenement);
+        }
+        if(debut){
+            nb_evenements_affiches -= nombre
+        }else{
+            nb_evenements_affiches += nombre;
+        }
+        if(!debut && decalage > nombre*5){
+            document.getElementById("bouton_evt_precedents").style.display = "inline";
+            for(let i = 0; i < nombre; i++){
+                liste_evenements.firstChild.remove()
+            }
+        } else if(debut){
+            for(let i = 0; i < nombre; i++){
+                liste_evenements.lastChild.remove()
+            }
+            if(decalage == 0){
+                document.getElementById("bouton_evt_precedents").style.display = "none";
+            }
+        }
+    })
+}
 
 
 function afficher_nouveau_filtre(nom_champ, valeur_filtre){

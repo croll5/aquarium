@@ -128,7 +128,7 @@ func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFic
 			fonctionTraitement = func(dicChamps map[string]string, cheminFichier, idMachine string) interface{} {
 				val, ok := dicChamps[parametresColonne[0]]
 				if !ok {
-					return "[AQUA_ERR] - Impossible d’extraire la clé" + parametresColonne[0]
+					return nil
 				}
 				return val
 			}

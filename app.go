@@ -43,6 +43,7 @@ package main
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/arborescence"
+	"aquarium/modules/chronologie"
 	"aquarium/modules/config"
 	"aquarium/modules/detection"
 	"aquarium/modules/extraction"
@@ -633,6 +634,18 @@ func (a *App) DonneesTableRapport(nomTable string) []map[string]interface{} {
 	var rprt *rapport.Rapport = rapport.InitRapport(chemin_projet)
 	log.Println(nomTable)
 	resultat, err := rprt.GetDonnesTableSauvegardee(nomTable)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
+/***************************************************************************************/
+/******************************* Chronologie FUNCTIONS PAGE ********************************/
+/***************************************************************************************/
+
+func (a *App) ContenuEvenementsChronologie(idMachine string, indexDebut int64, indexFin int64) []map[string]interface{} {
+	resultat, err := chronologie.ContenuEvenementsChronologie(chemin_projet, idMachine, indexDebut, indexFin)
 	if err != nil {
 		a.signalerErreur(err)
 	}

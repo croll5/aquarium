@@ -90,7 +90,7 @@ func GetFonctionDecodageBytes(encodage string) func([]byte) interface{} {
 	case "filetime":
 		return func(donnees []byte) interface{} {
 			if binary.LittleEndian.Uint64(donnees) == 0 {
-				return "n/a"
+				return nil
 			}
 			return FileTimeVersGo(donnees)
 		}
@@ -208,7 +208,9 @@ func CreerRequeteInstertionDepuisConfig(cheminProjet string, idMachine string, c
 		}
 	}
 	adb.CreateTableIfNotExist2(configTable.Nom, descriptifColonnes, true)
+	adb.CreerIndex(configTable.Nom, []string{"id"})
 	adb.CreateTableIfNotExist2(aquabase.TABLE_CHRONOLOGIE_GLOBALE, aquabase.ColonnesTableChronologieGlobale, false)
+	adb.CreerIndex(aquabase.TABLE_CHRONOLOGIE_GLOBALE, []string{"id_machine", "horodatage"})
 	requeteInsertion := adb.InitRequeteInsertionExtractionAvecIndex(configTable.Nom, idMachine, nomsColonnesTables, colonnesAIndexer)
 	return &requeteInsertion
 }

@@ -51,5 +51,11 @@ termes.
         <input type="text" id="zone_recherche" placeholder="Saisissez un filtre...">
         <label for="zone_recherche" style="display: none;">Saisissez un filtre</label>
     </div>
+    <br>
+    <button class="bouton_sombre" onclick="afficher_precedent()" id="bouton_evt_precedents" style="display: none;">Afficher les 50 évènements précédents</button>
+    <div>
+        <ul id="liste_evenements"></ul>
+    </div>
+    <button class="bouton_sombre" onclick="afficher_suite()">Afficher les 50 prochains évènements</button>
 </body>
 </html>
