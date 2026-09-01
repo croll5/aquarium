@@ -82,6 +82,7 @@ function afficher_evenements_suivants(nombre, decalage, debut=false){
             let horodatage = document.createElement("h3");
             horodatage.textContent = evenement.aqua_horodatage;
             ligne_evenement.appendChild(horodatage);
+            let contenu_detaille = document.createElement("div")
             let contenu_evenement = document.createElement("p");
             for(let [attribut, valeur] of Object.entries(evenement)){
                 if(attribut == "aqua_horodatage"){

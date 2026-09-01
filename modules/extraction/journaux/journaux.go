@@ -93,7 +93,6 @@ func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFic
 	if existe {
 		return fonctionTraitement(dicChamps, cheminFichier, idMachine)
 	}
-	log.Println("Extraction du contenu ", contenuColonne)
 	// On commence par séparer la clé de l’encodage
 	parametresColonne := strings.Split(contenuColonne, SEPARATEUR_ENCODAGE)
 	// S’il n’y a pas d’encodage, on met « string »
@@ -130,7 +129,7 @@ func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFic
 				if !ok {
 					return nil
 				}
-				return val
+				return fonctionDecodage(val)
 			}
 		}
 	}

@@ -319,7 +319,6 @@ func (adb Aquabase) CreerIndex(nomTable string, colonnes []string) error {
 	}
 	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
 		requete := "CREATE INDEX IF NOT EXISTS " + nomTable + "_index ON " + nomTable + " (" + strings.Join(colonnes, ", ") + ")"
-		log.Println(requete)
 		requeteIndex, err := infosBDD.bdd.Prepare(requete)
 		if err != nil {
 			log.Println(err)
