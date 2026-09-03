@@ -39,6 +39,8 @@ let params = new URLSearchParams(document.location.search);
 let machine_a_afficher = params.get("machine");
 let nb_evenements_affiches = 0;
 
+const TAILLE_MAX_EVT_SUCCINT = 300;
+
 document.getElementById("nom_machine").textContent = params.get("nom_machine");
 
 afficher_nouveau_filtre("machine", params.get("nom_machine"));
@@ -73,30 +75,12 @@ function afficher_evenements_suivants(nombre, decalage, debut=false){
             premier_element = liste_evenements.firstChild;
         }
         for(let evenement of resultat){
-            let ligne_evenement = document.createElement("li");
+            let ligne_evenement = creer_html_ligne_evenement(evenement)
             if(debut){
                 premier_element.before(ligne_evenement)
             }else{
                 liste_evenements.appendChild(ligne_evenement);
             }
-            let horodatage = document.createElement("h3");
-            horodatage.textContent = evenement.aqua_horodatage;
-            ligne_evenement.appendChild(horodatage);
-            let contenu_detaille = document.createElement("div")
-            let contenu_evenement = document.createElement("p");
-            for(let [attribut, valeur] of Object.entries(evenement)){
-                if(attribut == "aqua_horodatage"){
-                    continue;
-                }
-                let attribut_html = document.createElement("strong");
-                attribut_html.textContent = attribut + " : "
-                contenu_evenement.appendChild(attribut_html);
-                let valeur_html = document.createElement("span");
-                valeur_html.textContent = valeur+" "
-                contenu_evenement.appendChild(valeur_html);
-            }
-            // contenu_evenement.textContent = JSON.stringify(evenement);
-            ligne_evenement.appendChild(contenu_evenement);
         }
         if(debut){
             nb_evenements_affiches -= nombre
@@ -117,6 +101,61 @@ function afficher_evenements_suivants(nombre, decalage, debut=false){
             }
         }
     })
+}
+
+function creer_html_ligne_evenement(evenement){
+    let ligne_evenement = document.createElement("li");
+    let horodatage = document.createElement("h3");
+    horodatage.textContent = evenement.aqua_horodatage;
+    ligne_evenement.appendChild(horodatage);
+    let contenu_detaille = document.createElement("div");
+    contenu_detaille.classList.add("details_evenement");
+    let bouton_fermer = document.createElement("button");
+    bouton_fermer.textContent = "×";
+    bouton_fermer.classList.add("bouton_fermer");
+    contenu_detaille.appendChild(bouton_fermer);
+    let contenu_succint = document.createElement("p");
+    contenu_succint.classList.add("evenement_tronque");
+    // Permettre d’afficher le détail d’un évènement
+    contenu_succint.onclick = () => {
+        contenu_succint.style.display = "none";
+        contenu_detaille.style.display = "block";
+    }
+    let complet = false;
+    for(let [attribut, valeur] of Object.entries(evenement)){
+        if(attribut == "aqua_horodatage"){
+            continue;
+        }
+        if(valeur == ""){
+            continue;
+        }
+        // Ajout au contenu succint de l’évènement
+        let champ_detaille = document.createElement("h4");
+        champ_detaille.textContent = attribut;
+        contenu_detaille.appendChild(champ_detaille);
+        let detail_valeur = document.createElement("p");
+        detail_valeur.textContent = valeur
+        contenu_detaille.appendChild(detail_valeur)
+        // Ajout au contenu détaillé de l’évènement
+        if(complet){
+            continue
+        }
+        let attribut_html = document.createElement("strong");
+        attribut_html.textContent = (attribut + " : ").slice(0,Math.max(0,TAILLE_MAX_EVT_SUCCINT-contenu_succint.textContent.length));
+        contenu_succint.appendChild(attribut_html);
+        let valeur_html = document.createElement("span");
+        valeur_html.textContent = (valeur+" ").slice(0,Math.max(0,TAILLE_MAX_EVT_SUCCINT-contenu_succint.textContent.length));
+        contenu_succint.appendChild(valeur_html);
+        if(contenu_succint.textContent.length >= TAILLE_MAX_EVT_SUCCINT){
+            let suspension = document.createElement("span");
+            suspension.textContent = "…";
+            contenu_succint.appendChild(suspension);
+            complet = true;
+        }
+    }
+    ligne_evenement.appendChild(contenu_detaille);
+    ligne_evenement.appendChild(contenu_succint);
+    return ligne_evenement
 }
 
 

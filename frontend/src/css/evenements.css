@@ -1,0 +1,17 @@
+.evenement_tronque{
+    font-family: Consolas;
+    line-break: anywhere;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.evenement_tronque:hover{
+    cursor: pointer;
+    background-color: var(--or-5);
+}
+
+.details_evenement{
+    display: none;
+    border: solid;
+    position: absolute;
+}
