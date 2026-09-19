@@ -39,18 +39,17 @@ let demande_patienter = true;
 let chargement_en_cours = false;
 let logo_aquarium = document.getElementById("logo_aquarium_patientez")
 
+const NB_EVENEMENTS_PAR_RECUP = 50;
+
 function lancer_fonction_patientez(){
     demande_patienter = true;
     if(chargement_en_cours){
         return;
     }
-    let scroll = document.getElementById("body_arbo").scrollTop;
-    console.log(scroll)
     chargement_en_cours = true;
     let pos_a = "100vw", pos_b = "-30vw";
     let img_a = "../assets/images/dessin_patientez.png"
     let img_b = "../assets/images/dessin_patientez_inverse.png"
-    console.log(logo_aquarium.style.left)
     if(logo_aquarium.style.left == pos_a){
         chemin_patientez(pos_b, pos_a, img_b, img_a)
     }else{
@@ -81,12 +80,14 @@ document.getElementById("nom_machine").textContent = params.get("nom_machine");
 afficher_nouveau_filtre("machine", params.get("nom_machine"));
 
 function afficher_suite(){
-    afficher_evenements_suivants(50, nb_evenements_affiches)
+    console.log(nb_evenements_affiches)
+    afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, nb_evenements_affiches)
 }
 
 function afficher_precedent(){
     let liste_evenements = document.getElementById("liste_evenements");
-    afficher_evenements_suivants(50, nb_evenements_affiches-liste_evenements.childElementCount-50, true);
+    console.log("avant : ", nb_evenements_affiches-liste_evenements.childElementCount-NB_EVENEMENTS_PAR_RECUP)
+    afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, nb_evenements_affiches-liste_evenements.childElementCount-NB_EVENEMENTS_PAR_RECUP, true);
 }
 
 function repositionner_date(){
@@ -97,13 +98,14 @@ function repositionner_date(){
         document.getElementById("liste_evenements").textContent = "";
         nb_evenements_affiches = resultat;
         document.getElementById("bouton_evt_precedents").style.display = "inline";
-        afficher_evenements_suivants(50, resultat);
+        afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, resultat);
     })
 }
 
-afficher_evenements_suivants(50, 0);
+afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, 0);
 
 function afficher_evenements_suivants(nombre, decalage, debut=false){
+    console.log("décalage : ", decalage)
     demande_patienter = true;
     setTimeout(()=>{
         if(demande_patienter){
@@ -111,6 +113,10 @@ function afficher_evenements_suivants(nombre, decalage, debut=false){
         }
     },1000)
     parent.window.go.main.App.ContenuEvenementsChronologie(params.get("machine"), decalage, nombre).then(resultat =>{
+        let nombre_reel = resultat.length
+        if(nombre_reel < nombre){
+            document.getElementById("bouton_evt_suivants").style.display = "none";
+        }
         demande_patienter = false;
         let premier_element;
         let liste_evenements = document.getElementById("liste_evenements");
@@ -119,24 +125,25 @@ function afficher_evenements_suivants(nombre, decalage, debut=false){
         }
         for(let evenement of resultat){
             let ligne_evenement = creer_html_ligne_evenement(evenement)
-            if(debut){
+            if(debut && premier_element != undefined){
                 premier_element.before(ligne_evenement)
             }else{
                 liste_evenements.appendChild(ligne_evenement);
             }
         }
-        if(debut){
-            nb_evenements_affiches -= nombre
-        }else{
-            nb_evenements_affiches += nombre;
+        if(!debut){
+            nb_evenements_affiches += nombre_reel
+        }else if(liste_evenements.childElementCount > nombre*5){
+            nb_evenements_affiches -= nombre_reel;
         }
         if(!debut && liste_evenements.childElementCount > nombre*5){
             document.getElementById("bouton_evt_precedents").style.display = "inline";
-            for(let i = 0; i < nombre; i++){
-                liste_evenements.firstChild.remove()
+            for(let i = 0; i < nombre_reel; i++){
+                liste_evenements.firstChild.remove();
             }
         } else if(debut && liste_evenements.childElementCount > nombre*5){
-            for(let i = 0; i < nombre; i++){
+            document.getElementById("bouton_evt_suivants").style.display = "inline";
+            for(let i = 0; i < nombre_reel; i++){
                 liste_evenements.lastChild.remove()
             }
             if(decalage == 0){
