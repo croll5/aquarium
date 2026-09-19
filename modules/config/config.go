@@ -265,7 +265,6 @@ func ListeFichiersExtraction(chemins []ConfigChemin, cheminProjet string, dossie
 			}
 			if err != nil {
 				probleme = errors.WithStack(err)
-				continue
 			}
 			resultat = append(resultat, correspondances...)
 			if fichierUnique && len(correspondances) > 0 {
@@ -273,7 +272,6 @@ func ListeFichiersExtraction(chemins []ConfigChemin, cheminProjet string, dossie
 			}
 		}
 	}
-
 	return resultat, probleme
 }
 

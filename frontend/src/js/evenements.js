@@ -35,6 +35,41 @@ termes.
 -->
  */
 
+let demande_patienter = true;
+let chargement_en_cours = false;
+let logo_aquarium = document.getElementById("logo_aquarium_patientez")
+
+function lancer_fonction_patientez(){
+    demande_patienter = true;
+    if(chargement_en_cours){
+        return;
+    }
+    let scroll = document.getElementById("body_arbo").scrollTop;
+    console.log(scroll)
+    chargement_en_cours = true;
+    let pos_a = "100vw", pos_b = "-30vw";
+    let img_a = "../assets/images/dessin_patientez.png"
+    let img_b = "../assets/images/dessin_patientez_inverse.png"
+    console.log(logo_aquarium.style.left)
+    if(logo_aquarium.style.left == pos_a){
+        chemin_patientez(pos_b, pos_a, img_b, img_a)
+    }else{
+        chemin_patientez(pos_a, pos_b, img_a, img_b);
+    }
+}
+
+function chemin_patientez(pos_a, pos_b, img_a, img_b){
+    if(!demande_patienter){
+        chargement_en_cours = false;
+        return
+    }
+    logo_aquarium.style.left = pos_a;
+    logo_aquarium.src = img_a
+    setTimeout(() => {
+        chemin_patientez(pos_b, pos_a, img_b, img_a)
+    }, 5000);
+}
+
 let params = new URLSearchParams(document.location.search);
 let machine_a_afficher = params.get("machine");
 let nb_evenements_affiches = 0;
@@ -51,11 +86,12 @@ function afficher_suite(){
 
 function afficher_precedent(){
     let liste_evenements = document.getElementById("liste_evenements");
-    afficher_evenements_suivants(50, nb_evenements_affiches-liste_evenements.childElementCount-50, true)
+    afficher_evenements_suivants(50, nb_evenements_affiches-liste_evenements.childElementCount-50, true);
 }
 
 function repositionner_date(){
     // Récupération de la date
+    lancer_fonction_patientez();
     let date_choisie = new Date(document.getElementById("selecteur_date").value)
     parent.window.go.main.App.PositionDateDansChronologie(params.get("nachine"), date_choisie).then(resultat =>{
         document.getElementById("liste_evenements").textContent = "";
@@ -68,7 +104,14 @@ function repositionner_date(){
 afficher_evenements_suivants(50, 0);
 
 function afficher_evenements_suivants(nombre, decalage, debut=false){
+    demande_patienter = true;
+    setTimeout(()=>{
+        if(demande_patienter){
+            lancer_fonction_patientez();
+        }
+    },1000)
     parent.window.go.main.App.ContenuEvenementsChronologie(params.get("machine"), decalage, nombre).then(resultat =>{
+        demande_patienter = false;
         let premier_element;
         let liste_evenements = document.getElementById("liste_evenements");
         if(debut){
@@ -113,6 +156,10 @@ function creer_html_ligne_evenement(evenement){
     let bouton_fermer = document.createElement("button");
     bouton_fermer.textContent = "×";
     bouton_fermer.classList.add("bouton_fermer");
+    bouton_fermer.onclick = () => {
+        contenu_detaille.style.display = "none";
+        contenu_succint.style.display = "block";
+    }
     contenu_detaille.appendChild(bouton_fermer);
     let contenu_succint = document.createElement("p");
     contenu_succint.classList.add("evenement_tronque");

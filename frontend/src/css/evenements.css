@@ -12,6 +12,88 @@
 
 .details_evenement{
     display: none;
+    background-color: var(--or-5);
+    position: relative;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.details_evenement > p{
+    font-family: Consolas;
     border: solid;
-    position: absolute;
+    border-color: var(--or-4);
+    border-width: 1px;
+    padding: 5px;
+    background-color: var(--or-6);
+    border-radius: 7px;
+}
+
+.details_evenement > h4 {
+    margin: 0;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.details_evenement > .bouton_fermer{
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+
+/* LISTE */
+
+ul {
+  list-style-type: none;
+}
+
+li {
+  position: relative;
+  margin: 0;
+  padding-bottom: 1em;
+  padding-left: 20px;
+}
+
+li > h3 {
+    margin-top: 0;
+}
+
+li:after {
+  content: '';
+  background-color: var(--bleu-1);
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 6px;
+  width: 3px;
+  z-index: 1;
+}
+
+li:before {
+  content: '';
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' aria-hidden='true' viewBox='0 0 50 50' focusable='false'%3E%3Ccircle stroke='%23001D64' stroke-width='7' fill='%23FFF' cx='25' cy='25' r='18'%3E%3C/circle%3E%3C/svg%3E");
+  position: absolute;
+  left: -3px;
+  top: 3px;
+  height: 21px;
+  width: 21px;
+  z-index: 2;
+}
+
+#logo_aquarium_patientez{
+    width: 30vw;
+    transition: 5s;
+    transition-timing-function: linear;
+    position:absolute;
+    left: -30vw;
+    z-index: 500;
+}
+
+#contenant_img_patientez{
+    position:fixed;
+    top: 45vh;
+    z-index: 400;
+}
+
+body{
+    overflow-x: hidden;
 }
