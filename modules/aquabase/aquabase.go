@@ -58,10 +58,12 @@ type Aquabase struct {
 }
 
 type RequeteInsertion struct {
-	nomTable      string
-	colonnesTable []string
-	valeurs       [][]interface{}
-	bdd           *Aquabase
+	nomTable         string
+	colonnesTable    []string
+	valeurs          [][]interface{}
+	bdd              *Aquabase
+	colonnesIndexees []int
+	idMachine        string
 }
 
 type ResultatRequete struct {
@@ -75,6 +77,13 @@ type InfosBDD struct {
 }
 
 var basesDeDonnees map[string]InfosBDD = map[string]InfosBDD{}
+
+var tailleTables map[string]int64 = map[string]int64{}
+
+const TABLE_CHRONOLOGIE_GLOBALE = "aqua_chronologie"
+
+var ColonnesTableChronologieGlobale map[string]string = map[string]string{"horodatage": "DATETIME", "id_machine": "VARCHAR(30)", "id_evenement": "INT", "nom_table": "VARCHAR(50)"}
+var NomColonnesTableChronologieGlobale []string = []string{"horodatage", "id_machine", "id_evenement", "nom_table"}
 
 /* -------------------------- GESTION DE LA BASE DE DONNÉES -------------------------- */
 
@@ -303,6 +312,28 @@ func (adb Aquabase) CreateTableIfNotExist2(tableName string, tableColumns map[st
 	return err
 }
 
+func (adb Aquabase) CreerIndex(nomTable string, colonnes []string) error {
+	infosBDD, err := adb.Login()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
+		requete := "CREATE INDEX IF NOT EXISTS " + nomTable + "_index ON " + nomTable + " (" + strings.Join(colonnes, ", ") + ")"
+		requeteIndex, err := infosBDD.bdd.Prepare(requete)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		_, err = requeteIndex.Exec()
+		return err
+	})
+	if err != nil {
+		log.Println(err)
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------------- */
 /* ----------------------------------------       DELETE       ---------------------------------------- */
@@ -478,6 +509,14 @@ func (abd *Aquabase) InitRequeteInsertionExtraction(nomTable string, colonnesTab
 	requete.colonnesTable = colonnesTable
 	requete.valeurs = make([][]interface{}, 0)
 	requete.bdd = abd
+	requete.colonnesIndexees = make([]int, 0)
+	return requete
+}
+
+func (adb *Aquabase) InitRequeteInsertionExtractionAvecIndex(nomTable string, idMachine string, colonnesTable []string, colonnesIndexees []int) RequeteInsertion {
+	var requete RequeteInsertion = adb.InitRequeteInsertionExtraction(nomTable, colonnesTable)
+	requete.colonnesIndexees = colonnesIndexees
+	requete.idMachine = idMachine
 	return requete
 }
 
@@ -498,6 +537,22 @@ func (requete *RequeteInsertion) Executer() error {
 	infosBdd, err := requete.bdd.Login()
 	if err != nil {
 		return errors.WithStack(err)
+	}
+	// Récupération de la taille de la table
+	nbLignes, ok := tailleTables[requete.nomTable]
+	if !ok {
+		requeteNbLignes, err := requete.bdd.ExecuterRequeteSQL("SELECT COUNT(*) AS nbLignes FROM " + requete.nomTable)
+		nbLignes = 0
+		if err == nil {
+
+			resultat, existe := requeteNbLignes.Suivant()
+			if existe {
+				nbLignes = resultat["nbLignes"].(int64)
+				tailleTables[requete.nomTable] = nbLignes
+			}
+			requeteNbLignes.requete.Close()
+		}
+		tailleTables[requete.nomTable] = nbLignes
 	}
 	// Préparation des instesions
 	var texteRequete string = "INSERT INTO " + requete.nomTable + "("
@@ -532,6 +587,52 @@ func (requete *RequeteInsertion) Executer() error {
 		}
 		return err
 	})
+	// Ajout des index
+
+	idEvt := nbLignes
+	texteRequete = "INSERT INTO " + TABLE_CHRONOLOGIE_GLOBALE +
+		"(" + strings.Join(NomColonnesTableChronologieGlobale, ",") + ") VALUES (" +
+		strings.Repeat("?,", len(ColonnesTableChronologieGlobale)-1) + "?)"
+	err = infosBdd.tickets.ExecutionQuandTicketPret(func() error {
+		// Création de la transaction
+		tx, err := infosBdd.bdd.Begin()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// Prepare the query insertion
+		stmt, err := tx.Prepare(texteRequete)
+		if err != nil {
+			tx.Rollback()
+			return errors.WithStack(err)
+		}
+		defer stmt.Close()
+		for _, ligne := range requete.valeurs {
+			var dejaInsere map[interface{}]bool = map[interface{}]bool{}
+			idEvt++
+			for _, num_colonne := range requete.colonnesIndexees {
+				if ligne[num_colonne] == nil {
+					continue
+				}
+				_, ok = dejaInsere[ligne[num_colonne]]
+				if ok {
+					continue
+				}
+				dejaInsere[ligne[num_colonne]] = true
+				_, err = stmt.Exec(ligne[num_colonne], requete.idMachine, idEvt, requete.nomTable)
+				if err != nil {
+					tx.Rollback()
+					return errors.WithStack(err)
+				}
+			}
+		}
+		// Commit the transaction
+		err = tx.Commit()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		return err
+	})
+	tailleTables[requete.nomTable] += int64(len(requete.valeurs))
 	requete.valeurs = make([][]interface{}, 0)
 	if err != nil {
 		return errors.WithStack(err)
@@ -570,6 +671,24 @@ func (abase *Aquabase) RemplirTableDepuisRequetes(nomTable string, colonnesTable
 /* ----------------------------------------       SELECT       ---------------------------------------- */
 /* ---------------------------------------------------------------------------------------------------- */
 /* ---------------------------------------------------------------------------------------------------- */
+
+type ParametresRequeteSQL struct {
+	NomTable        string
+	Colonnes        []string
+	FiltresColonnes []FiltreRequeteSQL
+	OrderBy         string
+	Limit           int64
+	Offset          int64
+}
+
+type FiltreRequeteSQL struct {
+	NomColonne string
+	Valeur     interface{}
+	Contient   bool
+	Negation   bool
+	Inferieur  bool
+	Superieur  bool
+}
 
 /** Pragma request to obtains all the table name of the database
  * @return : dict of all table with the text "Columns: %d - Rows: %d"
@@ -723,6 +842,52 @@ func (adb Aquabase) ResultatRequeteSQL(requete string) ([]map[string]interface{}
 		return []map[string]interface{}{{"Erreur": "La table demandée ne contient aucune valeur."}}, nil
 	}
 	return results, err
+}
+
+func (adb Aquabase) ResultatRequeteSQLAvecFiltres(parametres *ParametresRequeteSQL) ([]map[string]interface{}, error) {
+	// initialisation de la requete
+	requete := "SELECT "
+	// ajout des colonnes
+	if len(parametres.Colonnes) > 0 {
+		requete += strings.Join(parametres.Colonnes, ", ")
+	} else {
+		requete += "*"
+	}
+	// ajout du nom de la table
+	requete += " FROM " + parametres.NomTable
+	// ajout des filtres
+	var valeursFiltres []interface{} = []interface{}{}
+	if len(parametres.FiltresColonnes) > 0 {
+		requete += " WHERE "
+	}
+	for _, filtreColonne := range parametres.FiltresColonnes {
+		requete += filtreColonne.NomColonne
+		if filtreColonne.Inferieur {
+			requete += "<? OR "
+		} else if filtreColonne.Superieur {
+			requete += ">? OR "
+		} else {
+			requete += "=? OR "
+		}
+		valeursFiltres = append(valeursFiltres, filtreColonne.Valeur)
+	}
+	requete = strings.TrimSuffix(requete, " OR ")
+	// ajout de l’« ORDER BY »
+	if parametres.OrderBy != "" {
+		requete += " ORDER BY " + parametres.OrderBy
+	}
+	// ajout de la limite
+	if parametres.Limit != 0 {
+		requete += " LIMIT " + fmt.Sprint(parametres.Limit)
+		// ajout de l’offset
+		if parametres.Offset != 0 {
+			requete += " OFFSET " + fmt.Sprint(parametres.Offset)
+		}
+	}
+	// affichage de la requete
+	log.Println(requete)
+	// exécution de la requete
+	return adb.SelectFrom(requete, valeursFiltres...)
 }
 
 func (adb Aquabase) ExecuterRequeteSQL(requete string) (ResultatRequete, error) {

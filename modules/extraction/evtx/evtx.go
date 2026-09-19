@@ -39,6 +39,7 @@ package evtx
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
+	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"io"
 
@@ -119,14 +120,7 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, fichier io.Rea
 	listeEvenements := fichierEvtx.FastEvents()
 	var probleme error = nil
 	// On prépare la requête d'insertion dans la BDD
-	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	var listeColonnesEvtx []string = []string{}
-	// On répurère la liste des colonnes à extraire
-	for _, colonne := range configExtraction.Table[0].Colonnes {
-		listeColonnesEvtx = append(listeColonnesEvtx, colonne.Nom)
-	}
-	// On prépare le contenu qui sera inséré dans la table
-	var requeteInsertionEvtx aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction("Evtx", listeColonnesEvtx)
+	var requeteInsertionEvtx aquabase.RequeteInsertion = *utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &configExtraction.Table[0])
 	for evenement := range listeEvenements {
 		// On ajoute chaque évènement à la requete
 		err := ajouterGoEvtxMapDansBDD(evenement, &requeteInsertionEvtx, fichierSource, configExtraction, idMachine)
