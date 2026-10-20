@@ -42,6 +42,7 @@ import (
 	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"io"
+	"log"
 
 	"github.com/0xrawsec/golang-evtx/evtx"
 
@@ -115,6 +116,13 @@ func (e Evtx) extraireEvenementsDepuisTampon(cheminProjet string, fichier io.Rea
 	fichierEvtx, err := evtx.New(readerAt)
 	if err != nil {
 		return errors.WithStack(err)
+	}
+	for pc := range fichierEvtx.Chunks() {
+		_, err := fichierEvtx.FetchChunk(pc.Offset)
+		if err != nil && err != io.EOF {
+			log.Println("Erreur dans l’ouverture du fichier evtx ", fichierSource)
+			return errors.WithStack(err)
+		}
 	}
 	// On récupère la liste des évènements
 	listeEvenements := fichierEvtx.FastEvents()

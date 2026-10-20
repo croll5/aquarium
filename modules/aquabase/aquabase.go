@@ -312,13 +312,13 @@ func (adb Aquabase) CreateTableIfNotExist2(tableName string, tableColumns map[st
 	return err
 }
 
-func (adb Aquabase) CreerIndex(nomTable string, colonnes []string) error {
+func (adb Aquabase) CreerIndex(nomTable string, colonnes []string, nomIndex string) error {
 	infosBDD, err := adb.Login()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	err = infosBDD.tickets.ExecutionQuandTicketPret(func() error {
-		requete := "CREATE INDEX IF NOT EXISTS " + nomTable + "_index ON " + nomTable + " (" + strings.Join(colonnes, ", ") + ")"
+		requete := "CREATE INDEX IF NOT EXISTS " + nomIndex + " ON " + nomTable + " (" + strings.Join(colonnes, ", ") + ")"
 		requeteIndex, err := infosBDD.bdd.Prepare(requete)
 		if err != nil {
 			log.Println(err)
@@ -531,7 +531,6 @@ func (requete *RequeteInsertion) AjouterDansRequete(valeurs ...any) error {
 
 func (requete *RequeteInsertion) Executer() error {
 	if len(requete.valeurs) == 0 {
-		log.Println("Il n’y avait aucun évènement !")
 		return nil
 	}
 	infosBdd, err := requete.bdd.Login()
@@ -747,6 +746,29 @@ func (adb Aquabase) GetAllTableNames() (map[string]string, error) {
 	return tables, err
 }
 
+func (adb Aquabase) SchemaBDD() (map[string][]string, error) {
+	var resultat map[string][]string = map[string][]string{}
+	listeTables, err := adb.ResultatRequeteSQL("SELECT name FROM sqlite_sequence")
+	if err != nil {
+		return resultat, err
+	}
+	for _, table := range listeTables {
+		nomTable := fmt.Sprintf("%s", table["name"])
+		resultat[nomTable] = make([]string, 0)
+		premiereLigneTable, err := adb.ResultatRequeteSQL(fmt.Sprintf("SELECT * FROM %s LIMIT 1", nomTable))
+		if err != nil {
+			continue
+		}
+		if len(premiereLigneTable) < 1 {
+			continue
+		}
+		for nomColonne := range premiereLigneTable[0] {
+			resultat[nomTable] = append(resultat[nomTable], nomColonne)
+		}
+	}
+	return resultat, err
+}
+
 /** Simple SQL Selector with a limit size
  * @table : the table to select
  * @limit : the number of rows to select
@@ -884,8 +906,6 @@ func (adb Aquabase) ResultatRequeteSQLAvecFiltres(parametres *ParametresRequeteS
 			requete += " OFFSET " + fmt.Sprint(parametres.Offset)
 		}
 	}
-	// affichage de la requete
-	log.Println(requete)
 	// exécution de la requete
 	return adb.SelectFrom(requete, valeursFiltres...)
 }

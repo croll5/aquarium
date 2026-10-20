@@ -32,14 +32,80 @@ sécurité de leurs systèmes et ou de leurs données et, plus généralement,
 Le fait que vous puissiez accéder à cet en-tête signifie que vous avez 
 pris connaissance de la licence CeCILL, et que vous en avez accepté les
 termes.
--->
  */
 
 let demande_patienter = true;
 let chargement_en_cours = false;
 let logo_aquarium = document.getElementById("logo_aquarium_patientez")
 
+let filtres = [];
+
+let params = new URLSearchParams(document.location.search);
+let machine_a_afficher = params.get("machine");
+let nb_evenements_affiches = 0;
+
+const TAILLE_MAX_EVT_SUCCINT = 300;
 const NB_EVENEMENTS_PAR_RECUP = 50;
+
+document.getElementById("nom_machine").textContent = params.get("nom_machine");
+
+afficher_nouveau_filtre(params.get("nom_machine"), "machine");
+
+function recherche_indicateur(evt){
+    if(evt.key == "Enter"){
+        let zone_recherche = document.getElementById("zone_recherche");
+        let indicateur = zone_recherche.value;
+        afficher_nouveau_filtre(indicateur);
+        zone_recherche.value = "";
+        if(filtres.length > 0){
+            filtrer_evenements_affiches(indicateur);
+            filtres[filtres.length] = {"champ":"", "valeur":indicateur, "principal":false};
+        }else{
+            afficher_recherche_indicateur(indicateur);
+            document.getElementById("bouton_selecteur_date").style.display = "none";
+            filtres[filtres.length] = {"champ":"", "valeur":indicateur, "principal":true};
+        }
+    }
+}
+
+function filtrer_evenements_affiches(indicateur){
+    let liste_evenements = document.getElementById("liste_evenements");
+    let nb_suppressions = 0;
+    for(let evenement of liste_evenements.childNodes){
+        if(!evenement.textContent.includes(indicateur)){
+            evenement.style.display = "none";
+            nb_suppressions ++;
+        }
+    }
+    if(nb_suppressions > 0){
+        afficher_evenements_suivants(nb_suppressions, nb_evenements_affiches)
+    }
+}
+
+function afficher_recherche_indicateur(indicateur){
+    let liste_evenements = document.getElementById("liste_evenements");
+    lancer_fonction_patientez()
+    liste_evenements.textContent = "";
+    parent.window.go.main.App.ChercherIndicateurDansBase(indicateur, NB_EVENEMENTS_PAR_RECUP).then((resultat) =>{
+        demande_patienter = false;
+        for(let evenement of resultat){
+            let ligne_evenement = creer_html_ligne_evenement(evenement)
+            liste_evenements.appendChild(ligne_evenement);
+        }
+        document.getElementById("bouton_evt_precedents").style.display = "none";
+        if(resultat.length == NB_EVENEMENTS_PAR_RECUP){
+            document.getElementById("bouton_evt_suivants").style.display = "inline";
+        }else{
+            document.getElementById("bouton_evt_suivants").style.display = "none";
+        }
+        if(filtres.length != 0){
+            for(let filtre of filtres){
+                filtrer_evenements_affiches(filtre["valeur"])
+            }
+        }
+        nb_evenements_affiches = NB_EVENEMENTS_PAR_RECUP;
+    })
+}
 
 function lancer_fonction_patientez(){
     demande_patienter = true;
@@ -69,16 +135,6 @@ function chemin_patientez(pos_a, pos_b, img_a, img_b){
     }, 5000);
 }
 
-let params = new URLSearchParams(document.location.search);
-let machine_a_afficher = params.get("machine");
-let nb_evenements_affiches = 0;
-
-const TAILLE_MAX_EVT_SUCCINT = 300;
-
-document.getElementById("nom_machine").textContent = params.get("nom_machine");
-
-afficher_nouveau_filtre("machine", params.get("nom_machine"));
-
 function afficher_suite(){
     console.log(nb_evenements_affiches)
     afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, nb_evenements_affiches)
@@ -94,12 +150,29 @@ function repositionner_date(){
     // Récupération de la date
     lancer_fonction_patientez();
     let date_choisie = new Date(document.getElementById("selecteur_date").value)
-    parent.window.go.main.App.PositionDateDansChronologie(params.get("nachine"), date_choisie).then(resultat =>{
+    parent.window.go.main.App.PositionDateDansChronologie(params.get("machine"), date_choisie).then(resultat =>{
         document.getElementById("liste_evenements").textContent = "";
         nb_evenements_affiches = resultat;
         document.getElementById("bouton_evt_precedents").style.display = "inline";
         afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, resultat);
     })
+}
+
+function evenement_passe_filtres(evenement) {
+    console.log(evenement);
+    for(let filtre of filtres){
+        let contientFiltre = false;
+        for(let [_,valeur] of Object.entries(evenement)){
+            if( valeur != null && valeur.toString().includes(filtre["valeur"])){
+                contientFiltre = true;
+                break
+            }
+        }
+        if(!contientFiltre){
+            return false
+        }
+    }
+    return true
 }
 
 afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, 0);
@@ -112,45 +185,69 @@ function afficher_evenements_suivants(nombre, decalage, debut=false){
             lancer_fonction_patientez();
         }
     },1000)
-    parent.window.go.main.App.ContenuEvenementsChronologie(params.get("machine"), decalage, nombre).then(resultat =>{
-        let nombre_reel = resultat.length
-        if(nombre_reel < nombre){
-            document.getElementById("bouton_evt_suivants").style.display = "none";
-        }
-        demande_patienter = false;
-        let premier_element;
-        let liste_evenements = document.getElementById("liste_evenements");
-        if(debut){
-            premier_element = liste_evenements.firstChild;
-        }
-        for(let evenement of resultat){
-            let ligne_evenement = creer_html_ligne_evenement(evenement)
-            if(debut && premier_element != undefined){
-                premier_element.before(ligne_evenement)
-            }else{
-                liste_evenements.appendChild(ligne_evenement);
+    if(filtres.length > 0){
+        parent.window.go.main.App.ChercherIndicateurEvenementSuivant(decalage, decalage+nombre).then(resultat =>{
+            let liste_evenements = []
+            for(let evenement of resultat){
+                if(evenement_passe_filtres(evenement)){
+                    liste_evenements[liste_evenements.length] = evenement
+                }
             }
-        }
-        if(!debut){
-            nb_evenements_affiches += nombre_reel
-        }else if(liste_evenements.childElementCount > nombre*5){
-            nb_evenements_affiches -= nombre_reel;
-        }
-        if(!debut && liste_evenements.childElementCount > nombre*5){
-            document.getElementById("bouton_evt_precedents").style.display = "inline";
-            for(let i = 0; i < nombre_reel; i++){
-                liste_evenements.firstChild.remove();
+            afficher_evenements(liste_evenements, liste_evenements.length, debut)
+            if(resultat.length > 0 && liste_evenements.length != nombre){
+                nb_evenements_affiches = decalage+nombre;
+                afficher_evenements_suivants(nombre-liste_evenements.length, decalage+nombre)
+            } else if(resultat.length == 0){
+                document.getElementById("bouton_evt_suivants").style.display = "none";
             }
-        } else if(debut && liste_evenements.childElementCount > nombre*5){
-            document.getElementById("bouton_evt_suivants").style.display = "inline";
-            for(let i = 0; i < nombre_reel; i++){
-                liste_evenements.lastChild.remove()
-            }
-            if(decalage == 0){
-                document.getElementById("bouton_evt_precedents").style.display = "none";
-            }
+        })
+    }else{
+        parent.window.go.main.App.ContenuEvenementsChronologie(params.get("machine"), decalage, nombre).then(resultat =>{
+            afficher_evenements(resultat, nombre, debut)
+        })
+    }
+}
+
+function afficher_evenements(resultat, nombre, debut){
+    let nombre_reel = resultat.length
+    if(nombre_reel < nombre){
+        document.getElementById("bouton_evt_suivants").style.display = "none";
+    } else {
+        document.getElementById("bouton_evt_suivants").style.display = "inline";
+    }
+    demande_patienter = false;
+    let premier_element;
+    let liste_evenements = document.getElementById("liste_evenements");
+    if(debut){
+        premier_element = liste_evenements.firstChild;
+    }
+    for(let evenement of resultat){
+        let ligne_evenement = creer_html_ligne_evenement(evenement)
+        if(debut && premier_element != undefined){
+            premier_element.before(ligne_evenement)
+        }else{
+            liste_evenements.appendChild(ligne_evenement);
         }
-    })
+    }
+    if(!debut){
+        nb_evenements_affiches += nombre_reel
+    }else if(liste_evenements.childElementCount > NB_EVENEMENTS_PAR_RECUP*5){
+        nb_evenements_affiches -= nombre_reel;
+    }
+    if(!debut && liste_evenements.childElementCount > NB_EVENEMENTS_PAR_RECUP*5){
+        document.getElementById("bouton_evt_precedents").style.display = "inline";
+        for(let i = 0; i < nombre_reel; i++){
+            liste_evenements.firstChild.remove();
+        }
+    } else if(debut && liste_evenements.childElementCount > NB_EVENEMENTS_PAR_RECUP*5){
+        document.getElementById("bouton_evt_suivants").style.display = "inline";
+        for(let i = 0; i < nombre_reel; i++){
+            liste_evenements.lastChild.remove()
+        }
+        if(decalage == 0){
+            document.getElementById("bouton_evt_precedents").style.display = "none";
+        }
+    }
 }
 
 function creer_html_ligne_evenement(evenement){
@@ -213,17 +310,88 @@ function creer_html_ligne_evenement(evenement){
 }
 
 
-function afficher_nouveau_filtre(nom_champ, valeur_filtre){
+function afficher_nouveau_filtre(valeur_filtre, nom_champ=""){
     let zone_recherche = document.getElementById("zone_recherche")
-    let liste_filtres = document.getElementById("barre_recherche");
     let filtre = document.createElement("div");
-    filtre.textContent = nom_champ + ": " + valeur_filtre;
+    if(nom_champ == ""){
+        filtre.textContent = valeur_filtre;
+    } else{
+        filtre.textContent = nom_champ + ": " + valeur_filtre;
+    }
+    
     filtre.classList.add("filtre_recherche");
     let bouton_fermer = document.createElement("button");
     bouton_fermer.textContent = "✖";
     bouton_fermer.onclick = function (event) {
         filtre.remove();
+        suppression_filtre(nom_champ, valeur_filtre)
     }
     filtre.appendChild(bouton_fermer);
     zone_recherche.before(filtre);
+}
+
+function suppression_filtre(nom_champ, valeur_filtre){
+    console.log(filtres)
+    let liste_evenements = document.getElementById("liste_evenements").children;
+    let numFiltre = -1;
+    for(let i = 0; i < filtres.length; i++){
+        if(filtres[i]["valeur"] == valeur_filtre){
+            numFiltre = i
+        }
+    }
+    if(numFiltre == -1){
+        return
+    }
+    if(filtres[numFiltre]["principal"] && filtres.length > 1){
+        let nouveauNumFiltre = numFiltre+1 % filtres.length
+        filtres[nouveauNumFiltre]["principal"] = nouveauNumFiltre
+        afficher_recherche_indicateur(filtres[nouveauNumFiltre]["valeur"])
+        filtres.splice(numFiltre, 1)
+    }
+    else if(filtres.length < 2){
+        filtres = []
+        document.getElementById("bouton_selecteur_date").style.display = "inline";
+        let premier_evenement = liste_evenements[0]
+        if(premier_evenement != undefined){
+            let heure = premier_evenement.getElementsByTagName("h3")[0].textContent
+            console.log(heure)
+            if(heure != undefined){
+                let date_debut = new Date(heure)
+                document.getElementById("selecteur_date").value = date_debut.toISOString().slice(0,16);
+            }
+        }
+        repositionner_date();
+    }else{
+        document.getElementById("liste_evenements").textContent = "";
+        for(let i = 0; i < filtres.length; i++){
+            if(filtres[i]["valeur"] == valeur_filtre){
+                filtres.splice(i, 1)
+                break;
+            }
+        }
+        afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, 0)
+    }
+}
+
+function suppression_filtre_secondaire(nom_champ, valeur_filtre){
+    let liste_evenements = document.getElementById("liste_evenements").children;
+    for(let i = 0; i < filtres.length; i++){
+        if(filtres[i]["valeur"] == valeur_filtre){
+            filtres.splice(i, 1)
+            break;
+        }
+    }
+    for(let evenement of liste_evenements){
+        let contientTout = true;
+        for(let filtre of filtres){
+            if(! evenement.textContent.includes(filtre["champ"]+filtre["valeur"])){
+                contientTout = false;
+            }
+        }
+        if(contientTout){
+            evenement.style.display = "block";
+        }else{
+            evenement.style.display = "none";
+        }
+    }
 }

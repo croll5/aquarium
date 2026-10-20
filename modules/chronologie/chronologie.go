@@ -39,7 +39,12 @@ package chronologie
 import (
 	"aquarium/modules/aquabase"
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var machineEnCache = ""
@@ -58,22 +63,14 @@ func ContenuEvenementsChronologie(cheminProjet string, idMachine string, indexDe
 		OrderBy:         "horodatage",
 	})
 	if err != nil {
-		return resultat, err
+		return resultat, errors.WithStack(err)
 	}
 	// Pour chaque identifiant, récupération de l’évènement associé
-	for _, idEvenement := range listeIdEvenements {
-		resultatEvenement, err := adb.ResultatRequeteSQLAvecFiltres(&aquabase.ParametresRequeteSQL{
-			NomTable:        fmt.Sprintf("%s", idEvenement["nom_table"]),
-			FiltresColonnes: []aquabase.FiltreRequeteSQL{aquabase.FiltreRequeteSQL{NomColonne: "id", Valeur: idEvenement["id_evenement"]}},
-		})
-		if err != nil {
-			return resultat, err
-		}
-		for i := range resultatEvenement {
-			resultatEvenement[i]["aqua_horodatage"] = idEvenement["horodatage"]
-		}
-		resultat = append(resultat, resultatEvenement...)
+	resultat, err = aquaChronologieVersTableComplete(cheminProjet, listeIdEvenements)
+	if err != nil {
+		return resultat, errors.WithStack(err)
 	}
+	go adb.CreerIndex(aquabase.TABLE_CHRONOLOGIE_GLOBALE, []string{"id_evenement", "nom_table"}, aquabase.TABLE_CHRONOLOGIE_GLOBALE+"index_2")
 	return resultat, nil
 }
 
@@ -89,7 +86,105 @@ func PositionDateDansChronologie(cheminProjet string, idMachine string, dateSele
 		}},
 	})
 	if err != nil {
-		return 0, err
+		return 0, errors.WithStack(err)
 	}
 	return resultatTaille[0]["nb"].(int64), nil
+}
+
+func ChercherIndicateurDansBase(cheminProjet string, valeurRecherchee string, nbEvenements int) ([]map[string]interface{}, error) {
+	var resultat []map[string]interface{}
+	adb := aquabase.InitDB_Extraction(cheminProjet)
+	listeTables, err := adb.SchemaBDD()
+	if err != nil {
+		return resultat, err
+	}
+	requete := "SELECT * FROM aqua_chronologie WHERE "
+	var listeConditions []string = make([]string, len(listeTables))
+	i := 0
+	for nomTable, listeColonnes := range listeTables {
+		listeConditions[i] = "nom_table=\"" + nomTable + "\" AND id_evenement IN (SELECT id FROM " + nomTable + " WHERE "
+		listeConditions[i] += strings.Join(listeColonnes, " LIKE \"%"+strings.ReplaceAll(valeurRecherchee, "\"", "\"\"")+"%\" OR ")
+		listeConditions[i] += " LIKE \"%" + strings.ReplaceAll(valeurRecherchee, "\"", "\"\"") + "%\")"
+		i++
+	}
+	requete += strings.Join(listeConditions, " OR ")
+	requete += " ORDER BY horodatage"
+	listeIdEvenements, err := adb.ResultatRequeteSQL(requete)
+	if err != nil {
+		return resultat, errors.WithStack(err)
+	}
+	if len(listeIdEvenements) > nbEvenements {
+		cacheChronologie = listeIdEvenements
+		listeIdEvenements = listeIdEvenements[:nbEvenements]
+	}
+	resultat, err = aquaChronologieVersTableComplete(cheminProjet, listeIdEvenements)
+	if err != nil {
+		return resultat, errors.WithStack(err)
+	}
+	return resultat, nil
+}
+
+func ChercherIndicateurEvenementSuivant(cheminProjet string, debut int, fin int) ([]map[string]interface{}, error) {
+	if fin < debut {
+		return []map[string]interface{}{}, errors.WithStack(errors.Errorf("Indice de début %d supérieur à l’indice de fin %d", debut, fin))
+	}
+	if fin >= len(cacheChronologie) {
+		return []map[string]interface{}{}, nil
+	}
+	return aquaChronologieVersTableComplete(cheminProjet, cacheChronologie[debut:fin])
+}
+
+func extraireIndicateurs(cheminProjet string, evenements []map[string]interface{}) error {
+	dicoRegex := make(map[string]*regexp.Regexp)
+	var err error
+	dicoRegex["sha1"], err = regexp.Compile(`[A-Fa-f0-9]{40}`)
+	if err != nil {
+		return err
+	}
+	dicoRegex["ip"], err = regexp.Compile(`[1-2]{0,1}[0-9]{1,2}\.[1-2]{0,1}[0-9]{1,2}\.[1-2]{0,1}[0-9]{1,2}\.[1-2]{0,1}[0-9]{1,2}`)
+	dicoRegex["md5"], err = regexp.Compile(`[A-Fa-f0-9]{32}`)
+	for _, evenement := range evenements {
+		for nomChamp, valeurChamp := range evenement {
+			valeurChampStr := fmt.Sprint(valeurChamp)
+			for typeRegex, moteurRegex := range dicoRegex {
+				res := moteurRegex.FindAllString(valeurChampStr, -1)
+				indexTrouves := moteurRegex.FindAllStringIndex(valeurChampStr, -1)
+				for _, indexTrouve := range indexTrouves {
+					if len(indexTrouve) != 2 {
+						break
+					}
+					debutOk := indexTrouve[0] == 0 || valeurChampStr[indexTrouve[0]-1] == ' '
+					finOk := indexTrouve[1] == len(valeurChampStr) || valeurChampStr[indexTrouve[1]] == ' '
+					if debutOk && finOk {
+						log.Println("Pour le champs ", nomChamp, " : ", typeRegex, " : ", res, "\n", valeurChampStr, "\n", indexTrouve)
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func aquaChronologieVersTableComplete(cheminProjet string, listeIdEvenements []map[string]interface{}) ([]map[string]interface{}, error) {
+	var resultat []map[string]interface{} = []map[string]interface{}{}
+	adb := aquabase.InitDB_Extraction(cheminProjet)
+	for _, idEvenement := range listeIdEvenements {
+		if idEvenement["id_evenement"] == nil || idEvenement["id_evenement"] == "" || idEvenement["nom_table"] == nil || idEvenement["nom_table"] == "" {
+			continue
+		}
+		resultatEvenement, err := adb.ResultatRequeteSQLAvecFiltres(&aquabase.ParametresRequeteSQL{
+			NomTable:        fmt.Sprintf("%s", idEvenement["nom_table"]),
+			FiltresColonnes: []aquabase.FiltreRequeteSQL{aquabase.FiltreRequeteSQL{NomColonne: "id", Valeur: idEvenement["id_evenement"]}},
+		})
+		if err != nil {
+			return resultat, err
+		}
+		for i := range resultatEvenement {
+			resultatEvenement[i]["aqua_horodatage"] = idEvenement["horodatage"]
+			resultatEvenement[i]["aqua_table"] = idEvenement["nom_table"]
+		}
+		resultat = append(resultat, resultatEvenement...)
+		// go extraireIndicateurs(cheminProjet, resultatEvenement)
+	}
+	return resultat, nil
 }

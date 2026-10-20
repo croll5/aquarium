@@ -660,6 +660,22 @@ func (a *App) PositionDateDansChronologie(idMachine string, dateSelectionnee tim
 	return resultat
 }
 
+func (a *App) ChercherIndicateurDansBase(valeurRecherchee string, nbEvenements int) []map[string]interface{} {
+	resultat, err := chronologie.ChercherIndicateurDansBase(chemin_projet, valeurRecherchee, nbEvenements)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
+func (a *App) ChercherIndicateurEvenementSuivant(debut int, fin int) []map[string]interface{} {
+	resultat, err := chronologie.ChercherIndicateurEvenementSuivant(chemin_projet, debut, fin)
+	if err != nil {
+		a.signalerErreur(err)
+	}
+	return resultat
+}
+
 /***************************************************************************************/
 /******************************* FONCTIONS UTILITAIRES  ********************************/
 /***************************************************************************************/
