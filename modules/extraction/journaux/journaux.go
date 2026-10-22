@@ -71,10 +71,9 @@ func (jr Journaux) Extraction(cheminProjet string, fichier io.Reader, cheminFich
 	if configExtraction.Complement[PARAM_SEPARATEUR] != "" {
 		listeEvenements = getListeDesEvenements(listeEvenements[0], configExtraction.Complement[PARAM_SEPARATEUR])
 	}
-	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
 	var probleme error
 	for _, table := range configExtraction.Table {
-		var requeteInsertion aquabase.RequeteInsertion = abase.InitRequeteInsertionExtraction(table.Nom, table.GetNomsColonnes())
+		var requeteInsertion aquabase.RequeteInsertion = *utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &table)
 		for _, evenement := range listeEvenements {
 			ajouterEvenementDansRequete(&requeteInsertion, cheminFichierAExtraire, evenement, table, configExtraction, idMachine)
 		}
@@ -94,7 +93,6 @@ func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFic
 	if existe {
 		return fonctionTraitement(dicChamps, cheminFichier, idMachine)
 	}
-	log.Println("Extraction du contenu ", contenuColonne)
 	// On commence par séparer la clé de l’encodage
 	parametresColonne := strings.Split(contenuColonne, SEPARATEUR_ENCODAGE)
 	// S’il n’y a pas d’encodage, on met « string »
@@ -129,9 +127,9 @@ func valeurDecodee(contenuColonne string, dicChamps map[string]string, cheminFic
 			fonctionTraitement = func(dicChamps map[string]string, cheminFichier, idMachine string) interface{} {
 				val, ok := dicChamps[parametresColonne[0]]
 				if !ok {
-					return "[AQUA_ERR] - Impossible d’extraire la clé" + parametresColonne[0]
+					return nil
 				}
-				return val
+				return fonctionDecodage(val)
 			}
 		}
 	}
