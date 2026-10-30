@@ -16,7 +16,7 @@
     </table>
     <table nom="executions_prefetch" condition="date_execution">
         <colonne type="STRING" contenu="empreinte">empreinte</colonne>
-        <colonne type="DATETIME" contenu="date_execution">horodatage</colonne>
+        <colonne type="DATETIME" contenu="date_execution" indexable="true">horodatage</colonne>
     </table>
     <table nom="ressources_prefetch" condition="ressource">
         <colonne type="STRING" contenu="empreinte">empreinte</colonne>

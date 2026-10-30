@@ -39,6 +39,7 @@ package prefetch
 import (
 	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
+	"aquarium/modules/extraction/utilitaires"
 	"bytes"
 	"io"
 	"strings"
@@ -61,10 +62,9 @@ func (p Prefetch) Extraction(cheminProjet string, fichier io.Reader, nomFichier 
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	var adb aquabase.Aquabase = *aquabase.InitDB_Extraction(cheminProjet)
 	var probleme error
 	for _, table := range configExtraction.Table {
-		var requeteInsertion aquabase.RequeteInsertion = adb.InitRequeteInsertionExtraction(table.Nom, listeColonnesTable(table))
+		var requeteInsertion aquabase.RequeteInsertion = *utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &table)
 		if table.Condition == "" {
 			var valeurs []interface{} = make([]interface{}, 0)
 			for _, colonne := range table.Colonnes {
@@ -89,14 +89,6 @@ func (p Prefetch) Extraction(cheminProjet string, fichier io.Reader, nomFichier 
 }
 
 /* FONCTIONS LOCALES */
-
-func listeColonnesTable(table config.ConfigTableBDD) []string {
-	var nomsColonnes []string = []string{}
-	for _, colonne := range table.Colonnes {
-		nomsColonnes = append(nomsColonnes, colonne.Nom)
-	}
-	return nomsColonnes
-}
 
 func getValeurColonne(fichierPrefetch *prefetch.PrefetchInfo, colonne config.ConfigColonneBDD, source string, idMachine string) interface{} {
 	switch colonne.Contenu {

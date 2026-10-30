@@ -40,8 +40,8 @@ package csv
 // compiler du go         : go build csv.go
 // execution du programme : ./csv.exe
 import (
-	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
+	"aquarium/modules/extraction/utilitaires"
 	"bufio"
 	"encoding/csv"
 	"io"
@@ -62,13 +62,7 @@ type Csv struct{}
 
 func (gt Csv) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAExtraire string, configExtraction config.ConfigExtraction, idMachine string) error {
 	// on initialise la requête
-	colonnesTable := configExtraction.Table[0].Colonnes
-	adb := aquabase.InitDB_Extraction(cheminProjet)
-	var nomsColonnesTables []string = make([]string, len(colonnesTable))
-	for i := range colonnesTable {
-		nomsColonnesTables[i] = colonnesTable[i].Nom
-	}
-	requeteInsertion := adb.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomsColonnesTables)
+	requeteInsertion := utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &configExtraction.Table[0])
 	scanner := bufio.NewReader(fichier)
 	// On lit le fichier CSV
 	lecteurCSV := csv.NewReader(scanner)
@@ -76,7 +70,7 @@ func (gt Csv) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAE
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	fonctionTraitement := getFonctionTraitementLigne(enTete, colonnesTable, cheminFichierAExtraire, idMachine)
+	fonctionTraitement := getFonctionTraitementLigne(enTete, configExtraction.Table[0].Colonnes, cheminFichierAExtraire, idMachine)
 	for i := 0; err == nil; i++ {
 		ligne, err := lecteurCSV.Read()
 		if err == io.EOF {
@@ -84,7 +78,7 @@ func (gt Csv) Extraction(cheminProjet string, fichier io.Reader, cheminFichierAE
 		}
 		if i > 0 && i%100_000 == 0 {
 			requeteInsertion.Executer()
-			requeteInsertion = adb.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomsColonnesTables)
+			requeteInsertion = utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &configExtraction.Table[0])
 		}
 		requeteInsertion.AjouterDansRequete(fonctionTraitement(ligne)...)
 	}
@@ -137,18 +131,13 @@ func getFonctionTraitementLigne(enTete []string, colonnesTable []config.ConfigCo
 	}
 }
 
-func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, tableName string, colonnesTable []config.ConfigColonneBDD, idMachine string) error {
+func exportDfToDb(df dataframe.DataFrame, cheminProjet string, filname string, configTable config.ConfigTableBDD, idMachine string) error {
 	// On initialise la requête
-	adb := aquabase.InitDB_Extraction(cheminProjet)
-	var nomsColonnesTables []string = make([]string, len(colonnesTable))
-	for i := range colonnesTable {
-		nomsColonnesTables[i] = colonnesTable[i].Nom
-	}
-	requeteInsertion := adb.InitRequeteInsertionExtraction(tableName, nomsColonnesTables)
+	requeteInsertion := utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &configTable)
 	// On parcourt le dataframe
 	for _, ligneCSV := range df.Maps() {
-		var valeursAAjouter []interface{} = make([]interface{}, len(colonnesTable))
-		for i, colonne := range colonnesTable {
+		var valeursAAjouter []interface{} = make([]interface{}, len(configTable.Colonnes))
+		for i, colonne := range configTable.Colonnes {
 			valeur, ok := ligneCSV[colonne.Contenu]
 			if !ok {
 				switch colonne.Contenu {
