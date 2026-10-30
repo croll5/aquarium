@@ -369,6 +369,7 @@ function suppression_filtre(nom_champ, valeur_filtre){
                 break;
             }
         }
+        nb_evenements_affiches = 0
         afficher_evenements_suivants(NB_EVENEMENTS_PAR_RECUP, 0)
     }
 }
