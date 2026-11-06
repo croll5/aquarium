@@ -4,7 +4,7 @@
     <nom>Fichiers EVTX</nom>
     <description>Fichiers d'évènements Windows</description>
     <table nom="evtx">
-        <colonne type="DATETIME" contenu="horodatage">horodatage</colonne>
+        <colonne type="DATETIME" contenu="horodatage" indexable="true">horodatage</colonne>
         <colonne type="TEXT" contenu="aqua_source">source</colonne>
         <colonne type="TEXT" contenu="message">Message</colonne>
         <colonne type="TEXT" contenu="Event/System/EventID">EventID</colonne>

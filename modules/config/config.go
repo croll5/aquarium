@@ -25,9 +25,10 @@ const (
 )
 
 type ConfigColonneBDD struct {
-	Nom     string `xml:",chardata"`
-	Type    string `xml:"type,attr"`
-	Contenu string `xml:"contenu,attr"`
+	Nom       string `xml:",chardata"`
+	Type      string `xml:"type,attr"`
+	Contenu   string `xml:"contenu,attr"`
+	Indexable bool   `xml:"indexable,attr"`
 }
 
 type ConfigTableBDD struct {
@@ -64,7 +65,6 @@ type DetailsConfigExtraction struct {
 }
 
 type ConfigurationXML struct {
-	Chronologie       ConfigTableBDD            `xml:"chronologie"`
 	DetailsExtraction []DetailsConfigExtraction `xml:"extraction"`
 	Arborescence      ConfigArborescence        `xml:"arborescence"`
 }
@@ -264,7 +264,6 @@ func ListeFichiersExtraction(chemins []ConfigChemin, cheminProjet string, dossie
 			}
 			if err != nil {
 				probleme = errors.WithStack(err)
-				continue
 			}
 			resultat = append(resultat, correspondances...)
 			if fichierUnique && len(correspondances) > 0 {
@@ -272,7 +271,6 @@ func ListeFichiersExtraction(chemins []ConfigChemin, cheminProjet string, dossie
 			}
 		}
 	}
-
 	return resultat, probleme
 }
 

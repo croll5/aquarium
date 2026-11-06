@@ -37,8 +37,8 @@ termes.
 package bdd_sqlite
 
 import (
-	"aquarium/modules/aquabase"
 	"aquarium/modules/config"
+	"aquarium/modules/extraction/utilitaires"
 	"database/sql"
 	"io"
 	"os"
@@ -101,14 +101,12 @@ func traiterReponseBDD(cheminProjet string, source string, reponse *sql.Rows, co
 	}
 	// On fait la liste des noms des colonnes
 	var contenuColonnesAttendues []string = []string{}
-	var nomColonnesAttendues []string = []string{}
 	for _, colonneVoulue := range configExtraction.Table[0].Colonnes {
 		contenuColonnesAttendues = append(contenuColonnesAttendues, colonneVoulue.Contenu)
-		nomColonnesAttendues = append(nomColonnesAttendues, colonneVoulue.Nom)
 	}
 	// On prépare la requête d'insertion dans la BDD
-	var abase = aquabase.InitDB_Extraction(cheminProjet)
-	var requeteInsertion = abase.InitRequeteInsertionExtraction(configExtraction.Table[0].Nom, nomColonnesAttendues)
+
+	var requeteInsertion = utilitaires.CreerRequeteInstertionDepuisConfig(cheminProjet, idMachine, &configExtraction.Table[0])
 	// On remplit la requête
 	var contenuLigne []interface{} = make([]interface{}, len(listeColonnes))
 	var pointeursColonnes []interface{} = make([]interface{}, len(listeColonnes))

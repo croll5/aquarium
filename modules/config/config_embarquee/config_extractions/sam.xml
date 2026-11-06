@@ -9,8 +9,8 @@
         <parametre cle="exclusions">Names</parametre>
     </complements>
     <table nom="sam">
-        <colonne type="DATETIME" contenu="0:fixe:0x8:0x8:filetime">derniereConnexion</colonne>
-        <colonne type="DATETIME" contenu="0:fixe:0x18:0x8:filetime">creationCompte</colonne>
+        <colonne type="DATETIME" contenu="0:fixe:0x8:0x8:filetime" indexable="true">derniereConnexion</colonne>
+        <colonne type="DATETIME" contenu="0:fixe:0x18:0x8:filetime" indexable="true">creationCompte</colonne>
         <colonne type="TEXT" contenu="nomCle">idCompte</colonne>
         <colonne type="TEXT" contenu="1:variable:0xC:0x10:utf16">nomCompte</colonne>
         <colonne type="TEXT" contenu="aqua_source">source</colonne>

@@ -6,7 +6,7 @@
     <nom>Journaux divers.log</nom>
     <description>Journaux « divers.log », contenant les informations sur les opérations effectuées par le système</description>
     <table nom="divers_log">
-        <colonne type="DATETIME" contenu="1|aqua_encodage:date[aqua_sep]2006/01/02 15:04:05">horodatage</colonne>
+        <colonne type="DATETIME" contenu="1|aqua_encodage:date[aqua_sep]2006/01/02 15:04:05" indexable="true">horodatage</colonne>
         <colonne type="TEXT" contenu="2">operation</colonne>
         <colonne type="TEXT" contenu="4">commande</colonne>
         <colonne type="TEXT" contenu="6">statut</colonne>

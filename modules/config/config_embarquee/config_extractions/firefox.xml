@@ -4,7 +4,7 @@
     <nom>Historique de navigation Firefox</nom>
     <description>Historique de navigation Firefox</description>
     <table nom="historique_firefox">
-        <colonne type="DATETIME" contenu="last_visit_date">derniere_visite</colonne>
+        <colonne type="DATETIME" contenu="last_visit_date" indexable="true">derniere_visite</colonne>
         <colonne type="TEXT" contenu="url">url</colonne>
         <colonne type="TEXT" contenu="visit_count">nb_visites</colonne>
         <colonne type="TEXT" contenu="url">url</colonne>
