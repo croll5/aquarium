@@ -65,7 +65,6 @@ type DetailsConfigExtraction struct {
 }
 
 type ConfigurationXML struct {
-	Chronologie       ConfigTableBDD            `xml:"chronologie"`
 	DetailsExtraction []DetailsConfigExtraction `xml:"extraction"`
 	Arborescence      ConfigArborescence        `xml:"arborescence"`
 }

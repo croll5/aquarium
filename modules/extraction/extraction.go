@@ -264,7 +264,6 @@ func CreationBaseAnalyse(cheminProjet string) error {
 			creerTableExtraction(cheminProjet, configExtraction)
 		}
 	}
-	err = creerTableChronologie(cheminProjet)
 	return err
 }
 
@@ -274,43 +273,6 @@ func CreationBaseAnalyse(cheminProjet string) error {
 **/
 func ProgressionExtraction(cheminProjet string) map[string]string {
 	return progressionExtraction
-}
-
-/** Fonction qui lance l'extraction de la table chronologie, qui contient un
-  * résumé de tous les évènements
-  * @param cheminprojet : le chemin d'enregistrament de l'analyse aquarium
-  * @return : une erreur s'il y a lieu
-**/
-func ExtraireTableChronologie(cheminProjet string) error {
-	aquaConfig, err := config.GetAquaConfig(cheminProjet)
-	if err != nil {
-		return err
-	}
-	for idMachine, machine := range aquaConfig.Machines {
-		configMachine, err := config.GetConfigurationMachine(cheminProjet, idMachine, machine)
-		var listeRequetesChronologie []string = []string{}
-		// On fait une liste des requêtes SQL à exécuter
-		for _, extraction := range configMachine.DetailsExtraction {
-			configExtraction, err := config.GetConfigExtraction(cheminProjet, extraction.Id)
-			if err != nil {
-				return err
-			}
-			if configExtraction.SQLChronologie != "" {
-				listeRequetesChronologie = append(listeRequetesChronologie, configExtraction.SQLChronologie)
-			}
-		}
-		// On liste les colonnes de la table chronologie
-		var listeColonnesChrolonogie []string = []string{}
-		for _, colonne := range configMachine.Chronologie.Colonnes {
-			listeColonnesChrolonogie = append(listeColonnesChrolonogie, colonne.Nom)
-		}
-		var base *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-		err = base.RemplirTableDepuisRequetes(configMachine.Chronologie.Nom, listeColonnesChrolonogie, listeRequetesChronologie, true, "horodatage")
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 /* ---------------------------- FONCTIONS DE CONFIGURATION ---------------------------- */
@@ -466,50 +428,4 @@ func extractionDossier(cheminProjet string, configDossier config.DossierAExtrair
 		fichier.Close()
 	}
 	return nil
-}
-
-/*
-*
-Fonction qui crée les tables de chronologie en fonction de la configuration des machines de l’analyse
-S’il y a deux tables de chronologie du même nom non identiques, une table contenant les colonnes des deux
-tables sera créée.
-@param cheminProjet : le chemin du dossier d'analyse
-*/
-func creerTableChronologie(cheminProjet string) error {
-	// Récupération du fichier de configuration
-	aquaconfig, err := config.GetAquaConfig(cheminProjet)
-	if err != nil {
-		return err
-	}
-	// Établissement de la liste des colonnes
-	var listeColonnes map[string]map[string]string = map[string]map[string]string{}
-	for idMachine, configMachine := range aquaconfig.Machines {
-		config, err := config.GetConfigurationMachine(cheminProjet, idMachine, configMachine)
-		_, tableExiste := listeColonnes[config.Chronologie.Nom]
-		if !tableExiste {
-			listeColonnes[config.Chronologie.Nom] = map[string]string{}
-		}
-		if err != nil {
-			return err
-		}
-		for _, colonne := range config.Chronologie.Colonnes {
-			typeColonne, existe := listeColonnes[config.Chronologie.Nom][colonne.Nom]
-			if !existe {
-				listeColonnes[config.Chronologie.Nom][colonne.Nom] = colonne.Type
-			}
-			if typeColonne != colonne.Type {
-				listeColonnes[config.Chronologie.Nom][colonne.Nom] = "TEXT"
-			}
-		}
-	}
-	// Création de la base de donnees
-	var abase *aquabase.Aquabase = aquabase.InitDB_Extraction(cheminProjet)
-	var probleme error = nil
-	for nomTable, colonnesTable := range listeColonnes {
-		err = abase.CreateTableIfNotExist2(nomTable, colonnesTable, false)
-		if err != nil {
-			probleme = err
-		}
-	}
-	return probleme
 }

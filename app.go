@@ -405,16 +405,6 @@ func (a *App) ProgressionExtraction() map[string]string {
 	return extraction.ProgressionExtraction(chemin_projet)
 }
 
-/* Fonction permettant de lancer l'extraction de la table chronologie */
-func (a *App) ExtractionChronologie() bool {
-	err := extraction.ExtraireTableChronologie(chemin_projet)
-	if err != nil {
-		a.signalerErreur(err)
-		return false
-	}
-	return true
-}
-
 /***************************************************************************************/
 /************************* Arborescence FUNCTIONS PAGE ********************************/
 /***************************************************************************************/

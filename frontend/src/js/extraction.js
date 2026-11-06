@@ -118,18 +118,3 @@ function annuler_extraction(idExtracteur, idMachine){
         })
     }
 }
-
-function extraire_chronologie(){
-    document.body.style.cursor = "wait";
-    document.getElementById("bouton_ext_chrono").style.display = "none";
-    document.getElementById("possibilites_extractions").style.display = "none";
-    document.getElementById("patience_chronologie").style.display = "inline";
-    document.getElementById("document_patientez").src = "../assets/documents/MONTAUBAN_Albane_Memoire_M2.pdf";
-    parent.window.go.main.App.ExtractionChronologie().then(resultat =>{
-        alert("L'extraction de la chronologie s'est terminée avec succès 🥳");
-        document.getElementById("bouton_ext_chrono").style.display = "inline";
-        document.getElementById("possibilites_extractions").style.display = "inline";
-        document.getElementById("patience_chronologie").style.display = "none";
-        document.body.style.cursor = "default";
-    })
-}
